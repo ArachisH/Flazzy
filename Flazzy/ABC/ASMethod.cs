@@ -73,7 +73,57 @@ namespace Flazzy.ABC
         }
         public override void WriteTo(FlashWriter output)
         {
-            throw new NotImplementedException();
+            output.WriteInt30(Parameters.Count);
+            output.WriteInt30(ReturnTypeIndex);
+
+            int optionalParamCount = 0;
+            int optionalParamStartIndex = (Parameters.Count - 1);
+            if (Parameters.Count > 0)
+            {
+                // This flag will be removed if at least a single parameter has no name assigned.
+                Flags |= MethodFlags.HasParamNames;
+                for (int i = 0; i < Parameters.Count; i++)
+                {
+                    ASParameter parameter = Parameters[i];
+                    output.WriteInt30(parameter.TypeIndex);
+
+                    // This flag should only be present when all parameters are assigned a Name.
+                    if (string.IsNullOrWhiteSpace(parameter.Name))
+                        Flags &= ~MethodFlags.HasParamNames;
+
+                    // Just one optional parameter is enough to attain this flag.
+                    if (parameter.IsOptional)
+                    {
+                        if (i < optionalParamStartIndex)
+                            optionalParamStartIndex = i;
+
+                        optionalParamCount++;
+                        Flags |= MethodFlags.HasOptional;
+                    }
+                }
+            }
+
+            output.WriteInt30(NameIndex);
+            output.Write((byte)Flags);
+            if (Flags.HasFlag(MethodFlags.HasOptional))
+            {
+                output.WriteInt30(optionalParamCount);
+                for (int i = optionalParamStartIndex; i < Parameters.Count; i++)
+                {
+                    ASParameter parameter = Parameters[i];
+                    output.WriteInt30(parameter.ValueIndex);
+                    output.Write((byte)parameter.ValueKind);
+                }
+            }
+
+            if (Flags.HasFlag(MethodFlags.HasParamNames))
+            {
+                for (int i = 0; i < Parameters.Count; i++)
+                {
+                    ASParameter parameter = Parameters[i];
+                    output.WriteInt30(parameter.NameIndex);
+                }
+            }
         }
     }
 }
