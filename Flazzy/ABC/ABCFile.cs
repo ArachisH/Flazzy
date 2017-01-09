@@ -49,8 +49,8 @@ namespace Flazzy.ABC
             Pool = new ASConstantPool(this, _input);
 
             PopulateList(Methods, ReadMethod);
-            //PopulateList(Metadata, ReadMetadata);
-            //PopulateList(Instances, ReadInstance);
+            PopulateList(Metadata, ReadMetadata);
+            PopulateList(Instances, ReadInstance);
             //PopulateList(Classes, ReadClass);
             //PopulateList(Scripts, ReadScript);
             //PopulateList(MethodBodies, ReadMethodBody);
@@ -62,11 +62,11 @@ namespace Flazzy.ABC
         }
         public ASMetadata ReadMetadata()
         {
-            return null;
+            return new ASMetadata(this, _input);
         }
         public ASInstance ReadInstance()
         {
-            return null;
+            return new ASInstance(this, _input);
         }
         public ASClass ReadClass()
         {
