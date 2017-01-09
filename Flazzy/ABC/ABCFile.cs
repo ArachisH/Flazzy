@@ -49,11 +49,11 @@ namespace Flazzy.ABC
             Pool = new ASConstantPool(this, _input);
 
             PopulateList(Methods, ReadMethod);
-            PopulateList(Metadata, ReadMetadata);
-            PopulateList(Instances, ReadInstance);
-            PopulateList(Classes, ReadClass);
-            PopulateList(Scripts, ReadScript);
-            PopulateList(MethodBodies, ReadMethodBody);
+            //PopulateList(Metadata, ReadMetadata);
+            //PopulateList(Instances, ReadInstance);
+            //PopulateList(Classes, ReadClass);
+            //PopulateList(Scripts, ReadScript);
+            //PopulateList(MethodBodies, ReadMethodBody);
         }
 
         public ASMethod ReadMethod()
