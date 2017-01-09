@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{41C5BB50-939E-4F53-9C24-203B180943EE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Flazzy</RootNamespace>
+    <AssemblyName>Flazzy</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <PrimaryVersionType>AssemblyVersionAttribute</PrimaryVersionType>
+    <UpdateAssemblyVersion>True</UpdateAssemblyVersion>
+    <UpdateAssemblyFileVersion>True</UpdateAssemblyFileVersion>
+    <UpdateAssemblyInfoVersion>False</UpdateAssemblyInfoVersion>
+    <AssemblyVersionSettings>None.IncrementOnDemandWithReset.None.None</AssemblyVersionSettings>
+    <AssemblyFileVersionSettings>None.IncrementOnDemandWithReset.None.None</AssemblyFileVersionSettings>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ABC\ABCFile.cs" />
+    <Compile Include="ABC\AS3Item.cs" />
+    <Compile Include="ABC\ASConstantPool.cs" />
+    <Compile Include="ABC\ASInstance.cs" />
+    <Compile Include="ABC\ASMetadata.cs" />
+    <Compile Include="ABC\ASMethod.cs" />
+    <Compile Include="ABC\ASMethodBody.cs" />
+    <Compile Include="ABC\ASMultiname.cs" />
+    <Compile Include="ABC\ASNamespace.cs" />
+    <Compile Include="ABC\ASNamespaceSet.cs" />
+    <Compile Include="ABC\ASClass.cs" />
+    <Compile Include="ABC\ASParameter.cs" />
+    <Compile Include="ABC\ASScript.cs" />
+    <Compile Include="ABC\Enums\ConstantKind.cs" />
+    <Compile Include="ABC\Enums\MethodFlags.cs" />
+    <Compile Include="ABC\Enums\MultinameKind.cs" />
+    <Compile Include="ABC\Enums\NamespaceKind.cs" />
+    <Compile Include="ABC\ConstantItem.cs" />
+    <Compile Include="CompressionKind.cs" />
+    <Compile Include="Compression\Ionic\Crc\CRC32.cs" />
+    <Compile Include="Compression\Ionic\Zlib\Deflate.cs" />
+    <Compile Include="Compression\Ionic\Zlib\DeflateStream.cs" />
+    <Compile Include="Compression\Ionic\Zlib\GZipStream.cs" />
+    <Compile Include="Compression\Ionic\Zlib\Inflate.cs" />
+    <Compile Include="Compression\Ionic\Zlib\InfTree.cs" />
+    <Compile Include="Compression\Ionic\Zlib\ParallelDeflateOutputStream.cs" />
+    <Compile Include="Compression\Ionic\Zlib\Tree.cs" />
+    <Compile Include="Compression\Ionic\Zlib\Zlib.cs" />
+    <Compile Include="Compression\Ionic\Zlib\ZlibBaseStream.cs" />
+    <Compile Include="Compression\Ionic\Zlib\ZlibCodec.cs" />
+    <Compile Include="Compression\Ionic\Zlib\ZlibConstants.cs" />
+    <Compile Include="Compression\Ionic\Zlib\ZlibStream.cs" />
+    <Compile Include="Compression\Zlib.cs" />
+    <Compile Include="Internals\FlashTools.cs" />
+    <Compile Include="Tags\DefineBinaryDataTag.cs" />
+    <Compile Include="Tags\DefineBitsLossless2Tag.cs" />
+    <Compile Include="Tags\DefineFontNameTag.cs" />
+    <Compile Include="Tags\DefineSoundTag.cs" />
+    <Compile Include="Tags\DoABCTag.cs" />
+    <Compile Include="FlashItem.cs" />
+    <Compile Include="IO\FlashReader.cs" />
+    <Compile Include="IO\FlashWriter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Records\FrameRecord.cs" />
+    <Compile Include="Records\HeaderRecord.cs" />
+    <Compile Include="Records\RectangeRecord.cs" />
+    <Compile Include="ShockwaveFlash.cs" />
+    <Compile Include="Tags\EndTag.cs" />
+    <Compile Include="Tags\Enums\FlashProduct.cs" />
+    <Compile Include="Tags\Enums\TagKind.cs" />
+    <Compile Include="Tags\Enums\FlashEdition.cs" />
+    <Compile Include="Tags\ExportAssetsTag.cs" />
+    <Compile Include="Tags\FileAttributesTag.cs" />
+    <Compile Include="Tags\FrameLabelTag.cs" />
+    <Compile Include="Tags\ProductInfoTag.cs" />
+    <Compile Include="Tags\ScriptLimitsTag.cs" />
+    <Compile Include="Tags\SetBackgroundColorTag.cs" />
+    <Compile Include="Tags\ShowFrameTag.cs" />
+    <Compile Include="Tags\SymbolClassTag.cs" />
+    <Compile Include="Tags\TagItem.cs" />
+    <Compile Include="Tags\UnknownTag.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
