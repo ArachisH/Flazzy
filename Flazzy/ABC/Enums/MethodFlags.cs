@@ -1,5 +1,8 @@
-﻿namespace Flazzy.ABC
+﻿using System;
+
+namespace Flazzy.ABC
 {
+    [Flags]
     public enum MethodFlags
     {
         None = 0x00,
