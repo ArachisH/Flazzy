@@ -66,7 +66,6 @@ namespace Flazzy
                     "Tags have already been read from the file.");
             }
 
-            // TODO: Dispose BOTH input streams if compression ends up replacing input.
             FlashReader input = _input;
             try
             {
@@ -78,7 +77,7 @@ namespace Flazzy
                     }
                     else if (_initialCompression == CompressionKind.ZLIB)
                     {
-                        var decompressor = new ZlibStream(input.BaseStream, CompressionMode.Decompress, true);
+                        var decompressor = new ZlibStream(input.BaseStream, CompressionMode.Decompress);
                         input = new FlashReader(decompressor);
                     }
                     Frame = new FrameRecord(input);
