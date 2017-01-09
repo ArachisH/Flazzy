@@ -69,11 +69,11 @@ namespace Flazzy.Example
                     Console.WriteLine("------------------------------");
                     Console.WriteLine($"{doAbcTag.Name}.abc({SizeSuffix(doAbcTag.ABCData.Length)})");
                     Console.WriteLine();
-                    Console.WriteLine($"  * Methods: {1:n0}");
-                    Console.WriteLine($"  * Metadata: {1:n0}");
-                    Console.WriteLine($"  * Classes/Instances: {1:n0}");
-                    Console.WriteLine($"  * Scripts: {1:n0}");
-                    Console.WriteLine($"  * Method Bodies: {1:n0}");
+                    Console.WriteLine($"  * Methods: {abc.Methods.Count:n0}");
+                    Console.WriteLine($"  * Metadata: {abc.Metadata.Count:n0}");
+                    Console.WriteLine($"  * Classes/Instances: {abc.Instances.Count:n0}");
+                    Console.WriteLine($"  * Scripts: {abc.Scripts.Count:n0}");
+                    Console.WriteLine($"  * Method Bodies: {abc.MethodBodies.Count:n0}");
                     Console.WriteLine();
                     Console.WriteLine($"  ~ Constant Pool");
                     Console.WriteLine($"       | Integers: {pool.Integers.Count:n0}");
