@@ -35,6 +35,14 @@ namespace Flazzy.ABC
 
         public List<int> InterfaceIndices { get; }
 
+        protected override string DebuggerDisplay
+        {
+            get
+            {
+                return ToAS3();
+            }
+        }
+
         public ASInstance(ABCFile abc)
             : base(abc)
         {
@@ -75,7 +83,20 @@ namespace Flazzy.ABC
 
         public override string ToAS3()
         {
-            throw new NotImplementedException();
+            string modifiers = QName.Namespace.GetAS3Modifiers();
+            if (Flags.HasFlag(ClassFlags.Final))
+            {
+                modifiers += "final";
+            }
+
+            string type = "class";
+            if (Flags.HasFlag(ClassFlags.Interface))
+            {
+                type = "interface";
+            }
+
+            //TODO: Add Super & Interfaces.
+            return $"{modifiers} {type} {QName.Name}";
         }
         public override void WriteTo(FlashWriter output)
         {
