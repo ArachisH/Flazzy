@@ -48,6 +48,24 @@ namespace Flazzy.ABC
             NameIndex = input.ReadInt30();
         }
 
+        public string GetAS3Modifiers()
+        {
+            switch (Kind)
+            {
+                case NamespaceKind.Package: return "public";
+                case NamespaceKind.Private: return "private";
+                case NamespaceKind.Explicit: return "explicit";
+
+                case NamespaceKind.StaticProtected:
+                case NamespaceKind.Protected: return "protected";
+
+
+                case NamespaceKind.Namespace:
+                case NamespaceKind.PackageInternal:
+                default: return string.Empty;
+            }
+        }
+
         public override void WriteTo(FlashWriter output)
         {
             output.Write((byte)Kind);
