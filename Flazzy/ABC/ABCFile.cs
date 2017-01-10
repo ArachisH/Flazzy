@@ -5,7 +5,7 @@ using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
-    public class ABCFile : FlashItem
+    public class ABCFile : FlashItem, IDisposable
     {
         private FlashReader _input;
         private readonly int _initialLength;
@@ -51,42 +51,45 @@ namespace Flazzy.ABC
             PopulateList(Methods, ReadMethod);
             PopulateList(Metadata, ReadMetadata);
             PopulateList(Instances, ReadInstance);
-            //PopulateList(Classes, ReadClass);
+            PopulateList(Classes, ReadClass, Instances.Count);
             //PopulateList(Scripts, ReadScript);
             //PopulateList(MethodBodies, ReadMethodBody);
         }
 
-        public ASMethod ReadMethod()
+        private ASMethod ReadMethod(int index)
         {
             return new ASMethod(this, _input);
         }
-        public ASMetadata ReadMetadata()
+        private ASMetadata ReadMetadata(int index)
         {
             return new ASMetadata(this, _input);
         }
-        public ASInstance ReadInstance()
+        private ASInstance ReadInstance(int index)
         {
             return new ASInstance(this, _input);
         }
-        public ASClass ReadClass()
+        private ASClass ReadClass(int index)
+        {
+            var @class = new ASClass(this, _input);
+            @class.InstanceIndex = index;
+
+            return @class;
+        }
+        private ASScript ReadScript(int index)
         {
             return null;
         }
-        public ASScript ReadScript()
-        {
-            return null;
-        }
-        public ASMethodBody ReadMethodBody()
+        private ASMethodBody ReadMethodBody(int index)
         {
             return null;
         }
 
-        private void PopulateList<T>(List<T> list, Func<T> reader, int count = -1)
+        private void PopulateList<T>(List<T> list, Func<int, T> reader, int count = -1)
         {
             list.Capacity = (count < 0 ? _input.ReadInt30() : count);
             for (int i = 0; i < list.Capacity; i++)
             {
-                T value = reader();
+                T value = reader(i);
                 list.Add(value);
             }
         }
@@ -96,6 +99,18 @@ namespace Flazzy.ABC
             output.Write((ushort)Version.Minor);
             output.Write((ushort)Version.Major);
             Pool.WriteTo(output);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _input.Dispose();
+            }
         }
     }
 }
