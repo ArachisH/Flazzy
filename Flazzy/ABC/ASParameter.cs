@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 using Flazzy.IO;
 
@@ -37,7 +38,21 @@ namespace Flazzy.ABC
 
         public override string ToAS3()
         {
-            throw new NotImplementedException();
+            string name = Name;
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = ("param" + (_method.Parameters.IndexOf(this) + 1));
+            }
+
+            string type = (Type?.Name ?? "*");
+            if (Type?.Kind == MultinameKind.TypeName)
+            {
+                type = (Type.QName.Name + "<");
+                type += string.Join(", ", Type.GetTypes().Select(t => t.Name));
+                type += ">";
+            }
+
+            return $"{name}:{type}";
         }
         public override void WriteTo(FlashWriter output)
         {
