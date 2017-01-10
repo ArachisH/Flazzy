@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 
 using Flazzy.IO;
 
@@ -12,6 +13,22 @@ namespace Flazzy.ABC
             : base(abc)
         {
             Traits = new List<ASTrait>();
+        }
+
+        protected override string DebuggerDisplay
+        {
+            get
+            {
+                int methodCount = Traits.Count(
+                    t => t.Kind == TraitKind.Method ||
+                         t.Kind == TraitKind.Getter ||
+                         t.Kind == TraitKind.Setter);
+
+                int slotCount = Traits.Count(t => t.Kind == TraitKind.Slot);
+                int constantCount = Traits.Count(t => t.Kind == TraitKind.Constant);
+
+                return $"Methods(G+S): {methodCount:n0}, Constants: {constantCount}, Slots: {slotCount}";
+            }
         }
 
         protected void PopulateTraits(FlashReader input)
