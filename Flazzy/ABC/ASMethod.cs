@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Linq;
 using System.Collections.Generic;
 
 using Flazzy.IO;
@@ -21,6 +21,19 @@ namespace Flazzy.ABC
 
         public MethodFlags Flags { get; set; }
         public List<ASParameter> Parameters { get; }
+
+        protected override string DebuggerDisplay
+        {
+            get
+            {
+                string display = ToAS3();
+                if (ReturnType == null)
+                {
+                    display += (".ctor");
+                }
+                return display;
+            }
+        }
 
         public ASMethod(ABCFile abc)
             : base(abc)
@@ -69,7 +82,16 @@ namespace Flazzy.ABC
 
         public override string ToAS3()
         {
-            throw new NotImplementedException();
+            string parameters = string.Join(
+                ", ", Parameters.Select(p => p.ToAS3()));
+
+            string signature = $"({parameters})";
+            if (ReturnType != null)
+            {
+                signature += (":" + ReturnType.Name);
+            }
+
+            return signature;
         }
         public override void WriteTo(FlashWriter output)
         {
