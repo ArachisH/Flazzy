@@ -140,8 +140,8 @@ namespace Flazzy
                         }
                         case CompressionKind.ZLIB:
                         {
-                            bodyOutput = new FlashWriter(new ZlibStream(
-                                output.BaseStream, CompressionMode.Compress, CompressionLevel.BestCompression, true));
+                            bodyOutput = new FlashWriter(new ZlibStream(output.BaseStream,
+                                CompressionMode.Compress, CompressionLevel.BestCompression, true));
 
                             break;
                         }
