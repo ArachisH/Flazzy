@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.IO;
 using Flazzy.IO;
 
 namespace Flazzy.ABC
@@ -24,13 +24,13 @@ namespace Flazzy.ABC
         {
             get
             {
-                return $"Version: {Version}";
+                return "Version: " + Version;
             }
         }
 
         public ABCFile()
         {
-            Methods = new List<ABC.ASMethod>();
+            Methods = new List<ASMethod>();
             Metadata = new List<ASMetadata>();
             Instances = new List<ASInstance>();
             Classes = new List<ASClass>();
@@ -52,8 +52,8 @@ namespace Flazzy.ABC
             PopulateList(Metadata, ReadMetadata);
             PopulateList(Instances, ReadInstance);
             PopulateList(Classes, ReadClass, Instances.Count);
-            //PopulateList(Scripts, ReadScript);
-            //PopulateList(MethodBodies, ReadMethodBody);
+            PopulateList(Scripts, ReadScript);
+            PopulateList(MethodBodies, ReadMethodBody);
         }
 
         private ASMethod ReadMethod(int index)
@@ -77,11 +77,11 @@ namespace Flazzy.ABC
         }
         private ASScript ReadScript(int index)
         {
-            return null;
+            return new ASScript(this, _input);
         }
         private ASMethodBody ReadMethodBody(int index)
         {
-            return null;
+            return new ASMethodBody(this, _input);
         }
 
         private void PopulateList<T>(List<T> list, Func<int, T> reader, int count = -1)
@@ -99,6 +99,35 @@ namespace Flazzy.ABC
             output.Write((ushort)Version.Minor);
             output.Write((ushort)Version.Major);
             Pool.WriteTo(output);
+            WriteTo(output, Methods);
+            WriteTo(output, Metadata);
+            WriteTo(output, Instances);
+            WriteTo(output, Classes, false);
+            WriteTo(output, Scripts);
+            WriteTo(output, MethodBodies);
+        }
+        private void WriteTo<T>(FlashWriter output, List<T> list, bool writeCount = true)
+            where T : FlashItem
+        {
+            if (writeCount)
+            {
+                output.WriteInt30(list.Count);
+            }
+            for (int i = 0; i < list.Count; i++)
+            {
+                FlashItem item = list[i];
+                item.WriteTo(output);
+            }
+        }
+
+        public byte[] ToArray()
+        {
+            using (var memOutput = new MemoryStream(_initialLength))
+            using (var output = new FlashWriter(memOutput))
+            {
+                WriteTo(output);
+                return memOutput.ToArray();
+            }
         }
 
         public void Dispose()

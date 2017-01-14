@@ -5,7 +5,7 @@ using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
-    public class ASTrait : AS3Item
+    public class ASTrait : AS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait, IFunctionTrait
     {
         public ASMultiname QName
         {
@@ -62,8 +62,6 @@ namespace Flazzy.ABC
         }
         public int ClassIndex { get; set; }
 
-        public int Id { get; set; }
-
         public object Value
         {
             get { return ABC.Pool.GetConstant(ValueKind, ValueIndex); }
@@ -71,10 +69,20 @@ namespace Flazzy.ABC
         public int ValueIndex { get; set; }
         public ConstantKind ValueKind { get; set; }
 
+        public int Id { get; set; }
         public List<int> MetadataIndices { get; }
+        public bool IsStatic { get; internal set; }
 
         public TraitKind Kind { get; set; }
         public TraitAttributes Attributes { get; set; }
+
+        protected override string DebuggerDisplay
+        {
+            get
+            {
+                return (Kind + ": " + QName.Name);
+            }
+        }
 
         public ASTrait(ABCFile abc)
             : base(abc)
@@ -110,6 +118,7 @@ namespace Flazzy.ABC
                 case TraitKind.Setter:
                 {
                     MethodIndex = input.ReadInt30();
+                    Method.Trait = this;
                     break;
                 }
 
@@ -153,7 +162,56 @@ namespace Flazzy.ABC
         }
         public override void WriteTo(FlashWriter output)
         {
-            throw new NotImplementedException();
+            var bitContainer = (byte)(
+                ((byte)Attributes << 4) + (byte)Kind);
+
+            output.WriteInt30(QNameIndex);
+            output.Write(bitContainer);
+            output.WriteInt30(Id);
+            switch (Kind)
+            {
+                case TraitKind.Slot:
+                case TraitKind.Constant:
+                {
+                    output.WriteInt30(TypeIndex);
+                    output.WriteInt30(ValueIndex);
+                    if (ValueIndex != 0)
+                    {
+                        output.Write((byte)ValueKind);
+                    }
+                    break;
+                }
+
+                case TraitKind.Method:
+                case TraitKind.Getter:
+                case TraitKind.Setter:
+                {
+                    output.WriteInt30(MethodIndex);
+                    break;
+                }
+
+                case TraitKind.Class:
+                {
+                    output.WriteInt30(ClassIndex);
+                    break;
+                }
+
+                case TraitKind.Function:
+                {
+                    output.WriteInt30(FunctionIndex);
+                    break;
+                }
+            }
+
+            if (Attributes.HasFlag(TraitAttributes.Metadata))
+            {
+                output.WriteInt30(MetadataIndices.Count);
+                for (int i = 0; i < MetadataIndices.Count; i++)
+                {
+                    int metadatumIndex = MetadataIndices[i];
+                    output.WriteInt30(metadatumIndex);
+                }
+            }
         }
     }
 }

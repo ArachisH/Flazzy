@@ -20,7 +20,9 @@ namespace Flazzy.ABC
         public int ReturnTypeIndex { get; set; }
 
         public MethodFlags Flags { get; set; }
+        public ASTrait Trait { get; internal set; }
         public List<ASParameter> Parameters { get; }
+        public ASMethodBody Body { get; internal set; }
 
         protected override string DebuggerDisplay
         {
@@ -85,7 +87,7 @@ namespace Flazzy.ABC
             string parameters = string.Join(
                 ", ", Parameters.Select(p => p.ToAS3()));
 
-            string signature = $"({parameters})";
+            string signature = $"{Trait?.QName.Name}({parameters})";
             if (ReturnType != null)
             {
                 signature += (":" + ReturnType.Name);

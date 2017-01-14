@@ -9,12 +9,8 @@ namespace Flazzy.ABC
     {
         public List<ASTrait> Traits { get; }
 
-        public ASContainer(ABCFile abc)
-            : base(abc)
-        {
-            Traits = new List<ASTrait>();
-        }
-
+        public virtual bool IsStatic { get; }
+        public abstract ASMultiname QName { get; }
         protected override string DebuggerDisplay
         {
             get
@@ -27,8 +23,14 @@ namespace Flazzy.ABC
                 int slotCount = Traits.Count(t => t.Kind == TraitKind.Slot);
                 int constantCount = Traits.Count(t => t.Kind == TraitKind.Constant);
 
-                return $"Methods(G+S): {methodCount:n0}, Constants: {constantCount}, Slots: {slotCount}";
+                return $"{QName}, Traits: {Traits.Count}";
             }
+        }
+
+        public ASContainer(ABCFile abc)
+            : base(abc)
+        {
+            Traits = new List<ASTrait>();
         }
 
         protected void PopulateTraits(FlashReader input)
@@ -37,7 +39,18 @@ namespace Flazzy.ABC
             for (int i = 0; i < Traits.Capacity; i++)
             {
                 var trait = new ASTrait(ABC, input);
+                trait.IsStatic = IsStatic;
+
                 Traits.Add(trait);
+            }
+        }
+        public override void WriteTo(FlashWriter output)
+        {
+            output.WriteInt30(Traits.Count);
+            for (int i = 0; i < Traits.Count; i++)
+            {
+                ASTrait trait = Traits[i];
+                trait.WriteTo(output);
             }
         }
     }
