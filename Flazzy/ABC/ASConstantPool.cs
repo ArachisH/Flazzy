@@ -10,8 +10,9 @@ namespace Flazzy.ABC
     /// </summary>
     public class ASConstantPool : FlashItem
     {
-        private readonly ABCFile _abc;
         private readonly FlashReader _input;
+
+        public ABCFile ABC { get; }
 
         /// <summary>
         /// Gets a list of integer constants referenced by the bytecode.
@@ -42,6 +43,35 @@ namespace Flazzy.ABC
         /// </summary>
         public List<ASMultiname> Multinames { get; }
 
+        public ASConstantPool()
+        {
+            Integers = new List<int>();
+            UIntegers = new List<uint>();
+            Doubles = new List<double>();
+            Strings = new List<string>();
+            Namespaces = new List<ASNamespace>();
+            NamespaceSets = new List<ASNamespaceSet>();
+            Multinames = new List<ASMultiname>();
+        }
+        public ASConstantPool(ABCFile abc)
+            : this()
+        {
+            ABC = abc;
+        }
+        public ASConstantPool(ABCFile abc, FlashReader input)
+            : this(abc)
+        {
+            _input = input;
+
+            PopulateList(Integers, input.ReadInt30, 0);
+            PopulateList<uint>(UIntegers, input.ReadUInt30, 0);
+            PopulateList(Doubles, input.ReadDouble, double.NaN);
+            PopulateList(Strings, input.ReadString, null);
+            PopulateList(Namespaces, ReadNamespace, null);
+            PopulateList(NamespaceSets, ReadNamespaceSet, null);
+            PopulateList(Multinames, ReadMultiname, null);
+        }
+
         public object GetConstant(ConstantKind type, int index)
         {
             switch (type)
@@ -63,33 +93,61 @@ namespace Flazzy.ABC
             }
         }
 
-        public ASConstantPool()
+        public int AddConstant(object value)
         {
-            Integers = new List<int>();
-            UIntegers = new List<uint>();
-            Doubles = new List<double>();
-            Strings = new List<string>();
-            Namespaces = new List<ASNamespace>();
-            NamespaceSets = new List<ASNamespaceSet>();
-            Multinames = new List<ASMultiname>();
+            return AddConstant(value, true);
         }
-        public ASConstantPool(ABCFile abc)
-            : this()
+        public int AddConstant(object value, bool recycle)
         {
-            _abc = abc;
-        }
-        public ASConstantPool(ABCFile abc, FlashReader input)
-            : this(abc)
-        {
-            _input = input;
+            switch (Type.GetTypeCode(value.GetType()))
+            {
+                case TypeCode.String:
+                return AddConstant(Strings, (string)value, recycle);
 
-            PopulateList(Integers, input.ReadInt30, 0);
-            PopulateList<uint>(UIntegers, input.ReadUInt30, 0);
-            PopulateList(Doubles, input.ReadDouble, double.NaN);
-            PopulateList(Strings, input.ReadString, null);
-            PopulateList(Namespaces, ReadNamespace, null);
-            PopulateList(NamespaceSets, ReadNamespaceSet, null);
-            PopulateList(Multinames, ReadMultiname, null);
+                case TypeCode.Double:
+                return AddConstant(Doubles, (double)value, recycle);
+
+                case TypeCode.UInt32:
+                return AddConstant(UIntegers, (uint)value, recycle);
+
+                case TypeCode.Int32:
+                return AddConstant(Integers, (int)value, recycle);
+
+                default:
+                {
+                    var multiname = (value as ASMultiname);
+                    if (multiname != null)
+                    {
+                        return AddConstant(Multinames, multiname, recycle);
+                    }
+
+                    var @namespace = (value as ASNamespace);
+                    if (@namespace != null)
+                    {
+                        return AddConstant(Namespaces, @namespace, recycle);
+                    }
+
+                    var namespaceSet = (value as ASNamespaceSet);
+                    if (namespaceSet != null)
+                    {
+                        return AddConstant(NamespaceSets, namespaceSet, recycle);
+                    }
+                    break;
+                }
+            }
+            return -1;
+        }
+        protected virtual int AddConstant<T>(List<T> constants, T value, bool recycle)
+        {
+            int index = (recycle ?
+                constants.IndexOf(value) : -1);
+
+            if (index == -1)
+            {
+                constants.Add(value);
+                index = (constants.Count - 1);
+            }
+            return index;
         }
 
         private ASMultiname ReadMultiname()

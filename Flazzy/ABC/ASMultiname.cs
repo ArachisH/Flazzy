@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
-    public class ASMultiname : ConstantItem
+    public class ASMultiname : ConstantItem, IQName, IRTQName, IMultiname, IMultinameL
     {
         public MultinameKind Kind { get; set; }
 

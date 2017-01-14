@@ -1,8 +1,6 @@
 ﻿using System.IO;
 using System.Text;
 
-using Flazzy.ABC;
-
 namespace Flazzy.IO
 {
     public class FlashReader : BinaryReader
@@ -17,6 +15,10 @@ namespace Flazzy.IO
         {
             get { return BaseStream.Position; }
             set { BaseStream.Position = value; }
+        }
+        public bool IsDataAvailable
+        {
+            get { return Position < Length; }
         }
 
         protected int BitPosition { get; set; }
@@ -111,7 +113,7 @@ namespace Flazzy.IO
             char[] characters = ReadChars(length);
             return new string(characters);
         }
-        
+
         #region Read Overrides
         public override int Read()
         {

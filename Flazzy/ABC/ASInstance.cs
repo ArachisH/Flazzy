@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Linq;
 using System.Collections.Generic;
 
 using Flazzy.IO;
@@ -21,7 +21,7 @@ namespace Flazzy.ABC
         }
         public int ConstructorIndex { get; set; }
 
-        public ASMultiname QName
+        public override ASMultiname QName
         {
             get { return ABC.Pool.Multinames[QNameIndex]; }
         }
@@ -83,24 +83,58 @@ namespace Flazzy.ABC
 
         public override string ToAS3()
         {
-            string modifiers = QName.Namespace.GetAS3Modifiers();
+            string as3 = QName.Namespace.GetAS3Modifiers();
+            bool isInterface = Flags.HasFlag(ClassFlags.Interface);
+
+            if (!string.IsNullOrWhiteSpace(as3)) as3 += " ";
             if (Flags.HasFlag(ClassFlags.Final))
             {
-                modifiers += "final";
+                as3 += "final ";
             }
 
-            string type = "class";
             if (Flags.HasFlag(ClassFlags.Interface))
             {
-                type = "interface";
+                as3 += "interface ";
+            }
+            else as3 += "class ";
+
+            as3 += QName.Name;
+
+            if (!isInterface && Super.Name != "Object")
+            {
+                as3 += $" extends {Super.Name}";
             }
 
-            //TODO: Add Super & Interfaces.
-            return $"{modifiers} {type} {QName.Name}";
+            if (InterfaceIndices.Count > 0)
+            {
+                string interfacesAS3 = string.Join(
+                    ", ", GetInterfaces().Select(i => i.Name));
+
+                as3 += (" implements " + interfacesAS3);
+            }
+
+            return as3;
         }
         public override void WriteTo(FlashWriter output)
         {
-            throw new NotImplementedException();
+            output.WriteInt30(QNameIndex);
+            output.WriteInt30(SuperIndex);
+            output.Write((byte)Flags);
+
+            if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
+            {
+                output.WriteInt30(ProtectedNamespaceIndex);
+            }
+
+            output.WriteInt30(InterfaceIndices.Count);
+            for (int i = 0; i < InterfaceIndices.Count; i++)
+            {
+                int interfaceIndex = InterfaceIndices[i];
+                output.WriteInt30(interfaceIndex);
+            }
+
+            output.WriteInt30(ConstructorIndex);
+            base.WriteTo(output);
         }
     }
 }

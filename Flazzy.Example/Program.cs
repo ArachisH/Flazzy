@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Text;
+using System.Diagnostics;
 using System.Collections.Generic;
 
-using Flazzy.ABC;
+using Flazzy.IO;
 using Flazzy.Tags;
 
 namespace Flazzy.Example
@@ -12,88 +14,130 @@ namespace Flazzy.Example
         private static readonly string[] SizeSuffixes =
             { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 
+        private readonly Stopwatch _watch;
+
+        public string FilePath { get; }
+        public ShockwaveFlash Flash { get; }
+
         public Program(string[] args)
-        { }
+        {
+            _watch = new Stopwatch();
+
+            FilePath = Path.GetFullPath(args[0]);
+            Flash = new ShockwaveFlash(FilePath);
+            UpdateTitle(this);
+        }
         public static void Main(string[] args)
         {
-            Console.Title = "Flazzy.Example";
-
-            var app = new Program(args);
-            app.Run();
+            Console.Title = ("Flazzy v" + GetVersion());
+            new Program(args).Run();
         }
 
         public void Run()
         {
-            string fileName = "Client.swf";
-            var fileInfo = new FileInfo(fileName);
+            /* Step #1 - Disassembling */
+            Disassemble();
 
-            // Path Setting: Project > Properties > Debug > Start Options > Working Directory
-            using (var ffile = new ShockwaveFlash(fileInfo.FullName))
+            /* Step #1.5(Optional) - Modifying/Extracting */
+            Modify();
+
+            /* Step #2 - Assembling */
+            Assemble(CompressionKind.None);
+        }
+        private void Modify()
+        {
+            //var doABCTags = Flash.Tags.OfType<DoABCTag>();
+            //foreach (DoABCTag abcTag in doABCTags)
+            //{
+            //    using (var abc = new ABCFile(abcTag.ABCData))
+            //    {
+            //        // Magic here.
+            //        // abcTag.ABCData = abc.ToArray();
+            //    }
+            //}
+
+            //Flash.Tags.OfType<DefineBitsLossless2Tag>().AsParallel().ForAll(bitsTag =>
+            //{
+            //    using (Bitmap asset = bitsTag.GenerateAsset())
+            //    {
+            //        asset.Save(/* File Path */);
+            //    }
+            //    Console.WriteLine($"Asset saved/generated {bitsTag.Id}.");
+            //});
+
+            //var defineBinaryDataTags = Flash.Tags.OfType<DefineBinaryDataTag>();
+            //foreach (DefineBinaryDataTag binTag in defineBinaryDataTags)
+            //{
+            //    // Magic here.
+            //}
+
+            // etc...
+        }
+        private void Disassemble()
+        {
+            _watch.Restart();
+            Console.Write("Disassembling...");
+
+            Flash.Disassemble();
+            Console.WriteLine($" | Tags: {Flash.Tags.Count:n0} | {GetLap()}");
+            Console.WriteLine();
+
+            IDictionary<TagKind, List<TagItem>> tagGroups = GetTagGroups();
+            foreach (TagKind kind in tagGroups.Keys)
             {
-                Console.WriteLine($"File Name: {fileName}({SizeSuffix(fileInfo.Length)})");
-                Console.WriteLine($"Compression: {ffile.Compression}({ffile.GetSignature()})");
-                Console.WriteLine("File Version: " + ffile.Version);
-                Console.WriteLine($"File Size: {SizeSuffix(ffile.FileLength)}");
-
-                ffile.Disassemble();
-                var tagChunks = new Dictionary<TagKind, List<TagItem>>();
-                foreach (TagItem tag in ffile.Tags)
+                int totalSize = 0;
+                List<TagItem> group = tagGroups[kind];
+                foreach (TagItem item in group)
                 {
-                    List<TagItem> chunks = null;
-                    if (!tagChunks.TryGetValue(tag.Kind, out chunks))
-                    {
-                        chunks = new List<TagItem>();
-                        tagChunks.Add(tag.Kind, chunks);
-                    }
-                    chunks.Add(tag);
+                    totalSize += item.Header.Length;
+                    totalSize += (item.Header.IsLongTag ? 6 : 2);
                 }
-
-                Console.WriteLine("------------------------------");
-                Console.WriteLine($"Tags Found: {ffile.Tags.Count:n0}");
-                Console.WriteLine();
-                foreach (TagKind kind in tagChunks.Keys)
-                {
-                    List<TagItem> chunks = tagChunks[kind];
-                    Console.WriteLine($"  * {kind}: {chunks.Count:n0}");
-                }
-
-                for (int i = 0; i < ffile.Tags.Count; i++)
-                {
-                    TagItem tag = ffile.Tags[i];
-                    if (tag.Kind != TagKind.DoABC) continue;
-
-                    var doAbcTag = (DoABCTag)tag;
-                    using (var abc = new ABCFile(doAbcTag.ABCData))
-                    {
-                        ASConstantPool pool = abc.Pool;
-
-                        Console.WriteLine("------------------------------");
-                        Console.WriteLine($"{doAbcTag.Name}.abc({SizeSuffix(doAbcTag.ABCData.Length)})");
-                        Console.WriteLine();
-                        Console.WriteLine($"  * Methods: {abc.Methods.Count:n0}");
-                        Console.WriteLine($"  * Metadata: {abc.Metadata.Count:n0}");
-                        Console.WriteLine($"  * Classes/Instances: {abc.Instances.Count:n0}");
-                        Console.WriteLine($"  * Scripts: {abc.Scripts.Count:n0}");
-                        Console.WriteLine($"  * Method Bodies: {abc.MethodBodies.Count:n0}");
-
-                        Console.WriteLine();
-                        Console.WriteLine($"  ~ Constant Pool");
-                        Console.WriteLine($"       | Integers: {pool.Integers.Count:n0}");
-                        Console.WriteLine($"       | UIntegers: {pool.UIntegers.Count:n0}");
-                        Console.WriteLine($"       | Doubles: {pool.Doubles.Count:n0}");
-                        Console.WriteLine($"       | Strings: {pool.Strings.Count:n0}");
-                        Console.WriteLine($"       | Namespaces: {pool.Namespaces.Count:n0}");
-                        Console.WriteLine($"       | NamespaceSets: {pool.NamespaceSets.Count:n0}");
-                        Console.WriteLine($"       | Multinames: {pool.Multinames.Count:n0}");
-                    }
-                }
+                Console.WriteLine($"  ~  [{kind}]: {group.Count:n0}({SizeSuffix(totalSize)})");
             }
+            Console.WriteLine();
+        }
+        private void Assemble(CompressionKind compression)
+        {
+            _watch.Restart();
+            Console.Write("Assembling...");
 
-            Console.WriteLine("------------------------------");
-            Console.WriteLine("Complete!");
-            Console.Read();
+            if (File.Exists("Assembled.swf"))
+            {
+                File.Delete("Assembled.swf");
+            }
+            using (var asmFile = File.OpenWrite("Assembled.swf"))
+            using (var asmStream = new FlashWriter(asmFile))
+            {
+                Flash.Assemble(asmStream, compression);
+                Console.WriteLine($" | Assembled.swf({SizeSuffix(asmStream.Length)}) | {GetLap()}");
+            }
         }
 
+        private string GetLap()
+        {
+            _watch.Stop();
+            return (_watch.Elapsed.ToString("s\\.ff") + " Seconds");
+        }
+        private IDictionary<TagKind, List<TagItem>> GetTagGroups()
+        {
+            var tagChunks = new Dictionary<TagKind, List<TagItem>>();
+            foreach (TagItem tag in Flash.Tags)
+            {
+                List<TagItem> chunks = null;
+                if (!tagChunks.TryGetValue(tag.Kind, out chunks))
+                {
+                    chunks = new List<TagItem>();
+                    tagChunks.Add(tag.Kind, chunks);
+                }
+                chunks.Add(tag);
+            }
+            return tagChunks;
+        }
+
+        private static Version GetVersion()
+        {
+            return typeof(ShockwaveFlash).Assembly.GetName().Version;
+        }
         private static string SizeSuffix(long value)
         {
             if (value < 0) { return "-" + SizeSuffix(-value); }
@@ -102,7 +146,17 @@ namespace Flazzy.Example
             int mag = (int)Math.Log(value, 1024);
             decimal adjustedSize = (decimal)value / (1L << (mag * 10));
 
-            return string.Format("{0:n1}{1}", adjustedSize, SizeSuffixes[mag]);
+            return string.Format("{0:n1} {1}", adjustedSize, SizeSuffixes[mag]);
+        }
+        private static void UpdateTitle(Program program)
+        {
+            var titleBuilder = new StringBuilder();
+            titleBuilder.Append(" | ");
+            titleBuilder.Append(Path.GetFileName(program.FilePath));
+            titleBuilder.Append("(" + SizeSuffix(program.Flash.FileLength) + ")");
+            titleBuilder.Append(" | ");
+            titleBuilder.Append("Compression: " + program.Flash.Compression);
+            Console.Title += titleBuilder;
         }
     }
 }
