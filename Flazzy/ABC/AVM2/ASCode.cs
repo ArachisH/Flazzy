@@ -299,7 +299,8 @@ namespace Flazzy.ABC.AVM2
                     {
                         foreach (ASInstruction instruction in block)
                         {
-                            if (!Local.IsSetLocal(instruction.OP)) continue;
+                            if (!Local.IsValid(instruction.OP)) continue;
+                            if (Local.IsGetLocal(instruction.OP)) continue;
                             var bodyLocal = (Local)instruction;
 
                             if (bodyLocal.Register == local.Register)
@@ -312,11 +313,14 @@ namespace Flazzy.ABC.AVM2
                     }
                 }
 
-                foreach (KeyValuePair<Jumper, ASInstruction> exitSet in _forwardExits)
+                IEnumerable<KeyValuePair<Jumper, ASInstruction>> exitSets = _forwardExits.Concat(_backExits);
+                foreach (KeyValuePair<Jumper, ASInstruction> exitSet in exitSets)
                 {
                     if (exitSet.Key == jumper) continue;
                     // Is another jump instruction(or exit) inside of the 'block' we're going to remove?
-                    if (block.Contains(exitSet.Key) && !block.Contains(exitSet.Value))
+                    // If a full jump instruction is within this jump body, don't worry about removing it since it will never be used.
+                    if (block.Contains(exitSet.Key) && !block.Contains(exitSet.Value) ||
+                        block.Contains(exitSet.Value) && !block.Contains(exitSet.Key))
                     {
                         // Keep the jump instruction, since it will corrupt the other jump instruction that is using it.
                         cleaned.Add(jumper);
@@ -331,7 +335,7 @@ namespace Flazzy.ABC.AVM2
                 cleaned.Remove(pusher);
             }
 
-            if (isJumping == false)
+            if (isJumping == false || isBackwardsJump)
             {
                 block = null;
             }
