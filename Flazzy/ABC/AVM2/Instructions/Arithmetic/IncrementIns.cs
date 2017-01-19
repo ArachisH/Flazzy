@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class IncrementIns : Instruction
+    public class IncrementIns : ASInstruction
     {
         public IncrementIns()
             : base(OPCode.Increment)

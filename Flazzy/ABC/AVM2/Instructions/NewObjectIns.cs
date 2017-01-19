@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class NewObjectIns : Instruction
+    public class NewObjectIns : ASInstruction
     {
         public int ArgCount { get; set; }
 

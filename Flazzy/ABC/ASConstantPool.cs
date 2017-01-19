@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using Flazzy.IO;
 
 namespace Flazzy.ABC
@@ -148,6 +148,20 @@ namespace Flazzy.ABC
                 index = (constants.Count - 1);
             }
             return index;
+        }
+
+        public IEnumerable<int> GetMultinameIndices(string name)
+        {
+            for (int i = 1; i < Multinames.Count; i++)
+            {
+                if (Multinames[i].Name == name)
+                    yield return i;
+            }
+        }
+        public IEnumerable<ASMultiname> GetMultinames(string name)
+        {
+            return Multinames
+                .Where(m => m.Name == name);
         }
 
         private ASMultiname ReadMultiname()

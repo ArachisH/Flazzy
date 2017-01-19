@@ -68,6 +68,9 @@ namespace Flazzy.ABC
             }
 
             ConstructorIndex = input.ReadInt30();
+            Constructor.IsConstructor = true;
+            Constructor.Container = this;
+
             PopulateTraits(input);
         }
 

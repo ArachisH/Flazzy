@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public abstract class Jumper : Instruction
+    public abstract class Jumper : ASInstruction
     {
         /// <summary>
         /// Gets or sets the number of bytes to jump.
@@ -49,6 +49,7 @@ namespace Flazzy.ABC.AVM2.Instructions
                 machine.Values.Pop();
             }
         }
+        public abstract bool? RunCondition(ASMachine machine);
 
         protected override void WriteValuesTo(FlashWriter output)
         {

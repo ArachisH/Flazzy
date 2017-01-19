@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class FindPropStrictIns : Instruction
+    public class FindPropStrictIns : ASInstruction
     {
         public ASMultiname PropertyName
         {

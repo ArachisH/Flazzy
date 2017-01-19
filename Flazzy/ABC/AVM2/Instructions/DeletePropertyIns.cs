@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class DeletePropertyIns : Instruction
+    public class DeletePropertyIns : ASInstruction
     {
         public ASMultiname PropertyName
         {

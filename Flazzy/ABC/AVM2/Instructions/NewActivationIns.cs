@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class NewActivationIns : Instruction
+    public class NewActivationIns : ASInstruction
     {
         public NewActivationIns()
             : base(OPCode.NewActivation)

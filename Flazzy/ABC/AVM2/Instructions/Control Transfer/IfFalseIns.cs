@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class IfFalseIns : Brancher
+    public class IfFalseIns : Jumper
     {
         public IfFalseIns()
             : base(OPCode.IfFalse)
@@ -15,6 +15,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             var value = (machine.Values.Pop() as bool?);
             if (value == null) return null;
+
             return (value == false);
         }
     }

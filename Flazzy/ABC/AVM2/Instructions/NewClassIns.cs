@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class NewClassIns : Instruction
+    public class NewClassIns : ASInstruction
     {
         public ASClass Class
         {

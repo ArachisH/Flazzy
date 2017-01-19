@@ -4,7 +4,7 @@ using Flazzy.IO;
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public abstract class Instruction : FlashItem
+    public abstract class ASInstruction : FlashItem
     {
         public OPCode OP { get; }
         protected ABCFile ABC { get; }
@@ -16,11 +16,11 @@ namespace Flazzy.ABC.AVM2.Instructions
             }
         }
 
-        public Instruction(OPCode op)
+        public ASInstruction(OPCode op)
         {
             OP = op;
         }
-        protected Instruction(OPCode op, ABCFile abc)
+        protected ASInstruction(OPCode op, ABCFile abc)
             : this(op)
         {
             ABC = abc;
@@ -70,7 +70,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             }
         }
 
-        public static Instruction Create(ABCFile abc, FlashReader input)
+        public static ASInstruction Create(ABCFile abc, FlashReader input)
         {
             var op = (OPCode)input.ReadByte();
             switch (op)

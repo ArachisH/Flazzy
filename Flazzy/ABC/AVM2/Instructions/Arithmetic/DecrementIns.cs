@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class DecrementIns : Instruction
+    public class DecrementIns : ASInstruction
     {
         public DecrementIns()
             : base(OPCode.Decrement)

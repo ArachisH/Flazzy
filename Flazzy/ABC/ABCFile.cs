@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Collections.Generic;
+
 using Flazzy.IO;
 
 namespace Flazzy.ABC
@@ -54,6 +55,62 @@ namespace Flazzy.ABC
             PopulateList(Classes, ReadClass, Instances.Count);
             PopulateList(Scripts, ReadScript);
             PopulateList(MethodBodies, ReadMethodBody);
+        }
+
+        public int AddMethod(ASMethod method, bool recycle = true)
+        {
+            return AddValue(Methods, method, recycle);
+        }
+        public int AddMetadata(ASMetadata metadata, bool recycle = true)
+        {
+            return AddValue(Metadata, metadata, recycle);
+        }
+        public int AddClass(ASClass @class, ASInstance instance, bool recycle = true)
+        {
+            AddValue(Classes, @class, recycle);
+            return AddValue(Instances, instance, recycle);
+        }
+        public int AddScript(ASScript script, bool recycle = true)
+        {
+            return AddValue(Scripts, script, recycle);
+        }
+        public int AddMethodBody(ASMethodBody methodBody, bool recycle = true)
+        {
+            if (methodBody.Method != null)
+            {
+                methodBody.Method.Body = methodBody;
+            }
+            return AddValue(MethodBodies, methodBody, recycle);
+        }
+        protected virtual int AddValue<T>(List<T> valueList, T value, bool recycle)
+        {
+            int index = (recycle ?
+                valueList.IndexOf(value) : -1);
+
+            if (index == -1)
+            {
+                index = (valueList.Count);
+                valueList.Add(value);
+            }
+            return index;
+        }
+
+        public IEnumerable<ASClass> GetClasses(string qualifiedName)
+        {
+            return GetClasses(qualifiedName, false);
+        }
+        public IEnumerable<ASClass> GetClasses(string qualifiedName, bool igoreCase)
+        {
+            StringComparison comparison = (igoreCase ?
+                StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+            foreach (ASClass @class in Classes)
+            {
+                if (@class.Instance.QName.Name.Equals(qualifiedName, comparison))
+                {
+                    yield return @class;
+                }
+            }
         }
 
         private ASMethod ReadMethod(int index)

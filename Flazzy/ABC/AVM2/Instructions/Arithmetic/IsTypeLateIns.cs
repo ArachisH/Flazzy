@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class IsTypeLateIns : Instruction
+    public class IsTypeLateIns : ASInstruction
     {
         public IsTypeLateIns()
             : base(OPCode.IsTypeLate)

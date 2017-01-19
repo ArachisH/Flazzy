@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class NextNameIns : Instruction
+    public class NextNameIns : ASInstruction
     {
         public NextNameIns()
             : base(OPCode.NextName)

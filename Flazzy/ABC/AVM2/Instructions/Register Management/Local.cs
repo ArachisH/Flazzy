@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public abstract class Local : Instruction
+    public abstract class Local : ASInstruction
     {
         public virtual int Register { get; set; }
 

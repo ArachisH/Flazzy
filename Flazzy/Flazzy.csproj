@@ -105,7 +105,6 @@
     <Compile Include="ABC\AVM2\Instructions\ConstructIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\ConstructPropIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\ConstructSuperIns.cs" />
-    <Compile Include="ABC\AVM2\Instructions\Control Transfer\Brancher.cs" />
     <Compile Include="ABC\AVM2\Instructions\Control Transfer\IfEqualIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Control Transfer\IfFalseIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Control Transfer\IfGreaterEqualIns.cs" />
@@ -143,7 +142,7 @@
     <Compile Include="ABC\AVM2\Instructions\HasNextIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\InitPropertyIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\InstanceOfIns.cs" />
-    <Compile Include="ABC\AVM2\Instructions\Instruction.cs" />
+    <Compile Include="ABC\AVM2\Instructions\ASInstruction.cs" />
     <Compile Include="ABC\AVM2\Instructions\LabelIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\LookUpSwitchIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\NewActivationIns.cs" />

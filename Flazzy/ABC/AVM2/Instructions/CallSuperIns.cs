@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class CallSuperIns : Instruction
+    public class CallSuperIns : ASInstruction
     {
         public ASMultiname MethodName
         {

@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class SwapIns : Instruction
+    public class SwapIns : ASInstruction
     {
         public SwapIns()
             : base(OPCode.Swap)

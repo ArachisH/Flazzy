@@ -26,7 +26,7 @@ namespace Flazzy.ABC
         {
             get
             {
-                return Method.Trait.QName;
+                return Method.Trait?.QName;
             }
         }
         protected override string DebuggerDisplay

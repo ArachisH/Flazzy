@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class CoerceIns : Instruction
+    public class CoerceIns : ASInstruction
     {
         public ASMultiname TypeName
         {

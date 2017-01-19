@@ -4,7 +4,7 @@ using Flazzy.IO;
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class IfNotGreaterEqualIns : Brancher
+    public class IfNotGreaterEqualIns : Jumper
     {
         public IfNotGreaterEqualIns()
             : base(OPCode.IfNGe)
@@ -15,11 +15,11 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         public override bool? RunCondition(ASMachine machine)
         {
-            var right = (machine.Values.Pop() as IComparable);
-            var left = (machine.Values.Pop() as IComparable);
+            var right = machine.Values.Pop();
+            var left = machine.Values.Pop();
             if (left == null || right == null) return null;
 
-            return !(left.CompareTo(right) >= 0);
+            return !(Convert.ToDouble(left) >= Convert.ToDouble(right));
         }
     }
 }
