@@ -29,7 +29,6 @@ namespace Flazzy
         { }
         public ShockwaveFlash(byte[] data)
             : this(new MemoryStream(data))
-
         { }
         public ShockwaveFlash(Stream input)
             : this(input, false)
@@ -37,7 +36,6 @@ namespace Flazzy
         public ShockwaveFlash(Stream input, bool leaveOpen)
             : this(new FlashReader(input, leaveOpen))
         { }
-
         protected ShockwaveFlash(FlashReader input)
         {
             _input = input;
