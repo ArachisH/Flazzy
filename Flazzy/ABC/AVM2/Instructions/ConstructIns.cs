@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class ConstructIns : Instruction
+    public class ConstructIns : ASInstruction
     {
         /// <summary>
         /// Gets or sets the number of arguments present on the stack.

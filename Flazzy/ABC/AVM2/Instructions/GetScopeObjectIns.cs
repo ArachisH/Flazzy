@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class GetScopeObjectIns : Instruction
+    public class GetScopeObjectIns : ASInstruction
     {
         public byte ScopeIndex { get; set; }
 
@@ -21,7 +21,6 @@ namespace Flazzy.ABC.AVM2.Instructions
         }
         public override void Execute(ASMachine machine)
         {
-            // TODO: Pop from Scope
             machine.Values.Push(null);
         }
 

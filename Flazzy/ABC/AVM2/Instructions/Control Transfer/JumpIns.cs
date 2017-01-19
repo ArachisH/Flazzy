@@ -10,5 +10,10 @@ namespace Flazzy.ABC.AVM2.Instructions
         public JumpIns(FlashReader input)
             : base(OPCode.Jump, input)
         { }
+
+        public override bool? RunCondition(ASMachine machine)
+        {
+            return true;
+        }
     }
 }

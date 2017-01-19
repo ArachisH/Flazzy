@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class GetLexIns : Instruction
+    public class GetLexIns : ASInstruction
     {
         public ASMultiname TypeName
         {

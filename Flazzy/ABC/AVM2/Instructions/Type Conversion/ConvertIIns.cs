@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class ConvertIIns : Instruction
+    public class ConvertIIns : ASInstruction
     {
         public ConvertIIns()
             : base(OPCode.Convert_i)

@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class DebugIns : Instruction
+    public class DebugIns : ASInstruction
     {
         public string Name
         {

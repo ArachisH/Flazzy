@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class PopScopeIns : Instruction
+    public class PopScopeIns : ASInstruction
     {
         public PopScopeIns()
             : base(OPCode.PopScope)

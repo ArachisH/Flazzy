@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class AsTypeLateIns : Instruction
+    public class AsTypeLateIns : ASInstruction
     {
         public AsTypeLateIns()
             : base(OPCode.AsTypeLate)

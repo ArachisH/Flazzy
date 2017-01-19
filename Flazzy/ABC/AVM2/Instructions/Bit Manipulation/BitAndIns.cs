@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class BitAndIns : Instruction
+    public class BitAndIns : ASInstruction
     {
         public BitAndIns()
             : base(OPCode.BitAnd)
@@ -23,8 +23,8 @@ namespace Flazzy.ABC.AVM2.Instructions
             object left = machine.Values.Pop();
             if (right != null && left != null)
             {
-                int iLeft = Convert.ToInt32(left);
-                int iRight = Convert.ToInt32(right);
+                var iLeft = (int)Convert.ToDouble(left);
+                var iRight = (int)Convert.ToDouble(right);
                 result = (iLeft & iRight);
             }
             machine.Values.Push(result);

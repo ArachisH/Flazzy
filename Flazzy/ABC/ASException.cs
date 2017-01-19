@@ -10,15 +10,15 @@ namespace Flazzy.ABC
         public int From { get; set; }
         public int Target { get; set; }
 
-        public string VariableName
+        public ASMultiname VariableName
         {
-            get { return ABC.Pool.Strings[VariableNameIndex]; }
+            get { return ABC.Pool.Multinames[VariableNameIndex]; }
         }
         public int VariableNameIndex { get; set; }
 
-        public string ExceptionType
+        public ASMultiname ExceptionType
         {
-            get { return ABC.Pool.Strings[ExceptionTypeIndex]; }
+            get { return ABC.Pool.Multinames[ExceptionTypeIndex]; }
         }
         public int ExceptionTypeIndex { get; set; }
 

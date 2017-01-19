@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public abstract class ArithmeticInstruction : Instruction
+    public abstract class ArithmeticInstruction : ASInstruction
     {
         public ArithmeticInstruction(OPCode op)
             : base(op)

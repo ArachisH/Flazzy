@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class EscXAttrIns : Instruction
+    public class EscXAttrIns : ASInstruction
     {
         public EscXAttrIns()
             : base(OPCode.Esc_XAttr)

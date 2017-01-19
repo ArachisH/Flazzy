@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class RShiftIns : Instruction
+    public class RShiftIns : ASInstruction
     {
         public RShiftIns()
             : base(OPCode.RShift)

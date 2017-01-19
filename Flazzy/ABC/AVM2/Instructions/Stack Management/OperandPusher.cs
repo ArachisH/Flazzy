@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public abstract class OperandPusher : Instruction
+    public abstract class OperandPusher : ASInstruction
     {
         public virtual object Value { get; set; }
 

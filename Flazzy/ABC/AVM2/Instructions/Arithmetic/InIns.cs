@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class InIns : Instruction
+    public class InIns : ASInstruction
     {
         public InIns()
             : base(OPCode.In)

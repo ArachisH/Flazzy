@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class CheckFilterIns : Instruction
+    public class CheckFilterIns : ASInstruction
     {
         public CheckFilterIns()
             : base(OPCode.CheckFilter)

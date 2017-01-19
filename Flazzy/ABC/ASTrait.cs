@@ -71,6 +71,7 @@ namespace Flazzy.ABC
 
         public int Id { get; set; }
         public List<int> MetadataIndices { get; }
+
         public bool IsStatic { get; internal set; }
 
         public TraitKind Kind { get; set; }

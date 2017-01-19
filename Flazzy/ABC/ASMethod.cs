@@ -20,9 +20,12 @@ namespace Flazzy.ABC
         public int ReturnTypeIndex { get; set; }
 
         public MethodFlags Flags { get; set; }
-        public ASTrait Trait { get; internal set; }
         public List<ASParameter> Parameters { get; }
+
+        public ASTrait Trait { get; internal set; }
         public ASMethodBody Body { get; internal set; }
+        public bool IsConstructor { get; internal set; }
+        public ASContainer Container { get; internal set; }
 
         protected override string DebuggerDisplay
         {
@@ -84,16 +87,26 @@ namespace Flazzy.ABC
 
         public override string ToAS3()
         {
+            string prefix = (Trait?.QName ?? Container.QName)
+                .Namespace.GetAS3Modifiers();
+
+            if (!IsConstructor && Trait.IsStatic)
+            {
+                prefix += " static";
+            }
+            prefix += " function ";
+            prefix += (Trait?.QName ?? Container.QName).Name; ;
+
             string parameters = string.Join(
                 ", ", Parameters.Select(p => p.ToAS3()));
 
-            string signature = $"{Trait?.QName.Name}({parameters})";
+            string suffix = $"({parameters})";
             if (ReturnType != null)
             {
-                signature += (":" + ReturnType.Name);
+                suffix += (":" + ReturnType.Name);
             }
 
-            return signature;
+            return $"{prefix}{suffix}";
         }
         public override void WriteTo(FlashWriter output)
         {

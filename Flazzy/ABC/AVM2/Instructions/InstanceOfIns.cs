@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class InstanceOfIns : Instruction
+    public class InstanceOfIns : ASInstruction
     {
         public InstanceOfIns()
             : base(OPCode.InstanceOf)

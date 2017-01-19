@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class CallPropVoidIns : Instruction
+    public class CallPropVoidIns : ASInstruction
     {
         public ASMultiname PropertyName
         {
@@ -29,10 +29,6 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             return (ArgCount + ResolveMultinamePops(PropertyName) + 1);
         }
-        public override int GetPushCount()
-        {
-            return 0;
-        }
         public override void Execute(ASMachine machine)
         {
             for (int i = 0; i < ArgCount; i++)
@@ -41,7 +37,6 @@ namespace Flazzy.ABC.AVM2.Instructions
             }
             ResolveMultiname(machine, PropertyName);
             object obj = machine.Values.Pop();
-            machine.Values.Push(null);
         }
 
         protected override void WriteValuesTo(FlashWriter output)

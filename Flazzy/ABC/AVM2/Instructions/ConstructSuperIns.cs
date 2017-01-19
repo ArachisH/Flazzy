@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class ConstructSuperIns : Instruction
+    public class ConstructSuperIns : ASInstruction
     {
         /// <summary>
         /// Gets or sets the number of arguments present on the stack.
@@ -22,10 +22,6 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             return (ArgCount + 1);
         }
-        public override int GetPushCount()
-        {
-            return 0;
-        }
         public override void Execute(ASMachine machine)
         {
             for (int i = 0; i < ArgCount; i++)
@@ -33,7 +29,6 @@ namespace Flazzy.ABC.AVM2.Instructions
                 machine.Values.Pop();
             }
             object obj = machine.Values.Pop();
-            machine.Values.Push(null);
         }
 
         protected override void WriteValuesTo(FlashWriter output)

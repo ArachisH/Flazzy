@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class BitXorIns : Instruction
+    public class BitXorIns : ASInstruction
     {
         public BitXorIns()
             : base(OPCode.BitXor)

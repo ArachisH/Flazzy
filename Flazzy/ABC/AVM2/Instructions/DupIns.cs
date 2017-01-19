@@ -1,23 +1,18 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class DupIns : Instruction
+    public class DupIns : ASInstruction
     {
         public DupIns()
             : base(OPCode.Dup)
         { }
 
-        public override int GetPopCount()
+        public override int GetPushCount()
         {
             return 1;
         }
-        public override int GetPushCount()
-        {
-            return 2;
-        }
         public override void Execute(ASMachine machine)
         {
-            object value = machine.Values.Pop();
-            machine.Values.Push(value);
+            object value = machine.Values.Peek();
             machine.Values.Push(value);
         }
     }

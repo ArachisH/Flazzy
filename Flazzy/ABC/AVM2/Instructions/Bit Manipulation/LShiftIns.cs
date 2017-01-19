@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class LShiftIns : Instruction
+    public class LShiftIns : ASInstruction
     {
         public LShiftIns()
             : base(OPCode.LShift)
