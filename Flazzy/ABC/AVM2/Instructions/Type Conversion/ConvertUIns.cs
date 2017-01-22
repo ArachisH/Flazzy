@@ -19,10 +19,10 @@ namespace Flazzy.ABC.AVM2.Instructions
         public override void Execute(ASMachine machine)
         {
             object result = null;
-            object value = machine.Values.Pop();
+            dynamic value = machine.Values.Pop();
             if (value != null)
             {
-                result = Convert.ToUInt32(value);
+                result = (uint)Convert.ToDouble(value);
             }
             machine.Values.Push(result);
         }
