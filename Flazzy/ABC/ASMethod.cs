@@ -87,15 +87,18 @@ namespace Flazzy.ABC
 
         public override string ToAS3()
         {
-            string prefix = (Trait?.QName ?? Container.QName)
-                .Namespace.GetAS3Modifiers();
+            string prefix = (Trait?.QName ?? Container?.QName)
+                ?.Namespace.GetAS3Modifiers();
 
-            if (!IsConstructor && Trait.IsStatic)
+            if (!string.IsNullOrWhiteSpace(prefix))
             {
-                prefix += " static";
+                if (!IsConstructor && Trait.IsStatic)
+                {
+                    prefix += " static";
+                }
+                prefix += " function ";
+                prefix += (Trait?.QName ?? Container.QName).Name; ;
             }
-            prefix += " function ";
-            prefix += (Trait?.QName ?? Container.QName).Name; ;
 
             string parameters = string.Join(
                 ", ", Parameters.Select(p => p.ToAS3()));
