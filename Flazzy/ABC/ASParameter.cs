@@ -30,6 +30,14 @@ namespace Flazzy.ABC
         public bool IsOptional { get; set; }
         public ConstantKind ValueKind { get; set; }
 
+        protected override string DebuggerDisplay
+        {
+            get
+            {
+                return ToAS3();
+            }
+        }
+
         public ASParameter(ABCFile abc, ASMethod method)
             : base(abc)
         {
@@ -52,7 +60,28 @@ namespace Flazzy.ABC
                 type += ">";
             }
 
-            return $"{name}:{type}";
+            string optionalSuffix = string.Empty;
+            if (Value != null)
+            {
+                optionalSuffix += " = ";
+                switch (ValueKind)
+                {
+                    case ConstantKind.String:
+                    optionalSuffix += $"\"{Value}\"";
+                    break;
+
+                    case ConstantKind.True:
+                    case ConstantKind.False:
+                    optionalSuffix += Value.ToString().ToLower();
+                    break;
+
+                    default:
+                    optionalSuffix += Value;
+                    break;
+                }
+            }
+
+            return $"{name}:{type}{optionalSuffix}";
         }
         public override void WriteTo(FlashWriter output)
         {
