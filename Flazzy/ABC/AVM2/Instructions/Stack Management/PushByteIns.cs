@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class PushByteIns : OperandPusher
+    public class PushByteIns : Primitive
     {
         private byte _value;
         new public byte Value
