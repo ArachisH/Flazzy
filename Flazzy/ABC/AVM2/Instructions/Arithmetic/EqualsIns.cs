@@ -1,20 +1,14 @@
-﻿using System;
-
-namespace Flazzy.ABC.AVM2.Instructions
+﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class EqualsIns : ArithmeticInstruction
+    public class EqualsIns : Computation
     {
         public EqualsIns()
             : base(OPCode.Equals)
         { }
 
-        protected override object Execute(object left, object right)
+        protected override object Execute(dynamic left, dynamic right)
         {
-            var cLeft = (left as IComparable);
-            var cRight = (right as IComparable);
-            if (cLeft == null || cRight == null) return null;
-
-            return (cLeft.CompareTo(cRight) == 0);
+            return (left == right);
         }
     }
 }
