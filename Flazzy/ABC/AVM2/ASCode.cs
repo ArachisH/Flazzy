@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -12,24 +11,19 @@ namespace Flazzy.ABC.AVM2
     {
         private readonly ABCFile _abc;
         private readonly ASMethodBody _body;
-        private readonly List<ExceptionProfile> _exceptions;
-        private readonly Dictionary<Jumper, ASInstruction> _backExits;
-        private readonly Dictionary<Jumper, ASInstruction> _forwardExits;
-        private readonly Dictionary<ASInstruction, List<ASInstruction>> _switchExits;
 
         public List<ASInstruction> Instructions { get; }
+        public Dictionary<Jumper, ASInstruction> JumpExits { get; }
+        public Dictionary<LookUpSwitchIns, List<ASInstruction>> SwitchExits { get; }
 
         public ASCode(ABCFile abc, ASMethodBody body)
         {
             _abc = abc;
             _body = body;
-            _exceptions = new List<ExceptionProfile>();
-            _forwardExits = new Dictionary<Jumper, ASInstruction>();
-            _backExits = new Dictionary<Jumper, ASInstruction>();
-            _switchExits = new Dictionary<ASInstruction, List<ASInstruction>>();
 
             Instructions = new List<ASInstruction>();
-
+            JumpExits = new Dictionary<Jumper, ASInstruction>();
+            SwitchExits = new Dictionary<LookUpSwitchIns, List<ASInstruction>>();
             LoadInstructions();
         }
 
@@ -38,17 +32,63 @@ namespace Flazzy.ABC.AVM2
             var machine = new ASMachine(this, _body.LocalCount);
             var cleaned = new List<ASInstruction>(Instructions.Count);
             var valuePushers = new Stack<ASInstruction>(_body.MaxStack);
+            KeyValuePair<Jumper, ASInstruction>[] jumpExits = JumpExits.ToArray();
+            KeyValuePair<LookUpSwitchIns, List<ASInstruction>>[] switchExits = SwitchExits.ToArray();
             for (int i = 0; i < Instructions.Count; i++)
             {
                 ASInstruction instruction = Instructions[i];
                 if (Jumper.IsValid(instruction.OP))
                 {
-                    i += VerifyJumper(machine,
+                    i += GetFinalJumpCount(machine,
                         (Jumper)instruction, cleaned, valuePushers);
                 }
                 else
                 {
                     instruction.Execute(machine);
+                    #region Arithmetic Optimization
+                    if (Computation.IsValid(instruction.OP))
+                    {
+                        object result = machine.Values.Pop();
+                        ASInstruction rightPusher = valuePushers.Pop();
+                        ASInstruction leftPusher = valuePushers.Pop();
+                        if (!Local.IsValid(leftPusher.OP) && !Local.IsValid(rightPusher.OP) && result != null)
+                        {
+                            // Constant values found, push result instead of having it do the calculation everytime.
+                            cleaned.Remove(leftPusher);
+                            cleaned.Remove(rightPusher);
+                            instruction = Primitive.Create(_abc, result);
+
+                            foreach (KeyValuePair<Jumper, ASInstruction> jumpExit in jumpExits)
+                            {
+                                if (leftPusher == jumpExit.Value)
+                                {
+                                    JumpExits[jumpExit.Key] = instruction;
+                                    // Do not break, another jump instruction can share the same exit.
+                                }
+                            }
+                            foreach (KeyValuePair<LookUpSwitchIns, List<ASInstruction>> switchExit in switchExits)
+                            {
+                                List<ASInstruction> cases = switchExit.Value;
+                                for (int j = 0; j < cases.Count; j++)
+                                {
+                                    ASInstruction exit = cases[j];
+                                    if (leftPusher == exit)
+                                    {
+                                        cases[j] = instruction;
+                                    }
+                                }
+                            }
+                            instruction.Execute(machine);
+                        }
+                        else
+                        {
+                            // Do not attempt to optimize when a local is being use, as these values can change.
+                            valuePushers.Push(leftPusher);
+                            valuePushers.Push(rightPusher);
+                            machine.Values.Push(result);
+                        }
+                    }
+                    #endregion
                     cleaned.Add(instruction);
 
                     int popCount = instruction.GetPopCount();
@@ -64,180 +104,148 @@ namespace Flazzy.ABC.AVM2
                 }
             }
 
-            #region Jump Instruction Fixing
-            ASInstruction[] jumpers = _forwardExits.Keys.ToArray();
-            foreach (Jumper jumper in jumpers)
+            jumpExits = JumpExits.ToArray(); // Global property could have been updated.
+            foreach (KeyValuePair<Jumper, ASInstruction> jumpExit in jumpExits)
             {
-                ASInstruction[] body = GetBody(jumper);
-                ASInstruction final = _forwardExits[jumper];
+                if (Instructions.IndexOf(jumpExit.Key) >
+                    Instructions.IndexOf(jumpExit.Value))
+                {
+                    // This is not a forward jump instruction, since the exit appears before the jump.
+                    continue;
+                }
 
                 // True if it still has the jump instruction, but the instruction
                 // needed to determine the final instruction to jump is not present.
-                if (cleaned.Contains(jumper) && !cleaned.Contains(final))
+                if (cleaned.Contains(jumpExit.Key) && !cleaned.Contains(jumpExit.Value))
                 {
                     // Start at the index of the instruction that should come after the final instruction to jump.
-                    for (int j = (Instructions.IndexOf(final) + 1); j < Instructions.Count; j++)
+                    for (int j = (Instructions.IndexOf(jumpExit.Value) + 1); j < Instructions.Count; j++)
                     {
                         ASInstruction afterEnd = Instructions[j];
-                        if (cleaned.Contains(afterEnd)) // Check if this instruction wasn't removed in the cleaning process, otherwise, get the next instruction.
+                        int exitIndex = cleaned.IndexOf(afterEnd);
+                        if (exitIndex != -1) // Does this instruction exist in the cleaned output?; Otherwise, get instruction that comes after it.
                         {
-                            int finalIndex = (cleaned.IndexOf(afterEnd) - 1); // This should be the new final instruction index to jump.
-                            SetEndOfJump(jumper, cleaned[finalIndex]);
+                            JumpExits[jumpExit.Key] = cleaned[exitIndex];
                             break;
                         }
                     }
                 }
             }
-            #endregion
 
             Instructions.Clear();
             Instructions.AddRange(cleaned);
         }
-        public int FindOPIndex(OPCode op)
+        public int IndexOf(OPCode op)
         {
             return Instructions.FindIndex(i => i.OP == op);
         }
-        public ASInstruction[] GetBody(Jumper jumper)
+        public bool IsBackwardsJump(Jumper jumper)
         {
-            int scopeStart = (Instructions.IndexOf(jumper) + 1);
-            int scopeEnd = (Instructions.IndexOf(_forwardExits[jumper]) + 1);
-
-            ASInstruction[] body = new ASInstruction[scopeEnd - scopeStart];
-            Instructions.CopyTo(scopeStart, body, 0, body.Length);
-            return body;
+            return (JumpExits[jumper].OP == OPCode.Label);
         }
-        public void SetEndOfJump(Jumper jumper, ASInstruction end)
+        public int IndexOf(ASInstruction instruction)
         {
-            if (!Instructions.Contains(end))
-            {
-                throw new ArgumentException(
-                    "The given instruction must first be added to the Instructions property.",
-                    nameof(end));
-            }
-            _forwardExits[jumper] = end;
+            return Instructions.IndexOf(instruction);
+        }
+        public ASInstruction[] GetJumpBlock(Jumper jumper)
+        {
+            int blockStart = (Instructions.IndexOf(jumper) + 1);
+            int scopeEnd = Instructions.IndexOf(JumpExits[jumper]);
+
+            ASInstruction[] body = new ASInstruction[scopeEnd - blockStart];
+            Instructions.CopyTo(blockStart, body, 0, body.Length);
+            return body;
         }
 
         private void LoadInstructions()
         {
-            var labels = new Dictionary<long, ASInstruction>();
-            var jumperSets = new Dictionary<long, List<Jumper>>();
-            var instructions = new Dictionary<long, ASInstruction>();
-            var forwardExits = new Dictionary<long, List<ASInstruction>>();
-            var debugInstructions = new SortedDictionary<int, DebugIns>();
-            using (var inCode = new FlashReader(_body.Code))
+            var marks = new Dictionary<long, ASInstruction>();
+            var sharedExits = new Dictionary<long, List<Jumper>>();
+            using (var input = new FlashReader(_body.Code))
             {
-                while (inCode.IsDataAvailable)
+                while (input.IsDataAvailable)
                 {
-                    long previousPos = inCode.Position;
-                    var instruct = ASInstruction.Create(_abc, inCode);
-                    Instructions.Add(instruct);
+                    long previousPosition = input.Position;
+                    var instruction = ASInstruction.Create(_abc, input);
 
-                    switch (instruct.OP)
-                    {
-                        case OPCode.Label:
-                        {
-                            labels.Add(inCode.Position, instruct);
-                            break;
-                        }
-                        case OPCode.Debug:
-                        {
-                            var debugIns = (DebugIns)instruct;
-                            debugInstructions[debugIns.RegisterIndex] = debugIns;
-                            break;
-                        }
-                    }
-
-                    if (_body.Exceptions.Count > 0)
-                    {
-                        instructions[previousPos] = instruct;
-                    }
-                    else if (instructions.ContainsKey(inCode.Position))
-                    {
-                        instructions[inCode.Position] = instruct;
-                    }
-
-                    if (instruct.OP == OPCode.LookUpSwitch)
-                    {
-                        var lookUp = (LookUpSwitchIns)instruct;
-                        var switchExits2 = new List<ASInstruction>();
-                        for (int j = 0; j < lookUp.CaseOffsets.Count; j++)
-                        {
-                            uint offset = lookUp.CaseOffsets[j];
-                            long jumpExit = (previousPos + offset);
-                            switchExits2.Add(labels[jumpExit - uint.MaxValue]);
-                        }
-
-                        uint defaultOffset = lookUp.DefaultOffset;
-                        long defaultJumpExit = (previousPos + defaultOffset);
-                        if (defaultJumpExit <= inCode.Length)
-                        {
-                            forwardExits[defaultJumpExit] = switchExits2;
-                        }
-                        else switchExits2.Add(labels[defaultJumpExit - uint.MaxValue]);
-
-                        _switchExits[instruct] = switchExits2;
-                        continue;
-                    }
-
-                    List<ASInstruction> switchExits = null;
-                    if (forwardExits.TryGetValue(previousPos, out switchExits))
-                    {
-                        switchExits.Add(instruct);
-                    }
+                    marks[previousPosition] = instruction;
+                    Instructions.Add(instruction);
 
                     List<Jumper> jumpers = null;
-                    if (jumperSets.TryGetValue(inCode.Position, out jumpers))
+                    if (sharedExits.TryGetValue(previousPosition, out jumpers))
                     {
-                        jumpers.ForEach(
-                            j => _forwardExits.Add(j, instruct));
-
-                        jumperSets.Remove(inCode.Position);
+                        // This is an exit position for a jump instruction, or more.
+                        foreach (Jumper jumper in jumpers)
+                        {
+                            JumpExits.Add(jumper, instruction);
+                        }
+                        sharedExits.Remove(previousPosition);
                     }
 
-                    if (Jumper.IsValid(instruct.OP))
+                    if (instruction.OP == OPCode.LookUpSwitch)
                     {
-                        var jumper = (Jumper)instruct;
+                        var lookUp = (LookUpSwitchIns)instruction;
+                        var offsets = new List<uint>(lookUp.CaseOffsets);
+                        offsets.Add(lookUp.DefaultOffset);
+
+                        var cases = new List<ASInstruction>();
+                        foreach (uint offset in offsets)
+                        {
+                            ASInstruction exit = null;
+                            long exitPosition = (previousPosition + offset);
+                            if (exitPosition <= input.Length)
+                            {
+
+                            }
+                            else
+                            {
+                                exit = marks[(exitPosition - uint.MaxValue) - 1];
+                            }
+                            cases.Add(exit);
+                        }
+                        SwitchExits.Add(lookUp, cases);
+                    }
+                    else if (Jumper.IsValid(instruction.OP))
+                    {
+                        var jumper = (Jumper)instruction;
                         if (jumper.Offset == 0) continue;
 
-                        long jumpExit = (inCode.Position + jumper.Offset);
-                        if (jumpExit <= inCode.Length)
+                        long exitPosition = (input.Position + jumper.Offset);
+                        if (exitPosition == input.Length)
+                        {
+                            // Jump exit does not exist at this (non-existent)index, do not look for exit.
+                            continue;
+                        }
+                        else if (exitPosition < input.Length) // Forward jump.
                         {
                             jumpers = null;
-                            if (!jumperSets.TryGetValue(jumpExit, out jumpers))
+                            if (!sharedExits.TryGetValue(exitPosition, out jumpers))
                             {
                                 jumpers = new List<Jumper>();
-                                jumperSets.Add(jumpExit, jumpers);
+                                sharedExits.Add(exitPosition, jumpers);
                             }
                             jumpers.Add(jumper);
                         }
-                        else
+                        else // Backwards jump.
                         {
-                            ASInstruction labelIns = labels[jumpExit - uint.MaxValue];
-                            _backExits[jumper] = labelIns;
+                            var label = (LabelIns)marks[(exitPosition - uint.MaxValue) - 1];
+                            JumpExits.Add(jumper, label);
                         }
                     }
                 }
             }
-
-            if (_body.Exceptions.Count > 0)
-            {
-                _exceptions.AddRange(
-                    _body.Exceptions.Select(e => new ExceptionProfile(e)));
-
-                foreach (ExceptionProfile exception in _exceptions)
-                {
-                    exception.To = instructions[exception.Exception.To];
-                    exception.From = instructions[exception.Exception.From];
-                    exception.Target = instructions[exception.Exception.Target];
-                }
-            }
         }
-        private bool IsReverseJump(Jumper jumper)
+        private void Rewrite(FlashWriter output, ASInstruction instruction, long position)
         {
-            return (_backExits.ContainsKey(jumper));
+            long currentPosition = output.Position;
+            output.Position = position;
+
+            instruction.WriteTo(output);
+            output.Position = currentPosition;
         }
-        protected int VerifyJumper(ASMachine machine, Jumper jumper, List<ASInstruction> cleaned, Stack<ASInstruction> valuePushers)
+        private int GetFinalJumpCount(ASMachine machine, Jumper jumper, List<ASInstruction> cleaned, Stack<ASInstruction> valuePushers)
         {
+            var magicCount = 0;
             var locals = new List<Local>();
             var pushers = new List<ASInstruction>();
             bool? isJumping = jumper.RunCondition(machine);
@@ -252,15 +260,29 @@ namespace Flazzy.ABC.AVM2
                     pushers.Add(pusher);
                     // Get the instructions that were pushed by a GetLocal/N.
                     // These are used to determine whether the jump should be kept, since a local register could change within the jump body.
-                    if (Local.IsGetLocal(pusher.OP))
+                    if (Local.IsValid(pusher.OP))
                     {
                         locals.Add((Local)pusher);
+                    }
+                    else if (Primitive.IsValid(pusher.OP) ||
+                        pusher.OP == OPCode.Dup)
+                    {
+                        magicCount++;
                     }
                 }
             }
 
-            if (isJumping == null) // Output is not known, keep the instruction.
+            // Output is not known, keep the instruction.
+            if (isJumping == null)
             {
+                cleaned.Add(jumper);
+                return 0;
+            }
+
+            if (pushers.Count != (magicCount + locals.Count))
+            {
+                // One or more push instructions are wildcards, they have a 'history' of being modified.
+                // Keep this jump instruction, result could change.
                 cleaned.Add(jumper);
                 return 0;
             }
@@ -269,12 +291,15 @@ namespace Flazzy.ABC.AVM2
             ASInstruction exit = null;
             bool isBackwardsJump = false;
             IEnumerable<ASInstruction> block = null;
-            Dictionary<Jumper, ASInstruction> exits = null;
-            if (IsReverseJump(jumper))
+            if (!JumpExits.TryGetValue(jumper, out exit))
+            {
+                // This jump instruction should not be 'cleaned', keep it.
+                cleaned.Add(jumper);
+                return 0;
+            }
+            if (IsBackwardsJump(jumper))
             {
                 isBackwardsJump = true;
-                exit = _backExits[jumper];
-                exits = _backExits;
 
                 block = cleaned
                     .Skip(cleaned.IndexOf(exit) + 1)
@@ -282,10 +307,7 @@ namespace Flazzy.ABC.AVM2
             }
             else
             {
-                block = (jumper.Offset > 0 ? GetBody(jumper) : null);
-
-                exit = _forwardExits[jumper];
-                exits = _forwardExits;
+                block = (jumper.Offset > 0 ? GetJumpBlock(jumper) : null);
             }
 
 
@@ -313,18 +335,28 @@ namespace Flazzy.ABC.AVM2
                     }
                 }
 
-                IEnumerable<KeyValuePair<Jumper, ASInstruction>> exitSets = _forwardExits.Concat(_backExits);
-                foreach (KeyValuePair<Jumper, ASInstruction> exitSet in exitSets)
+                foreach (KeyValuePair<Jumper, ASInstruction> jumpExit in JumpExits)
                 {
-                    if (exitSet.Key == jumper) continue;
+                    if (jumpExit.Key == jumper) continue;
                     // Is another jump instruction(or exit) inside of the 'block' we're going to remove?
                     // If a full jump instruction is within this jump body, don't worry about removing it since it will never be used.
-                    if (block.Contains(exitSet.Key) && !block.Contains(exitSet.Value) ||
-                        block.Contains(exitSet.Value) && !block.Contains(exitSet.Key))
+                    if (block.Contains(jumpExit.Key) && !block.Contains(jumpExit.Value) ||
+                        block.Contains(jumpExit.Value) && !block.Contains(jumpExit.Key))
                     {
                         // Keep the jump instruction, since it will corrupt the other jump instruction that is using it.
                         cleaned.Add(jumper);
                         return 0;
+                    }
+                }
+                foreach (KeyValuePair<LookUpSwitchIns, List<ASInstruction>> switchExit in SwitchExits)
+                {
+                    foreach (ASInstruction caseExit in switchExit.Value)
+                    {
+                        if (block.Contains(caseExit))
+                        {
+                            cleaned.Add(jumper);
+                            return 0;
+                        }
                     }
                 }
             }
@@ -339,7 +371,7 @@ namespace Flazzy.ABC.AVM2
             {
                 block = null;
             }
-            exits.Remove(jumper);
+            JumpExits.Remove(jumper);
             return (block?.Count() ?? 0);
         }
 
@@ -354,123 +386,93 @@ namespace Flazzy.ABC.AVM2
         }
         public override void WriteTo(FlashWriter output)
         {
-            var offsets = new Dictionary<ASInstruction, long>();
-            var jumperStarts = new Dictionary<Jumper, long>();
-            var forwardExits = new Dictionary<ASInstruction, long>();
-            var backJumpExits = new Dictionary<ASInstruction, long>();
-            var jumperSets = new Dictionary<ASInstruction, List<Jumper>>();
+            var marks = new Dictionary<ASInstruction, long>();
+            var sharedExits = new Dictionary<ASInstruction, List<ASInstruction>>();
             for (int i = 0; i < Instructions.Count; i++)
             {
+                long previousPosition = output.Position;
                 ASInstruction instruction = Instructions[i];
-                if (instruction.OP == OPCode.LookUpSwitch)
-                {
-                    var lookUpIns = (LookUpSwitchIns)instruction;
-                    List<ASInstruction> switchLabels = _switchExits[lookUpIns];
-                    for (int j = 0; j < (switchLabels.Count - 1); j++)
-                    {
-                        ASInstruction label = switchLabels[j];
 
-                        long offset = backJumpExits[label];
-                        long jumpCount = (output.Position - offset);
-                        lookUpIns.CaseOffsets[j] = (uint)(uint.MaxValue - jumpCount);
-                    }
-
-                    ASInstruction defaultExit = switchLabels[switchLabels.Count - 1];
-                    if (defaultExit.OP == OPCode.Label)
-                    {
-                        long offset = backJumpExits[defaultExit];
-                        long jumpCount = (output.Position - offset);
-                        lookUpIns.DefaultOffset = (uint)(uint.MaxValue - jumpCount);
-                    }
-                    else
-                    {
-                        forwardExits[defaultExit] = (output.Position + 1);
-                    }
-                }
-                if (_body.Exceptions.Count > 0)
-                {
-                    offsets[instruction] = output.Position;
-                }
+                marks.Add(instruction, previousPosition);
                 instruction.WriteTo(output);
 
-                if (instruction.OP == OPCode.Label)
+                List<ASInstruction> jumpers = null;
+                if (sharedExits.TryGetValue(instruction, out jumpers))
                 {
-                    backJumpExits.Add(instruction, output.Position);
-                }
-
-                long defaultOffsetPos = 0;
-                if (forwardExits.TryGetValue(instruction, out defaultOffsetPos))
-                {
-                    long offset = (output.Position - defaultOffsetPos);
-                    long curPos = output.Position;
-
-                    output.Position = defaultOffsetPos;
-                    output.WriteUInt24((uint)offset);
-                    output.Position = curPos;
-                }
-
-                List<Jumper> jumpers = null;
-                if (jumperSets.TryGetValue(instruction, out jumpers))
-                {
-                    foreach (Jumper jumper in jumpers)
+                    foreach (ASInstruction jumper in jumpers)
                     {
-                        long jumpStart = jumperStarts[jumper];
-                        jumper.Offset = (uint)(output.Position - (jumpStart + 4));
+                        long position = marks[jumper];
+                        var fixedOffset = (uint)(previousPosition - (position + 4));
 
-                        long curPosition = output.Position;
-                        output.Position = jumpStart;
-
-                        jumper.WriteTo(output);
-                        output.Position = curPosition;
+                        ((Jumper)jumper).Offset = fixedOffset;
+                        Rewrite(output, jumper, position);
                     }
+                    sharedExits.Remove(instruction);
                 }
 
-                if (Jumper.IsValid(instruction.OP))
+                if (instruction.OP == OPCode.LookUpSwitch)
                 {
-                    ASInstruction endInstruction = null;
+                    var lookUp = (LookUpSwitchIns)instruction;
+                    List<ASInstruction> cases = SwitchExits[lookUp];
+                    for (int j = 0; j < cases.Count; j++)
+                    {
+                        ASInstruction exit = cases[j];
+                        long exitPosition = marks[exit];
+
+                        uint fixedOffset = 0;
+                        if (exit.OP != OPCode.Label)
+                        {
+
+                        }
+                        else
+                        {
+                            long jumpCount = (previousPosition - (exitPosition + 1));
+                            fixedOffset = (uint)(uint.MaxValue - jumpCount);
+                        }
+
+                        if (j == (cases.Count - 1))
+                        {
+                            lookUp.DefaultOffset = fixedOffset;
+                        }
+                        else
+                        {
+                            lookUp.CaseOffsets[j] = fixedOffset;
+                        }
+                    }
+                    Rewrite(output, lookUp, previousPosition);
+                }
+                else if (Jumper.IsValid(instruction.OP))
+                {
                     var jumper = (Jumper)instruction;
-                    if (_forwardExits.TryGetValue(jumper, out endInstruction))
+                    if (jumper.Offset == 0) continue;
+
+                    ASInstruction exit = null;
+                    if (!JumpExits.TryGetValue(jumper, out exit))
+                    {
+                        // An exit for this jump instruction could not be found, perhaps its' offset exceeds the index limit?
+                        continue;
+                    }
+                    else if (exit.OP != OPCode.Label || !marks.ContainsKey(exit)) // Forward jumps can have a label for an exit, as long as it is located ahead.
                     {
                         jumpers = null;
-                        if (!jumperSets.TryGetValue(endInstruction, out jumpers))
+                        if (!sharedExits.TryGetValue(exit, out jumpers))
                         {
-                            jumpers = new List<Jumper>();
-                            jumperSets.Add(endInstruction, jumpers);
+                            jumpers = new List<ASInstruction>();
+                            sharedExits.Add(exit, jumpers);
                         }
                         jumpers.Add(jumper);
-                        jumperStarts.Add(jumper, output.Position - 4);
                     }
-                    else if (_backExits.TryGetValue(jumper, out endInstruction))
+                    else // Backward jumps must always have a label for an exit, and must be behind this instruction.
                     {
-                        long jumpEnter = backJumpExits[endInstruction];
-                        long jumpCount = (output.Position - jumpEnter);
-                        jumper.Offset = (uint)(uint.MaxValue - jumpCount);
+                        long exitPosition = marks[exit];
+                        long jumpCount = (output.Position - (exitPosition + 1));
 
-                        output.Position -= 4;
-                        jumper.WriteTo(output);
+                        var fixedOffset = (uint)(uint.MaxValue - jumpCount);
+                        jumper.Offset = fixedOffset;
+
+                        Rewrite(output, jumper, previousPosition);
                     }
                 }
-            }
-
-            foreach (ExceptionProfile profile in _exceptions)
-            {
-                profile.Exception.To = (int)offsets[profile.To];
-                profile.Exception.From = (int)offsets[profile.From];
-                profile.Exception.Target = (int)offsets[profile.Target];
-            }
-        }
-
-        private class ExceptionProfile
-        {
-            public ASException Exception { get; }
-
-            public ASInstruction To { get; set; }
-            public ASInstruction From { get; set; }
-            public ASInstruction Target { get; set; }
-
-            public ExceptionProfile(ASException exception)
-            {
-                Exception = exception;
             }
         }
     }
