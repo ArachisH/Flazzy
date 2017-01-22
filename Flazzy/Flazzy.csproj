@@ -38,6 +38,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -66,7 +67,7 @@
     <Compile Include="ABC\AVM2\Instructions\ApplyTypeIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\AddIIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\AddIns.cs" />
-    <Compile Include="ABC\AVM2\Instructions\Arithmetic\ArithmeticInstruction.cs" />
+    <Compile Include="ABC\AVM2\Instructions\Arithmetic\Compuation.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\DecrementIIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\DecrementIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\DivideIns.cs" />
@@ -180,7 +181,7 @@
     <Compile Include="ABC\AVM2\Instructions\SetPropertyIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\SetSlotIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\SetSuperIns.cs" />
-    <Compile Include="ABC\AVM2\Instructions\Stack Management\OperandPusher.cs" />
+    <Compile Include="ABC\AVM2\Instructions\Stack Management\Primitive.cs" />
     <Compile Include="ABC\AVM2\Instructions\Stack Management\PushByteIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Stack Management\PushDoubleIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Stack Management\PushFalseIns.cs" />
