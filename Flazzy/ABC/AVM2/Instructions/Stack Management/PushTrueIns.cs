@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class PushTrueIns : OperandPusher
+    public class PushTrueIns : Primitive
     {
         public override object Value
         {

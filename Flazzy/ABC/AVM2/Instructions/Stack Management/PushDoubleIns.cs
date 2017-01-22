@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class PushDoubleIns : OperandPusher
+    public class PushDoubleIns : Primitive
     {
         private double _value;
         new public double Value
