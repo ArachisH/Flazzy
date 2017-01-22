@@ -1,19 +1,14 @@
-﻿using System;
-
-namespace Flazzy.ABC.AVM2.Instructions
+﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class SubtractIIns : ArithmeticInstruction
+    public class SubtractIIns : Computation
     {
         public SubtractIIns()
             : base(OPCode.Subtract_i)
         { }
 
-        protected override object Execute(object left, object right)
+        protected override object Execute(dynamic left, dynamic right)
         {
-            var dLeft = Convert.ToInt32(left);
-            var dRight = Convert.ToInt32(right);
-
-            return (dLeft - dRight);
+            return (left - right);
         }
     }
 }

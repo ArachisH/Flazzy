@@ -1,19 +1,14 @@
-﻿using System;
-
-namespace Flazzy.ABC.AVM2.Instructions
+﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class DivideIns : ArithmeticInstruction
+    public class DivideIns : Computation
     {
         public DivideIns()
             : base(OPCode.Divide)
         { }
 
-        protected override object Execute(object left, object right)
+        protected override object Execute(dynamic left, dynamic right)
         {
-            double dLeft = Convert.ToDouble(left);
-            double dRight = Convert.ToDouble(right);
-
-            return (dLeft / dRight);
+            return (left / right);
         }
     }
 }

@@ -1,18 +1,14 @@
-﻿using System;
-
-namespace Flazzy.ABC.AVM2.Instructions
+﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class MultiplyIns : ArithmeticInstruction
+    public class MultiplyIns : Computation
     {
         public MultiplyIns()
             : base(OPCode.Multiply)
         { }
 
-        protected override object Execute(object left, object right)
+        protected override object Execute(dynamic left, dynamic right)
         {
-            var iLeft = Convert.ToDouble(left);
-            var iRight = Convert.ToDouble(right);
-            return (iLeft * iRight);
+            return (left * right);
         }
     }
 }

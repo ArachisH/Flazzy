@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class StrictEqualsIns : ArithmeticInstruction
+    public class StrictEqualsIns : Computation
     {
         public StrictEqualsIns()
             : base(OPCode.StrictEquals)

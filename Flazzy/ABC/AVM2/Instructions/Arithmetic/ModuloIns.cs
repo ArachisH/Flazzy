@@ -1,18 +1,14 @@
-﻿using System;
-
-namespace Flazzy.ABC.AVM2.Instructions
+﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class ModuloIns : ArithmeticInstruction
+    public class ModuloIns : Computation
     {
         public ModuloIns()
             : base(OPCode.Modulo)
         { }
 
-        protected override object Execute(object left, object right)
+        protected override object Execute(dynamic left, dynamic right)
         {
-            var dLeft = Convert.ToDouble(left);
-            var dRight = Convert.ToDouble(right);
-            return (dLeft % dRight);
+            return (left % right);
         }
     }
 }

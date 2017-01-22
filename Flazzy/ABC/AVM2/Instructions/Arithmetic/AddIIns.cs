@@ -1,19 +1,14 @@
-﻿using System;
-
-namespace Flazzy.ABC.AVM2.Instructions
+﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class AddIIns : ArithmeticInstruction
+    public class AddIIns : Computation
     {
         public AddIIns()
             : base(OPCode.Add_i)
         { }
 
-        protected override object Execute(object left, object right)
+        protected override object Execute(dynamic left, dynamic right)
         {
-            var iLeft = Convert.ToInt32(left);
-            var iRight = Convert.ToInt32(right);
-
-            return (iLeft + iRight);
+            return (left + right);
         }
     }
 }
