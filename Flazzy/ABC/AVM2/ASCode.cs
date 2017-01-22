@@ -32,6 +32,8 @@ namespace Flazzy.ABC.AVM2
             var machine = new ASMachine(this, _body.LocalCount);
             var cleaned = new List<ASInstruction>(Instructions.Count);
             var valuePushers = new Stack<ASInstruction>(_body.MaxStack);
+            var localReferences = new Dictionary<int, List<ASInstruction>>();
+            var swappedValues = new Dictionary<ASInstruction, ASInstruction[]>();
             KeyValuePair<Jumper, ASInstruction>[] jumpExits = JumpExits.ToArray();
             KeyValuePair<LookUpSwitchIns, List<ASInstruction>>[] switchExits = SwitchExits.ToArray();
             for (int i = 0; i < Instructions.Count; i++)
@@ -40,7 +42,7 @@ namespace Flazzy.ABC.AVM2
                 if (Jumper.IsValid(instruction.OP))
                 {
                     i += GetFinalJumpCount(machine,
-                        (Jumper)instruction, cleaned, valuePushers);
+                        (Jumper)instruction, cleaned, localReferences, valuePushers);
                 }
                 else
                 {
@@ -91,15 +93,71 @@ namespace Flazzy.ABC.AVM2
                     #endregion
                     cleaned.Add(instruction);
 
+                    ASInstruction[] swaps = null;
+                    List<ASInstruction> references = null;
+                    if (Local.IsValid(instruction.OP))
+                    {
+                        var local = (Local)instruction;
+                        if (!localReferences.TryGetValue(local.Register, out references))
+                        {
+                            references = new List<ASInstruction>();
+                            localReferences[local.Register] = references;
+                        }
+                        references.Add(instruction);
+                    }
+                    else if (instruction.OP == OPCode.Swap)
+                    {
+                        swaps = new ASInstruction[2];
+                        swappedValues[instruction] = swaps;
+                    }
+
                     int popCount = instruction.GetPopCount();
                     for (int j = 0; j < popCount; j++)
                     {
-                        valuePushers.Pop();
+                        ASInstruction pusher = valuePushers.Pop();
+                        references?.Add(pusher);
+                        if (swaps != null)
+                        {
+                            swaps[j] = pusher;
+                        }
                     }
                     int pushCount = instruction.GetPushCount();
                     for (int j = 0; j < pushCount; j++)
                     {
                         valuePushers.Push(instruction);
+                    }
+                }
+            }
+
+            // Remove dead locals.
+            foreach (KeyValuePair<int, List<ASInstruction>> local in localReferences)
+            {
+                if (local.Key < (_body.Method.Parameters.Count + 1)) continue;
+                List<ASInstruction> references = localReferences[local.Key];
+
+                bool isNeeded = false;
+                foreach (ASInstruction reference in references)
+                {
+                    // This checks if the local is being referenced by something else that retreives the value.
+                    if (Local.IsValid(reference.OP) && !Local.IsSetLocal(reference.OP))
+                    {
+                        isNeeded = true;
+                        break;
+                    }
+                }
+                if (!isNeeded)
+                {
+                    foreach (ASInstruction reference in references)
+                    {
+                        if (reference.OP == OPCode.Swap)
+                        {
+                            ASInstruction[] swaps = swappedValues[reference];
+                            foreach (ASInstruction swap in swaps)
+                            {
+                                cleaned.Remove(swap);
+                            }
+                        }
+                        cleaned.Remove(reference);
                     }
                 }
             }
@@ -195,7 +253,7 @@ namespace Flazzy.ABC.AVM2
                             long exitPosition = (previousPosition + offset);
                             if (exitPosition <= input.Length)
                             {
-
+                                // TODO
                             }
                             else
                             {
@@ -243,7 +301,8 @@ namespace Flazzy.ABC.AVM2
             instruction.WriteTo(output);
             output.Position = currentPosition;
         }
-        private int GetFinalJumpCount(ASMachine machine, Jumper jumper, List<ASInstruction> cleaned, Stack<ASInstruction> valuePushers)
+        private int GetFinalJumpCount(ASMachine machine, Jumper jumper, List<ASInstruction> cleaned,
+            Dictionary<int, List<ASInstruction>> localReferences, Stack<ASInstruction> valuePushers)
         {
             var magicCount = 0;
             var locals = new List<Local>();
@@ -338,10 +397,15 @@ namespace Flazzy.ABC.AVM2
                 foreach (KeyValuePair<Jumper, ASInstruction> jumpExit in JumpExits)
                 {
                     if (jumpExit.Key == jumper) continue;
-                    // Is another jump instruction(or exit) inside of the 'block' we're going to remove?
-                    // If a full jump instruction is within this jump body, don't worry about removing it since it will never be used.
-                    if (block.Contains(jumpExit.Key) && !block.Contains(jumpExit.Value) ||
-                        block.Contains(jumpExit.Value) && !block.Contains(jumpExit.Key))
+
+                    bool hasEntry = block.Contains(jumpExit.Key); // Does a jump instruction begin somewhere in the block?
+                    bool hasExit = block.Contains(jumpExit.Value); // Does the jump instruction end somewhere in the block?
+
+                    ASInstruction afterLast = Instructions[Instructions.IndexOf(block.Last()) + 1];
+                    bool isExitAfterLast = (jumpExit.Value == afterLast); // Does the exit of the jump that is in the block come after the final instruction of the current block?
+
+                    if (hasEntry && !hasExit && !isExitAfterLast ||
+                        hasExit && !hasEntry)
                     {
                         // Keep the jump instruction, since it will corrupt the other jump instruction that is using it.
                         cleaned.Add(jumper);
@@ -359,6 +423,12 @@ namespace Flazzy.ABC.AVM2
                         }
                     }
                 }
+            }
+
+            foreach (Local local in locals)
+            {
+                List<ASInstruction> references = localReferences[local.Register];
+                references.Remove(local);
             }
 
             // Remove the instructions that pushed values for the jump instruction that is to be removed.
@@ -422,7 +492,7 @@ namespace Flazzy.ABC.AVM2
                         uint fixedOffset = 0;
                         if (exit.OP != OPCode.Label)
                         {
-
+                            // TODO
                         }
                         else
                         {
