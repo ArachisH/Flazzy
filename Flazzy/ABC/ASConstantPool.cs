@@ -93,11 +93,7 @@ namespace Flazzy.ABC
             }
         }
 
-        public int AddConstant(object value)
-        {
-            return AddConstant(value, true);
-        }
-        public int AddConstant(object value, bool recycle)
+        public int AddConstant(object value, bool recycle = true)
         {
             switch (Type.GetTypeCode(value.GetType()))
             {
