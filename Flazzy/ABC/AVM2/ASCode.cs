@@ -4,41 +4,262 @@ using System.Collections.Generic;
 
 using Flazzy.IO;
 using Flazzy.ABC.AVM2.Instructions;
+using System;
+using System.Collections;
+using System.Collections.ObjectModel;
 
 namespace Flazzy.ABC.AVM2
 {
-    public class ASCode : FlashItem
+    public class ASCode : FlashItem, IList<ASInstruction>
     {
         private readonly ABCFile _abc;
         private readonly ASMethodBody _body;
 
-        public List<ASInstruction> Instructions { get; }
+        private readonly List<ASInstruction> _instructions;
+        private readonly Dictionary<ASInstruction, int> _indices;
+        private readonly Dictionary<OPCode, List<ASInstruction>> _opGroups;
+
         public Dictionary<Jumper, ASInstruction> JumpExits { get; }
         public Dictionary<LookUpSwitchIns, List<ASInstruction>> SwitchExits { get; }
 
+        public bool IsReadOnly => false;
+        public int Count => _instructions.Count;
+
+        public ASInstruction this[int index]
+        {
+            get { return _instructions[index]; }
+            set
+            {
+                ASInstruction previous = _instructions[index];
+                _indices.Remove(previous);
+
+                _indices.Add(value, index);
+                _instructions[index] = value;
+            }
+        }
+
         public ASCode(ABCFile abc, ASMethodBody body)
+            : this(abc, body, false)
+        { }
+        private ASCode(ABCFile abc, ASMethodBody body, bool deobfuscate)
         {
             _abc = abc;
             _body = body;
 
-            Instructions = new List<ASInstruction>();
+            _instructions = new List<ASInstruction>();
+            _indices = new Dictionary<ASInstruction, int>();
+            _opGroups = new Dictionary<OPCode, List<ASInstruction>>();
+
             JumpExits = new Dictionary<Jumper, ASInstruction>();
             SwitchExits = new Dictionary<LookUpSwitchIns, List<ASInstruction>>();
+
+            // TODO Implement deobfuscation while reading.
             LoadInstructions();
+        }
+
+        public void Add(ASInstruction instruction)
+        {
+            Insert(_instructions.Count, instruction);
+        }
+        public bool Remove(ASInstruction instruction)
+        {
+            int index = -1;
+            if (_indices.TryGetValue(instruction, out index))
+            {
+                RemoveAt(index);
+                return true;
+            }
+            return false;
+        }
+
+        public void RemoveAt(int index)
+        {
+            RemoveRange(index, 1);
+        }
+        public void Insert(int index, ASInstruction instruction)
+        {
+            InsertRange(index, new[] { instruction });
+        }
+
+        public void RemoveRange(int index, int count)
+        {
+            if ((index + count) <= _instructions.Count)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    ASInstruction instruction = _instructions[index];
+                    _indices.Remove(instruction);
+                    _instructions.RemoveAt(index);
+
+                    List<ASInstruction> group = _opGroups[instruction.OP];
+                    if (group.Count == 1)
+                    {
+                        _opGroups.Remove(instruction.OP);
+                    }
+                    else group.Remove(instruction);
+
+                    // TODO: Recalibrate switch exits.
+                    Jumper entry = GetJumperEntry(instruction);
+                    if (entry != null)
+                    {
+                        if (index != _instructions.Count)
+                        {
+                            ASInstruction exit = _instructions[index];
+                            JumpExits[entry] = exit;
+                        }
+                        else JumpExits[entry] = null;
+                    }
+
+                    if (Jumper.IsValid(instruction.OP))
+                    {
+                        JumpExits.Remove((Jumper)instruction);
+                    }
+                    else if (instruction.OP == OPCode.LookUpSwitch)
+                    {
+                        SwitchExits.Remove((LookUpSwitchIns)instruction);
+                    }
+                }
+                for (int i = index; i < _indices.Count; i++)
+                {
+                    ASInstruction toPull = _instructions[i];
+                    _indices[toPull] -= count;
+                }
+            }
+        }
+        public void AddRange(IEnumerable<ASInstruction> collection)
+        {
+            InsertRange(_instructions.Count, collection);
+        }
+        public void InsertRange(int index, IEnumerable<ASInstruction> collection)
+        {
+            if (index <= _instructions.Count && collection.Any())
+            {
+                var deadJumps = new Stack<Jumper>(JumpExits
+                    .Where(je => je.Value == null)
+                    .Select(je => je.Key));
+
+                int count = _instructions.Count;
+                if (index == _instructions.Count)
+                {
+                    _instructions.AddRange(collection);
+                }
+                else _instructions.InsertRange(index, collection);
+                int collectionCount = (_instructions.Count - count);
+
+                while (deadJumps.Count > 0)
+                {
+                    JumpExits[deadJumps.Pop()] = collection.First();
+                }
+
+                // We'll try to keep the dictionary organized, even though it really doesn't matter.
+                // Looks nice though.
+                for (int i = ((index + collectionCount) - 1); i >= index; i--)
+                {
+                    ASInstruction instruction = _instructions[i];
+                    _indices.Add(instruction, i);
+
+                    List<ASInstruction> instructions = null;
+                    if (!_opGroups.TryGetValue(instruction.OP, out instructions))
+                    {
+                        instructions = new List<ASInstruction>();
+                        _opGroups.Add(instruction.OP, instructions);
+                    }
+                    instructions.Add(instruction);
+                }
+                for (int i = (index + collectionCount); i < _instructions.Count; i++)
+                {
+                    ASInstruction toPush = _instructions[i];
+                    _indices[toPush] += collectionCount;
+                }
+            }
+        }
+
+        public void Clear()
+        {
+            _indices.Clear();
+            _opGroups.Clear();
+            _instructions.Clear();
+
+            JumpExits.Clear();
+            SwitchExits.Clear();
+        }
+        public bool Contains(OPCode op)
+        {
+            return _opGroups.ContainsKey(op);
+        }
+        public bool Contains(ASInstruction instruction)
+        {
+            List<ASInstruction> group = null;
+            if (_opGroups.TryGetValue(instruction.OP, out group))
+            {
+                return group.Contains(instruction);
+            }
+            return false;
+        }
+
+        public void CopyTo(ASInstruction[] array)
+        {
+            CopyTo(array, 0);
+        }
+        public void CopyTo(ASInstruction[] array, int arrayIndex)
+        {
+            CopyTo(0, array, arrayIndex, array.Length);
+        }
+        public void CopyTo(int index, ASInstruction[] array, int arrayIndex, int count)
+        {
+            _instructions.CopyTo(index, array, arrayIndex, count);
+        }
+
+        public int IndexOf(OPCode op)
+        {
+            if (_opGroups.ContainsKey(op))
+            {
+                List<ASInstruction> instructions = _opGroups[op];
+                return _indices[instructions[0]];
+            }
+            return -1;
+        }
+        public int IndexOf(ASInstruction instruction)
+        {
+            if (_indices.ContainsKey(instruction))
+            {
+                return _indices[instruction];
+            }
+            return -1;
+        }
+        public bool StartsWith(params OPCode[] operations)
+        {
+            for (int i = 0; i < operations.Length; i++)
+            {
+                if (_instructions[i].OP != operations[i])
+                {
+                    return false;
+                }
+            }
+            return (operations.Length > 0);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)_instructions).GetEnumerator();
+        }
+        public IEnumerator<ASInstruction> GetEnumerator()
+        {
+            return _instructions.GetEnumerator();
         }
 
         public void Deobfuscate()
         {
             var machine = new ASMachine(this, _body.LocalCount);
-            var cleaned = new List<ASInstruction>(Instructions.Count);
+            var cleaned = new List<ASInstruction>(_instructions.Count);
             var valuePushers = new Stack<ASInstruction>(_body.MaxStack);
             var localReferences = new Dictionary<int, List<ASInstruction>>();
             var swappedValues = new Dictionary<ASInstruction, ASInstruction[]>();
             KeyValuePair<Jumper, ASInstruction>[] jumpExits = JumpExits.ToArray();
             KeyValuePair<LookUpSwitchIns, List<ASInstruction>>[] switchExits = SwitchExits.ToArray();
-            for (int i = 0; i < Instructions.Count; i++)
+            for (int i = 0; i < _instructions.Count; i++)
             {
-                ASInstruction instruction = Instructions[i];
+                ASInstruction instruction = _instructions[i];
                 if (Jumper.IsValid(instruction.OP))
                 {
                     i += GetFinalJumpCount(machine,
@@ -132,7 +353,8 @@ namespace Flazzy.ABC.AVM2
             // Remove dead locals.
             foreach (KeyValuePair<int, List<ASInstruction>> local in localReferences)
             {
-                if (local.Key < (_body.Method.Parameters.Count + 1)) continue;
+                if (local.Key == 0) continue; // Scope
+                if (local.Key <= (_body.Method.Parameters.Count)) continue; // Register == Param #(Non-zero based)
                 List<ASInstruction> references = localReferences[local.Key];
 
                 bool isNeeded = false;
@@ -165,8 +387,8 @@ namespace Flazzy.ABC.AVM2
             jumpExits = JumpExits.ToArray(); // Global property could have been updated.
             foreach (KeyValuePair<Jumper, ASInstruction> jumpExit in jumpExits)
             {
-                if (Instructions.IndexOf(jumpExit.Key) >
-                    Instructions.IndexOf(jumpExit.Value))
+                if (IndexOf(jumpExit.Key) >
+                    IndexOf(jumpExit.Value))
                 {
                     // This is not a forward jump instruction, since the exit appears before the jump.
                     continue;
@@ -177,9 +399,9 @@ namespace Flazzy.ABC.AVM2
                 if (cleaned.Contains(jumpExit.Key) && !cleaned.Contains(jumpExit.Value))
                 {
                     // Start at the index of the instruction that should come after the final instruction to jump.
-                    for (int j = (Instructions.IndexOf(jumpExit.Value) + 1); j < Instructions.Count; j++)
+                    for (int j = (_indices[jumpExit.Value] + 1); j < _instructions.Count; j++)
                     {
-                        ASInstruction afterEnd = Instructions[j];
+                        ASInstruction afterEnd = _instructions[j];
                         int exitIndex = cleaned.IndexOf(afterEnd);
                         if (exitIndex != -1) // Does this instruction exist in the cleaned output?; Otherwise, get instruction that comes after it.
                         {
@@ -190,31 +412,80 @@ namespace Flazzy.ABC.AVM2
                 }
             }
 
-            Instructions.Clear();
-            Instructions.AddRange(cleaned);
-        }
-        public int IndexOf(OPCode op)
-        {
-            return Instructions.FindIndex(i => i.OP == op);
+            _instructions.Clear();
+            _instructions.AddRange(cleaned);
+            Recalibrate();
         }
         public bool IsBackwardsJump(Jumper jumper)
         {
             return (JumpExits[jumper].OP == OPCode.Label);
         }
-        public int IndexOf(ASInstruction instruction)
+        public Jumper GetJumperEntry(ASInstruction exit)
         {
-            return Instructions.IndexOf(instruction);
+            foreach (KeyValuePair<Jumper, ASInstruction> jumpExit in JumpExits)
+            {
+                if (jumpExit.Value != exit) continue;
+                return jumpExit.Key;
+            }
+            return null;
         }
         public ASInstruction[] GetJumpBlock(Jumper jumper)
         {
-            int blockStart = (Instructions.IndexOf(jumper) + 1);
-            int scopeEnd = Instructions.IndexOf(JumpExits[jumper]);
+            int blockStart = (_indices[jumper] + 1);
+            int scopeEnd = _indices[JumpExits[jumper]];
 
-            ASInstruction[] body = new ASInstruction[scopeEnd - blockStart];
-            Instructions.CopyTo(blockStart, body, 0, body.Length);
+            var body = new ASInstruction[scopeEnd - blockStart];
+            _instructions.CopyTo(blockStart, body, 0, body.Length);
+
             return body;
         }
+        public LookUpSwitchIns GetSwitchEntry(ASInstruction exit)
+        {
+            foreach (KeyValuePair<LookUpSwitchIns, List<ASInstruction>> switchExit in SwitchExits)
+            {
+                if (!switchExit.Value.Contains(exit)) continue;
+                return switchExit.Key;
+            }
+            return null;
+        }
 
+        public IEnumerable<ASInstruction> GetOPGroup(OPCode op)
+        {
+            if (_opGroups.ContainsKey(op))
+            {
+                return _opGroups[op];
+            }
+            return Enumerable.Empty<ASInstruction>();
+        }
+        public SortedDictionary<OPCode, List<ASInstruction>> GetOPGroups()
+        {
+            var groups = new SortedDictionary<OPCode, List<ASInstruction>>();
+            foreach (OPCode op in _opGroups.Keys)
+            {
+                groups[op] = new List<ASInstruction>();
+                groups[op].AddRange(_opGroups[op]);
+            }
+            return groups;
+        }
+
+        private void Recalibrate()
+        {
+            _indices.Clear();
+            _opGroups.Clear();
+            for (int i = 0; i < _instructions.Count; i++)
+            {
+                ASInstruction instruction = _instructions[i];
+                _indices.Add(instruction, i);
+
+                List<ASInstruction> instructions = null;
+                if (!_opGroups.TryGetValue(instruction.OP, out instructions))
+                {
+                    instructions = new List<ASInstruction>();
+                    _opGroups.Add(instruction.OP, instructions);
+                }
+                instructions.Add(instruction);
+            }
+        }
         private void LoadInstructions()
         {
             var marks = new Dictionary<long, ASInstruction>();
@@ -225,9 +496,18 @@ namespace Flazzy.ABC.AVM2
                 {
                     long previousPosition = input.Position;
                     var instruction = ASInstruction.Create(_abc, input);
-
                     marks[previousPosition] = instruction;
-                    Instructions.Add(instruction);
+
+                    _indices.Add(instruction, _indices.Count);
+                    _instructions.Add(instruction);
+
+                    List<ASInstruction> instructions = null;
+                    if (!_opGroups.TryGetValue(instruction.OP, out instructions))
+                    {
+                        instructions = new List<ASInstruction>();
+                        _opGroups.Add(instruction.OP, instructions);
+                    }
+                    instructions.Add(instruction);
 
                     List<Jumper> jumpers = null;
                     if (sharedExits.TryGetValue(previousPosition, out jumpers))
@@ -301,8 +581,7 @@ namespace Flazzy.ABC.AVM2
             instruction.WriteTo(output);
             output.Position = currentPosition;
         }
-        private int GetFinalJumpCount(ASMachine machine, Jumper jumper, List<ASInstruction> cleaned,
-            Dictionary<int, List<ASInstruction>> localReferences, Stack<ASInstruction> valuePushers)
+        private int GetFinalJumpCount(ASMachine machine, Jumper jumper, List<ASInstruction> cleaned, Dictionary<int, List<ASInstruction>> localReferences, Stack<ASInstruction> valuePushers)
         {
             var magicCount = 0;
             var locals = new List<Local>();
@@ -401,7 +680,7 @@ namespace Flazzy.ABC.AVM2
                     bool hasEntry = block.Contains(jumpExit.Key); // Does a jump instruction begin somewhere in the block?
                     bool hasExit = block.Contains(jumpExit.Value); // Does the jump instruction end somewhere in the block?
 
-                    ASInstruction afterLast = Instructions[Instructions.IndexOf(block.Last()) + 1];
+                    ASInstruction afterLast = _instructions[_indices[block.Last()] + 1];
                     bool isExitAfterLast = (jumpExit.Value == afterLast); // Does the exit of the jump that is in the block come after the final instruction of the current block?
 
                     if (hasEntry && !hasExit && !isExitAfterLast ||
@@ -458,11 +737,9 @@ namespace Flazzy.ABC.AVM2
         {
             var marks = new Dictionary<ASInstruction, long>();
             var sharedExits = new Dictionary<ASInstruction, List<ASInstruction>>();
-            for (int i = 0; i < Instructions.Count; i++)
+            foreach (ASInstruction instruction in _instructions)
             {
                 long previousPosition = output.Position;
-                ASInstruction instruction = Instructions[i];
-
                 marks.Add(instruction, previousPosition);
                 instruction.WriteTo(output);
 
@@ -484,9 +761,9 @@ namespace Flazzy.ABC.AVM2
                 {
                     var lookUp = (LookUpSwitchIns)instruction;
                     List<ASInstruction> cases = SwitchExits[lookUp];
-                    for (int j = 0; j < cases.Count; j++)
+                    for (int i = 0; i < cases.Count; i++)
                     {
-                        ASInstruction exit = cases[j];
+                        ASInstruction exit = cases[i];
                         long exitPosition = marks[exit];
 
                         uint fixedOffset = 0;
@@ -499,14 +776,13 @@ namespace Flazzy.ABC.AVM2
                             long jumpCount = (previousPosition - (exitPosition + 1));
                             fixedOffset = (uint)(uint.MaxValue - jumpCount);
                         }
-
-                        if (j == (cases.Count - 1))
+                        if (i == (cases.Count - 1))
                         {
                             lookUp.DefaultOffset = fixedOffset;
                         }
                         else
                         {
-                            lookUp.CaseOffsets[j] = fixedOffset;
+                            lookUp.CaseOffsets[i] = fixedOffset;
                         }
                     }
                     Rewrite(output, lookUp, previousPosition);
