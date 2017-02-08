@@ -9,6 +9,10 @@
             ABC = abc;
         }
 
+        public ABCFile GetABC()
+        {
+            return ABC;
+        }
         public abstract string ToAS3();
     }
 }
