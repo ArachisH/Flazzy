@@ -55,13 +55,13 @@ namespace Flazzy.ABC
             string type = (Type?.Name ?? "*");
             if (Type?.Kind == MultinameKind.TypeName)
             {
-                type = (Type.QName.Name + "<");
-                type += string.Join(", ", Type.GetTypes().Select(t => t.Name));
+                type = (Type.QName.Name + ".<");
+                type += string.Join(", ", Type.GetTypes().Select(t => (t?.Name ?? "*")));
                 type += ">";
             }
 
             string optionalSuffix = string.Empty;
-            if (Value != null)
+            if (IsOptional)
             {
                 optionalSuffix += " = ";
                 switch (ValueKind)
@@ -73,6 +73,10 @@ namespace Flazzy.ABC
                     case ConstantKind.True:
                     case ConstantKind.False:
                     optionalSuffix += Value.ToString().ToLower();
+                    break;
+
+                    case ConstantKind.Null:
+                    optionalSuffix += "null";
                     break;
 
                     default:
