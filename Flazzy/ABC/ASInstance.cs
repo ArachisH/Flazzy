@@ -33,6 +33,10 @@ namespace Flazzy.ABC
         }
         public int ProtectedNamespaceIndex { get; set; }
 
+        public bool IsInterface
+        {
+            get { return Flags.HasFlag(ClassFlags.Interface); }
+        }
         public List<int> InterfaceIndices { get; }
 
         protected override string DebuggerDisplay
@@ -82,6 +86,23 @@ namespace Flazzy.ABC
                 ASMultiname @interface = ABC.Pool.Multinames[interfaceIndex];
                 yield return @interface;
             }
+        }
+        public bool ContainsInterface(string qualifiedName)
+        {
+            if (Super.Name != "Object")
+            {
+                ASInstance superInstance = ABC.GetFirstInstance(Super.Name);
+                if (superInstance.ContainsInterface(qualifiedName))
+                {
+                    return true;
+                }
+            }
+            foreach (ASMultiname @interface in GetInterfaces())
+            {
+                if (@interface.Name != qualifiedName) continue;
+                return true;
+            }
+            return false;
         }
 
         public override string ToAS3()
