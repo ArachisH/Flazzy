@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 
 using Flazzy.IO;
@@ -8,8 +9,9 @@ namespace Flazzy.ABC
 {
     public class ABCFile : FlashItem, IDisposable
     {
-        private FlashReader _input;
+        private readonly FlashReader _input;
         private readonly int _initialLength;
+        private readonly Dictionary<string, List<ASClass>> _classCache;
 
         public List<ASMethod> Methods { get; }
         public List<ASMetadata> Metadata { get; }
@@ -31,6 +33,8 @@ namespace Flazzy.ABC
 
         public ABCFile()
         {
+            _classCache = new Dictionary<string, List<ASClass>>();
+
             Methods = new List<ASMethod>();
             Metadata = new List<ASMetadata>();
             Instances = new List<ASInstance>();
@@ -95,21 +99,48 @@ namespace Flazzy.ABC
             return index;
         }
 
-        public IEnumerable<ASClass> GetClasses(string qualifiedName)
+        public void RebuildCache()
         {
-            return GetClasses(qualifiedName, false);
-        }
-        public IEnumerable<ASClass> GetClasses(string qualifiedName, bool igoreCase)
-        {
-            StringComparison comparison = (igoreCase ?
-                StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-
+            _classCache.Clear();
             foreach (ASClass @class in Classes)
             {
-                if (@class.Instance.QName.Name.Equals(qualifiedName, comparison))
+                List<ASClass> classes = null;
+                string qualifiedName = @class.Instance.QName.Name;
+                if (!_classCache.TryGetValue(qualifiedName, out classes))
                 {
+                    classes = new List<ASClass>();
+                    _classCache[qualifiedName] = classes;
+                }
+                classes.Add(@class);
+            }
+        }
+
+        public ASClass GetFirstClass(string qualifiedName)
+        {
+            return GetClasses(qualifiedName).FirstOrDefault();
+        }
+        public IEnumerable<ASClass> GetClasses(string qualifiedName)
+        {
+            List<ASClass> classes = null;
+            if (_classCache.TryGetValue(qualifiedName, out classes))
+            {
+                foreach (ASClass @class in classes)
+                {
+                    if (@class.Instance.QName.Name != qualifiedName) continue;
                     yield return @class;
                 }
+            }
+        }
+
+        public ASInstance GetFirstInstance(string qualifiedName)
+        {
+            return GetInstances(qualifiedName).FirstOrDefault();
+        }
+        public IEnumerable<ASInstance> GetInstances(string qualifiedName)
+        {
+            foreach (ASClass @class in GetClasses(qualifiedName))
+            {
+                yield return @class.Instance;
             }
         }
 
@@ -130,6 +161,15 @@ namespace Flazzy.ABC
             var @class = new ASClass(this, _input);
             @class.InstanceIndex = index;
 
+            List<ASClass> classes = null;
+            string qualifedName = @class.Instance.QName.Name;
+            if (!_classCache.TryGetValue(qualifedName, out classes))
+            {
+                classes = new List<ASClass>();
+                _classCache[qualifedName] = classes;
+            }
+
+            classes.Add(@class);
             return @class;
         }
         private ASScript ReadScript(int index)
