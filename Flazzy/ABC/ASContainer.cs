@@ -33,10 +33,29 @@ namespace Flazzy.ABC
             Traits = new List<ASTrait>();
         }
 
+        public void AddMethod(ASMethod method, string qualifiedName)
+        {
+            var qname = new ASMultiname(ABC.Pool);
+            qname.NameIndex = ABC.Pool.AddConstant(qualifiedName);
+            qname.Kind = MultinameKind.QName;
+            qname.NamespaceIndex = 1; // Public
+
+            int methodIndex = ABC.AddMethod(method);
+            int qnameIndex = ABC.Pool.AddConstant(qname);
+
+            var trait = new ASTrait(ABC);
+            trait.Kind = TraitKind.Method;
+            trait.QNameIndex = qnameIndex;
+            trait.MethodIndex = methodIndex;
+
+            method.Trait = trait;
+            method.Container = this;
+            Traits.Add(trait);
+        }
+
         public IEnumerable<ASMethod> GetMethods()
         {
-            return GetTraits(TraitKind.Method,
-                TraitKind.Getter, TraitKind.Setter)
+            return GetTraits(TraitKind.Method, TraitKind.Getter, TraitKind.Setter)
                 .Select(t => t.Method);
         }
         public IEnumerable<ASMethod> GetMethods(int paramCount)
@@ -55,24 +74,55 @@ namespace Flazzy.ABC
                 .Where(m => m.Parameters.Count == paramCount &&
                             m.ReturnType.Name == returnTypeName);
         }
-        public ASMethod GetMethod(int paramCount, string returnTypeName, string methodName)
+
+        public ASMethod GetMethod(string qualifiedName)
         {
             return GetMethods()
-                .Where(m => m.Trait.QName.Name == methodName &&
+                .Where(m => m.Trait.QName.Name == qualifiedName)
+                .SingleOrDefault();
+        }
+        public ASMethod GetMethod(int paramCount, string qualifiedName)
+        {
+            return GetMethods()
+                .Where(m => m.Trait.QName.Name == qualifiedName &&
+                            m.Parameters.Count == paramCount)
+                .FirstOrDefault();
+        }
+        public ASMethod GetMethod(int paramCount, string qualifiedName, string returnTypeName)
+        {
+            return GetMethods()
+                .Where(m => m.Trait.QName.Name == qualifiedName &&
                             m.Parameters.Count == paramCount &&
                             m.ReturnType.Name == returnTypeName)
                 .FirstOrDefault();
         }
 
-        public IEnumerable<ASTrait> GetSlotTraits(string typeName)
+        public IEnumerable<ASTrait> GetGetters()
+        {
+            return GetTraits(TraitKind.Getter);
+        }
+        public IEnumerable<ASTrait> GetGetters(string returnTypeName)
+        {
+            return GetGetters()
+                .Where(g => g.Type.Name == returnTypeName);
+        }
+
+        public ASTrait GetGetter(string qualifiedName)
+        {
+            return GetGetters()
+                .Where(g => g.QName.Name == qualifiedName)
+                .FirstOrDefault();
+        }
+
+        public IEnumerable<ASTrait> GetSlotTraits(string returnTypeName)
         {
             return GetTraits(TraitKind.Slot)
-                .Where(sct => sct.Type.Name == typeName);
+                .Where(sct => sct.Type.Name == returnTypeName);
         }
-        public IEnumerable<ASTrait> GetConstantTraits(string typeName)
+        public IEnumerable<ASTrait> GetConstantTraits(string returnTypeName)
         {
             return GetTraits(TraitKind.Constant)
-                .Where(sct => sct.Type.Name == typeName);
+                .Where(sct => sct.Type.Name == returnTypeName);
         }
 
         public IEnumerable<ASTrait> GetTraits(params TraitKind[] kinds)
