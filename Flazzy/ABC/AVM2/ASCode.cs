@@ -1,12 +1,10 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 
 using Flazzy.IO;
 using Flazzy.ABC.AVM2.Instructions;
-using System;
-using System.Collections;
-using System.Collections.ObjectModel;
 
 namespace Flazzy.ABC.AVM2
 {
