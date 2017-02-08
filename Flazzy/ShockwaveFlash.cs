@@ -5,25 +5,27 @@ using System.Collections.Generic;
 using Flazzy.IO;
 using Flazzy.Tags;
 using Flazzy.Records;
-
-using Ionic.Zlib;
+using Flazzy.Compression;
 
 namespace Flazzy
 {
     public class ShockwaveFlash : IDisposable
     {
-        private bool _disassembled;
-        private FlashReader _input;
-        private readonly CompressionKind _initialCompression;
+        private readonly FlashReader _input;
 
+        public string Signature
+        {
+            get { return $"{(char)Compression}WS"; }
+        }
         public byte Version { get; set; }
+        public List<TagItem> Tags { get; }
         public uint FileLength { get; set; }
         public FrameRecord Frame { get; set; }
         public CompressionKind Compression { get; set; }
 
-        public List<TagItem> Tags { get; }
-        public bool IsCompressed { get; private set; }
-
+        public ShockwaveFlash()
+            : this(true)
+        { }
         public ShockwaveFlash(string path)
             : this(File.OpenRead(path))
         { }
@@ -36,144 +38,112 @@ namespace Flazzy
         public ShockwaveFlash(Stream input, bool leaveOpen)
             : this(new FlashReader(input, leaveOpen))
         { }
+
         protected ShockwaveFlash(FlashReader input)
+            : this(false)
         {
-            _input = input;
-
-            Tags = new List<TagItem>();
-
-            string signature = input.ReadString(3);
-            Compression = (CompressionKind)signature[0];
-            _initialCompression = Compression;
-
+            Compression = (CompressionKind)input.ReadString(3)[0];
             Version = input.ReadByte();
             FileLength = input.ReadUInt32();
 
-            IsCompressed = (Compression != CompressionKind.None);
-            if (!IsCompressed)
+            switch (Compression)
             {
-                Frame = new FrameRecord(input);
+                case CompressionKind.LZMA:
+                throw new NotSupportedException("LZMA");
+
+                case CompressionKind.ZLIB:
+                _input = ZLIB.WrapDecompressor(input.BaseStream);
+                break;
+
+                case CompressionKind.None:
+                _input = input;
+                break;
+            }
+            Frame = new FrameRecord(_input);
+        }
+        protected ShockwaveFlash(bool isCreatingTemplate)
+        {
+            Tags = new List<TagItem>();
+            if (isCreatingTemplate)
+            {
+                Frame = new FrameRecord();
+                Frame.Area = new RectangeRecord();
+                Compression = CompressionKind.ZLIB;
             }
         }
 
         public void Disassemble()
         {
-            if (_disassembled)
-            {
-                throw new InvalidOperationException(
-                    "Tags have already been read from the file.");
-            }
-
-            FlashReader input = _input;
-            try
-            {
-                if (IsCompressed)
-                {
-                    if (_initialCompression == CompressionKind.LZMA)
-                    {
-                        throw new NotSupportedException("LZMA");
-                    }
-                    else if (_initialCompression == CompressionKind.ZLIB)
-                    {
-                        var decompressor = new ZlibStream(input.BaseStream, CompressionMode.Decompress);
-                        input = new FlashReader(decompressor);
-                    }
-                    Frame = new FrameRecord(input);
-                    IsCompressed = false;
-                }
-                Disassemble(input);
-            }
-            finally
-            {
-                _disassembled = true;
-                input.Dispose();
-            }
+            Disassemble(null);
         }
-        protected virtual void Disassemble(FlashReader input)
+        public virtual void Disassemble(Action<TagItem> callback)
         {
-            long relativePos = (8 + Frame.Area.GetByteSize() + 4);
-            while (true)
+            long position = (8 + Frame.Area.GetByteSize() + 4);
+            while (position != FileLength)
             {
-                var header = new HeaderRecord(input);
-                relativePos += (header.IsLongTag ? 6 : 2);
-                long expectedPos = (header.Length + relativePos);
+                var header = new HeaderRecord(_input);
+                position += (header.IsLongTag ? 6 : 2);
+                long offset = (header.Length + position);
 
-                TagItem tag = ReadTag(header, input);
-                relativePos += tag.GetBodySize();
+                TagItem tag = ReadTag(header, _input);
+                position += tag.GetBodySize();
 
-                if (relativePos != expectedPos)
+                if (position != offset)
                 {
-                    throw new InvalidDataException("Unable to disassemble tag.");
+                    throw new IOException($"Expected position value '{offset}', instead got '{position}'.");
                 }
-                else Tags.Add(tag);
-
-                if (tag.Kind == TagKind.End)
-                {
-                    break;
-                }
+                callback?.Invoke(tag);
+                Tags.Add(tag);
             }
         }
 
         public void Assemble(FlashWriter output)
         {
-            Assemble(output, Compression);
+            Assemble(output, Compression, null);
         }
-        public virtual void Assemble(FlashWriter output, CompressionKind compression)
+        public void Assemble(FlashWriter output, CompressionKind compression)
         {
-            FlashWriter bodyOutput = output;
-            try
+            Assemble(output, compression, null);
+        }
+        public virtual void Assemble(FlashWriter output, CompressionKind compression, Action<TagItem> callback)
+        {
+            output.Write(((char)compression) + "WS", true);
+            output.Write(Version);
+            output.Write(uint.MinValue);
+
+            int fileLength = 8;
+            FlashWriter compressor = null;
+            switch (compression)
             {
-                output.Write(((char)compression + "WS"), true);
-                output.Write(Version);
-                output.Write(uint.MinValue);
-
-                int fileLength = 8;
-                if (compression != CompressionKind.None)
+                case CompressionKind.LZMA:
                 {
-                    switch (compression)
-                    {
-                        case CompressionKind.LZMA:
-                        {
-                            throw new NotSupportedException("LZMA");
-                        }
-                        case CompressionKind.ZLIB:
-                        {
-                            bodyOutput = new FlashWriter(new ZlibStream(output.BaseStream,
-                                CompressionMode.Compress, CompressionLevel.BestCompression, true));
-
-                            break;
-                        }
-                    }
+                    throw new NotSupportedException("LZMA");
                 }
-
-                Frame.WriteTo(bodyOutput);
-                fileLength += (Frame.Area.GetByteSize() + 4);
-                for (int i = 0; i < Tags.Count; i++)
+                case CompressionKind.ZLIB:
                 {
-                    TagItem tag = Tags[i];
-                    WriteTag(tag, bodyOutput);
-
-                    fileLength += tag.Header.Length;
-                    fileLength += (tag.Header.IsLongTag ? 6 : 2);
-                }
-
-                if (bodyOutput != output)
-                {
-                    // Finalize compression.
-                    bodyOutput.Dispose();
-                }
-
-                output.Position = 4;
-                output.Write((uint)fileLength);
-            }
-            finally
-            {
-                if (bodyOutput != output)
-                {
-                    // Ensure compression stream has been disposed.
-                    bodyOutput.Dispose();
+                    compressor = ZLIB.WrapCompressor(output.BaseStream, true);
+                    break;
                 }
             }
+
+            /* Body Start */
+            Frame.WriteTo(compressor ?? output);
+            fileLength += (Frame.Area.GetByteSize() + 4);
+            for (int i = 0; i < Tags.Count; i++)
+            {
+                TagItem tag = Tags[i];
+                callback?.Invoke(tag);
+                WriteTag(tag, compressor ?? output);
+
+                fileLength += tag.Header.Length;
+                fileLength += (tag.Header.IsLongTag ? 6 : 2);
+            }
+            compressor?.Dispose();
+            /* Body End */
+
+            output.Position = 4;
+            output.Write((uint)fileLength);
+            output.Position = output.Length;
         }
 
         protected virtual void WriteTag(TagItem tag, FlashWriter output)
@@ -255,19 +225,12 @@ namespace Flazzy
         }
         public byte[] ToArray(CompressionKind compression)
         {
-            using (var memOutput = new MemoryStream((int)FileLength))
+            using (var outputMem = new MemoryStream((int)FileLength))
+            using (var output = new FlashWriter(outputMem))
             {
-                using (var output = new FlashWriter(memOutput, true))
-                {
-                    Assemble(output, compression);
-                }
-                return memOutput.ToArray();
+                Assemble(output, compression);
+                return outputMem.ToArray();
             }
-        }
-
-        public string GetSignature()
-        {
-            return ((char)Compression + "WS");
         }
 
         public void Dispose()
