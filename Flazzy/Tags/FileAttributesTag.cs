@@ -12,6 +12,9 @@ namespace Flazzy.Tags
         public bool NoCrossDomainCache { get; set; }
         public bool UseNetwork { get; set; }
 
+        public FileAttributesTag()
+            : base(TagKind.FileAttributes)
+        { }
         public FileAttributesTag(HeaderRecord header, FlashReader input)
             : base(header)
         {

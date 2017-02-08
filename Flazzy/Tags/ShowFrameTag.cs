@@ -4,6 +4,9 @@ namespace Flazzy.Tags
 {
     public class ShowFrameTag : TagItem
     {
+        public ShowFrameTag()
+            : base(TagKind.ShowFrame)
+        { }
         public ShowFrameTag(HeaderRecord header)
             : base(header)
         { }

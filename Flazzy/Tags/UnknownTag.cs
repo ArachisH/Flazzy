@@ -7,6 +7,11 @@ namespace Flazzy.Tags
     {
         public byte[] Data { get; set; }
 
+        public UnknownTag(TagKind kind)
+            : base(kind)
+        {
+            Data = new byte[0];
+        }
         public UnknownTag(HeaderRecord header, FlashReader input)
             : base(header)
         {

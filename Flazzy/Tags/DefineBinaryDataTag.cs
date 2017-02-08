@@ -8,6 +8,11 @@ namespace Flazzy.Tags
         public ushort Id { get; set; }
         public byte[] Data { get; set; }
 
+        public DefineBinaryDataTag()
+            : base(TagKind.DefineBinaryData)
+        {
+            Data = new byte[0];
+        }
         public DefineBinaryDataTag(HeaderRecord header, FlashReader input)
             : base(header)
         {

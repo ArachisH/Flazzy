@@ -9,6 +9,9 @@ namespace Flazzy.Tags
     {
         public Color BackgroundColor { get; set; }
 
+        public SetBackgroundColorTag()
+            : base(TagKind.SetBackgroundColor)
+        { }
         public SetBackgroundColorTag(HeaderRecord header, FlashReader input)
             : base(header)
         {

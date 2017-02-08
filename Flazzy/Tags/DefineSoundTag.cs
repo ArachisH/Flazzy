@@ -13,6 +13,11 @@ namespace Flazzy.Tags
         public byte[] SoundData { get; set; }
         public uint SoundSampleCount { get; set; }
 
+        public DefineSoundTag()
+            : base(TagKind.DefineSound)
+        {
+            SoundData = new byte[0];
+        }
         public DefineSoundTag(HeaderRecord header, FlashReader input)
             : base(header)
         {

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Collections.Generic;
 
 using Flazzy.IO;
@@ -11,6 +12,12 @@ namespace Flazzy.Tags
         public List<ushort> Ids { get; }
         public List<string> Names { get; }
 
+        public ExportAssetsTag()
+            : base(TagKind.ExportAssets)
+        {
+            Ids = new List<ushort>();
+            Names = new List<string>();
+        }
         public ExportAssetsTag(HeaderRecord header, FlashReader input)
             : base(header)
         {
@@ -18,7 +25,6 @@ namespace Flazzy.Tags
 
             Ids = new List<ushort>(assetCount);
             Names = new List<string>(assetCount);
-
             for (int i = 0; i < assetCount; i++)
             {
                 Ids.Add(input.ReadUInt16());
@@ -40,8 +46,8 @@ namespace Flazzy.Tags
 
         protected override void WriteBodyTo(FlashWriter output)
         {
-            var assetCount = (ushort)Ids.Count;
-            output.Write(assetCount);
+            int assetCount = Math.Min(Ids.Count, Names.Count);
+            output.Write((ushort)assetCount);
 
             for (int i = 0; i < assetCount; i++)
             {
