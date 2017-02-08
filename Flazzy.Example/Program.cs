@@ -1,162 +1,103 @@
 ﻿using System;
 using System.IO;
-using System.Text;
-using System.Diagnostics;
 using System.Collections.Generic;
 
 using Flazzy.IO;
 using Flazzy.Tags;
+using Flazzy.Example.Utilities;
+using System.Security.Cryptography;
 
 namespace Flazzy.Example
 {
     public class Program
     {
-        private static readonly string[] SizeSuffixes =
-            { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-
-        private readonly Stopwatch _watch;
-
-        public string FilePath { get; }
-        public ShockwaveFlash Flash { get; }
+        public FileInfo Info { get; }
+        public ShockwaveFlash Flash { get; private set; }
 
         public Program(string[] args)
         {
-            _watch = new Stopwatch();
-
-            FilePath = Path.GetFullPath(args[0]);
-            Flash = new ShockwaveFlash(FilePath);
-            UpdateTitle(this);
+            Info = new FileInfo(args[0]);
+            Flash = new ShockwaveFlash(Info.FullName);
         }
         public static void Main(string[] args)
         {
-            Console.Title = ("Flazzy v" + GetVersion());
+            Console.Title = ("Flazzy v" +
+                typeof(ShockwaveFlash).Assembly.GetName().Version);
+
             new Program(args).Run();
         }
 
         public void Run()
         {
-            /* Step #1 - Disassembling */
             Disassemble();
 
-            /* Step #1.5(Optional) - Modifying/Extracting */
             Modify();
 
-            /* Step #2 - Assembling */
-            Assemble(CompressionKind.None);
+            Assemble();
         }
         private void Modify()
+        { }
+        private void Assemble()
         {
-            //var doABCTags = Flash.Tags.OfType<DoABCTag>();
-            //foreach (DoABCTag abcTag in doABCTags)
-            //{
-            //    using (var abc = new ABCFile(abcTag.ABCData))
-            //    {
-            //        // Magic here.
-            //        // abcTag.ABCData = abc.ToArray();
-            //    }
-            //}
+            ConsoleEx.WriteLineTitle("Assembling");
 
-            //Flash.Tags.OfType<DefineBitsLossless2Tag>().AsParallel().ForAll(bitsTag =>
-            //{
-            //    using (Bitmap asset = bitsTag.GenerateAsset())
-            //    {
-            //        asset.Save(/* File Path */);
-            //    }
-            //    Console.WriteLine($"Asset saved/generated {bitsTag.Id}.");
-            //});
+            string fileName = "Assembled.swf";
+            using (var asmFile = File.Open(fileName, FileMode.Create))
+            using (var asmStream = new FlashWriter(asmFile))
+            {
+                Flash.Assemble(asmStream, CompressionKind.None);
 
-            //var defineBinaryDataTags = Flash.Tags.OfType<DefineBinaryDataTag>();
-            //foreach (DefineBinaryDataTag binTag in defineBinaryDataTags)
-            //{
-            //    // Magic here.
-            //}
-
-            // etc...
+                asmFile.Position = 0;
+                Console.WriteLine("SHA1: " + GetSHA1(asmFile));
+                Console.WriteLine("File Assembled: " + Path.Combine(Info.DirectoryName, fileName));
+            }
         }
         private void Disassemble()
         {
-            _watch.Restart();
-            Console.Write("Disassembling...");
-
+            ConsoleEx.WriteLineTitle("Disassembling");
             Flash.Disassemble();
-            Console.WriteLine($" | Tags: {Flash.Tags.Count:n0} | {GetLap()}");
+
+            Console.WriteLine("SHA1: " + GetSHA1(Info.FullName));
             Console.WriteLine();
 
-            IDictionary<TagKind, List<TagItem>> tagGroups = GetTagGroups();
-            foreach (TagKind kind in tagGroups.Keys)
+            IDictionary<TagKind, List<TagItem>> groups = GetTagGroups();
+            foreach (KeyValuePair<TagKind, List<TagItem>> groupPair in groups)
             {
-                int totalSize = 0;
-                List<TagItem> group = tagGroups[kind];
-                foreach (TagItem item in group)
-                {
-                    totalSize += item.Header.Length;
-                    totalSize += (item.Header.IsLongTag ? 6 : 2);
-                }
-                Console.WriteLine($"  ~  [{kind}]: {group.Count:n0}({SizeSuffix(totalSize)})");
+                Console.WriteLine($"{groupPair.Key}: {groupPair.Value.Count:n0}");
             }
             Console.WriteLine();
         }
-        private void Assemble(CompressionKind compression)
-        {
-            _watch.Restart();
-            Console.Write("Assembling...");
 
-            if (File.Exists("Assembled.swf"))
+        public string GetSHA1(string path)
+        {
+            using (var input = File.OpenRead(path))
             {
-                File.Delete("Assembled.swf");
-            }
-            using (var asmFile = File.OpenWrite("Assembled.swf"))
-            using (var asmStream = new FlashWriter(asmFile))
-            {
-                Flash.Assemble(asmStream, compression);
-                Console.WriteLine($" | Assembled.swf({SizeSuffix(asmStream.Length)}) | {GetLap()}");
+                return GetSHA1(input);
             }
         }
-
-        private string GetLap()
+        public string GetSHA1(Stream input)
         {
-            _watch.Stop();
-            return (_watch.Elapsed.ToString("s\\.ff") + " Seconds");
+            using (var sha1 = new SHA1Managed())
+            {
+                return BitConverter.ToString(sha1.ComputeHash(input))
+                    .Replace("-", string.Empty)
+                    .ToLower();
+            }
         }
         private IDictionary<TagKind, List<TagItem>> GetTagGroups()
         {
-            var tagChunks = new Dictionary<TagKind, List<TagItem>>();
+            var groups = new Dictionary<TagKind, List<TagItem>>();
             foreach (TagItem tag in Flash.Tags)
             {
-                List<TagItem> chunks = null;
-                if (!tagChunks.TryGetValue(tag.Kind, out chunks))
+                List<TagItem> group = null;
+                if (!groups.TryGetValue(tag.Kind, out group))
                 {
-                    chunks = new List<TagItem>();
-                    tagChunks.Add(tag.Kind, chunks);
+                    group = new List<TagItem>();
+                    groups.Add(tag.Kind, group);
                 }
-                chunks.Add(tag);
+                group.Add(tag);
             }
-            return tagChunks;
-        }
-
-        private static Version GetVersion()
-        {
-            return typeof(ShockwaveFlash).Assembly.GetName().Version;
-        }
-        private static string SizeSuffix(long value)
-        {
-            if (value < 0) { return "-" + SizeSuffix(-value); }
-            if (value == 0) { return "0.0 Bytes"; }
-
-            int mag = (int)Math.Log(value, 1024);
-            decimal adjustedSize = (decimal)value / (1L << (mag * 10));
-
-            return string.Format("{0:n1} {1}", adjustedSize, SizeSuffixes[mag]);
-        }
-        private static void UpdateTitle(Program program)
-        {
-            var titleBuilder = new StringBuilder();
-            titleBuilder.Append(" | ");
-            titleBuilder.Append(Path.GetFileName(program.FilePath));
-            titleBuilder.Append("(" + SizeSuffix(program.Flash.FileLength) + ")");
-            titleBuilder.Append(" | ");
-            titleBuilder.Append("Compression: " + program.Flash.Compression);
-            Console.Title += titleBuilder;
+            return groups;
         }
     }
 }
