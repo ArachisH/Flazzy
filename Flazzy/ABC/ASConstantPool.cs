@@ -151,13 +151,20 @@ namespace Flazzy.ABC
             for (int i = 1; i < Multinames.Count; i++)
             {
                 if (Multinames[i].Name == name)
+                {
                     yield return i;
+                }
             }
         }
         public IEnumerable<ASMultiname> GetMultinames(string name)
         {
-            return Multinames
-                .Where(m => m.Name == name);
+            for (int i = 1; i < Multinames.Count; i++)
+            {
+                if (Multinames[i].Name == name)
+                {
+                    yield return Multinames[i];
+                }
+            }
         }
 
         private ASMultiname ReadMultiname()
