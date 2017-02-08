@@ -11,6 +11,9 @@ namespace Flazzy.Tags
         public string Name { get; set; }
         public string Copyright { get; set; }
 
+        public DefineFontNameTag()
+            : base(TagKind.DefineFontName)
+        { }
         public DefineFontNameTag(HeaderRecord header, FlashReader input)
             : base(header)
         {

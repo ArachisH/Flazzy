@@ -9,6 +9,9 @@ namespace Flazzy.Tags
     {
         public string Name { get; set; }
 
+        public FrameLabelTag()
+            : base(TagKind.FrameLabel)
+        { }
         public FrameLabelTag(HeaderRecord header, FlashReader input)
             : base(header)
         {

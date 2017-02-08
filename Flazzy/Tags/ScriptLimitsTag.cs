@@ -8,6 +8,9 @@ namespace Flazzy.Tags
         public ushort MaxRecursionDepth { get; set; }
         public ushort ScriptTimeoutSeconds { get; set; }
 
+        public ScriptLimitsTag()
+            : base(TagKind.ScriptLimits)
+        { }
         public ScriptLimitsTag(HeaderRecord header, FlashReader input)
             : base(header)
         {

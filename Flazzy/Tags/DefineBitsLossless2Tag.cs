@@ -20,6 +20,11 @@ namespace Flazzy.Tags
 
         public ushort Id { get; set; }
 
+        public DefineBitsLossless2Tag()
+            : base(TagKind.DefineBitsLossless2)
+        {
+            _compressedBitmapData = new byte[0];
+        }
         public DefineBitsLossless2Tag(HeaderRecord header, FlashReader input)
             : base(header)
         {
@@ -115,7 +120,7 @@ namespace Flazzy.Tags
                     if (_compressedBitmapData == null)
                     {
                         _compressedBitmapData =
-                            Zlib.Compress(_pixelData);
+                            ZLIB.Compress(_pixelData);
                     }
                     break;
                 }
@@ -124,7 +129,7 @@ namespace Flazzy.Tags
                     if (_pixelData == null)
                     {
                         _pixelData =
-                            Zlib.Decompress(_compressedBitmapData);
+                            ZLIB.Decompress(_compressedBitmapData);
                     }
                     break;
                 }

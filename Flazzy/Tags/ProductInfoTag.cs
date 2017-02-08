@@ -18,6 +18,11 @@ namespace Flazzy.Tags
 
         public DateTime CompilationDate { get; set; }
 
+        public ProductInfoTag()
+            :base(TagKind.ProductInfo)
+        {
+            CompilationDate = DateTime.Now;
+        }
         public ProductInfoTag(HeaderRecord header, FlashReader input)
             : base(header)
         {

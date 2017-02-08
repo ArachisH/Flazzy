@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Collections.Generic;
 
 using Flazzy.IO;
@@ -11,6 +12,12 @@ namespace Flazzy.Tags
         public List<ushort> Ids { get; }
         public List<string> Names { get; }
 
+        public SymbolClassTag()
+            : base(TagKind.SymbolClass)
+        {
+            Ids = new List<ushort>();
+            Names = new List<string>();
+        }
         public SymbolClassTag(HeaderRecord header, FlashReader input)
             : base(header)
         {
@@ -40,8 +47,8 @@ namespace Flazzy.Tags
 
         protected override void WriteBodyTo(FlashWriter output)
         {
-            var symbolCount = (ushort)Ids.Count;
-            output.Write(symbolCount);
+            int symbolCount = Math.Min(Ids.Count, Names.Count);
+            output.Write((ushort)symbolCount);
 
             for (int i = 0; i < symbolCount; i++)
             {

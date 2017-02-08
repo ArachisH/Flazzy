@@ -11,6 +11,11 @@ namespace Flazzy.Tags
         public string Name { get; set; }
         public byte[] ABCData { get; set; }
 
+        public DoABCTag()
+            : base(TagKind.DoABC)
+        {
+            ABCData = new byte[0];
+        }
         public DoABCTag(HeaderRecord header, FlashReader input)
             : base(header)
         {
