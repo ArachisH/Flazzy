@@ -87,6 +87,10 @@ namespace Flazzy.ABC
 
         public override string ToAS3()
         {
+            return ToAS3(false);
+        }
+        public string ToAS3(bool excludeModifiers)
+        {
             string prefix = (Trait?.QName ?? Container?.QName)
                 ?.Namespace.GetAS3Modifiers();
 
@@ -100,6 +104,11 @@ namespace Flazzy.ABC
                 prefix += (Trait?.QName ?? Container.QName).Name; ;
             }
 
+            if (excludeModifiers)
+            {
+                prefix = string.Empty;
+            }
+
             string parameters = string.Join(
                 ", ", Parameters.Select(p => p.ToAS3()));
 
@@ -111,6 +120,7 @@ namespace Flazzy.ABC
 
             return $"{prefix}{suffix}";
         }
+
         public override void WriteTo(FlashWriter output)
         {
             output.WriteInt30(Parameters.Count);
