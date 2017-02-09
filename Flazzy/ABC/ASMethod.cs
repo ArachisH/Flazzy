@@ -108,11 +108,15 @@ namespace Flazzy.ABC
             {
                 prefix = string.Empty;
             }
+            
+            IEnumerable<string> rawParams = Parameters.Select(p => p.ToAS3());
+            if (Flags.HasFlag(MethodFlags.NeedRest))
+            {
+                rawParams = rawParams.Concat(
+                    new[] { ("... param" + (Parameters.Count + 1)) });
+            }
 
-            string parameters = string.Join(
-                ", ", Parameters.Select(p => p.ToAS3()));
-
-            string suffix = $"({parameters})";
+            string suffix = $"({string.Join(", ", rawParams)})";
             if (ReturnType != null)
             {
                 suffix += (":" + ReturnType.Name);
