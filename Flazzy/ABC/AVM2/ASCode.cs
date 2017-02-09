@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -8,6 +9,7 @@ using Flazzy.ABC.AVM2.Instructions;
 
 namespace Flazzy.ABC.AVM2
 {
+    [DebuggerDisplay("Count = {Count}")]
     public class ASCode : FlashItem, IList<ASInstruction>
     {
         private readonly ABCFile _abc;
