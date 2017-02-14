@@ -17,8 +17,7 @@ This library provides functionality for adding, removing, or modifying instructi
 The **ASCode** type also allows for basic control-flow deobfuscation, you can acheive this by calling the **Deobfuscate()** method after the type is initialized. For a list of supported instructions see [here](/Flazzy/ABC/AVM2/Instructions).
 
 ## Usage/Tutorials
-For some tutorials to get you started, proceed to the project [Wiki](/Flazzy/wiki).
-This is were you can read up on how to actually use this thing.
+For some tutorials to get you started, proceed to the project [Wiki](https://github.com/ArachisH/Flazzy/wiki). This is were you can read up on how to actually use this thing.
 
 ## Resources
 * [Shockwave Flash File Format v19](/Docs/SWF Format.pdf)  
