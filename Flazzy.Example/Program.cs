@@ -57,9 +57,6 @@ namespace Flazzy.Example
             ConsoleEx.WriteLineTitle("Disassembling");
             Flash.Disassemble();
 
-            Console.WriteLine("SHA1: " + GetSHA1(Info.FullName));
-            Console.WriteLine();
-
             IDictionary<TagKind, List<TagItem>> groups = GetTagGroups();
             foreach (KeyValuePair<TagKind, List<TagItem>> groupPair in groups)
             {
