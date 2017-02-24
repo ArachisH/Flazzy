@@ -49,7 +49,12 @@ namespace Flazzy
             switch (Compression)
             {
                 case CompressionKind.LZMA:
-                throw new NotSupportedException("LZMA");
+                {
+                    // Sup...
+                    byte[] decompressed = LZMA.Decompress(input.BaseStream, ((int)FileLength - 8));
+                    _input = new FlashReader(decompressed);
+                    break;
+                }
 
                 case CompressionKind.ZLIB:
                 _input = ZLIB.WrapDecompressor(input.BaseStream);
@@ -101,6 +106,11 @@ namespace Flazzy
         {
             Assemble(output, Compression, null);
         }
+        public void Assemble(FlashWriter output, Action<TagItem> callback)
+        {
+            Assemble(output, Compression, callback);
+        }
+
         public void Assemble(FlashWriter output, CompressionKind compression)
         {
             Assemble(output, compression, null);
@@ -117,7 +127,8 @@ namespace Flazzy
             {
                 case CompressionKind.LZMA:
                 {
-                    throw new NotSupportedException("LZMA");
+                    compressor = new FlashWriter((int)FileLength);
+                    break;
                 }
                 case CompressionKind.ZLIB:
                 {
@@ -137,6 +148,12 @@ namespace Flazzy
 
                 fileLength += tag.Header.Length;
                 fileLength += (tag.Header.IsLongTag ? 6 : 2);
+            }
+            if (compression == CompressionKind.LZMA)
+            {
+                byte[] uncompressedBody = ((MemoryStream)compressor.BaseStream).ToArray();
+                byte[] compressedBody = LZMA.Compress(uncompressedBody);
+                output.Write(compressedBody);
             }
             compressor?.Dispose();
             /* Body End */
