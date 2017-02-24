@@ -28,6 +28,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -36,6 +37,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -234,6 +236,22 @@
     <Compile Include="Compression\ComponentAce\ZlibConstants.cs" />
     <Compile Include="Compression\ComponentAce\ZOutputStream.cs" />
     <Compile Include="Compression\ComponentAce\ZStream.cs" />
+    <Compile Include="Compression\SevenZip\Common\CommandLineParser.cs" />
+    <Compile Include="Compression\SevenZip\Common\CRC.cs" />
+    <Compile Include="Compression\SevenZip\Common\InBuffer.cs" />
+    <Compile Include="Compression\SevenZip\Common\OutBuffer.cs" />
+    <Compile Include="Compression\SevenZip\Compress\LZMA\LzmaBase.cs" />
+    <Compile Include="Compression\SevenZip\Compress\LZMA\LzmaDecoder.cs" />
+    <Compile Include="Compression\SevenZip\Compress\LZMA\LzmaEncoder.cs" />
+    <Compile Include="Compression\SevenZip\Compress\LZ\IMatchFinder.cs" />
+    <Compile Include="Compression\SevenZip\Compress\LZ\LzBinTree.cs" />
+    <Compile Include="Compression\SevenZip\Compress\LZ\LzInWindow.cs" />
+    <Compile Include="Compression\SevenZip\Compress\LZ\LzOutWindow.cs" />
+    <Compile Include="Compression\SevenZip\Compress\RangeCoder\RangeCoder.cs" />
+    <Compile Include="Compression\SevenZip\Compress\RangeCoder\RangeCoderBit.cs" />
+    <Compile Include="Compression\SevenZip\Compress\RangeCoder\RangeCoderBitTree.cs" />
+    <Compile Include="Compression\SevenZip\ICoder.cs" />
+    <Compile Include="Compression\LZMA.cs" />
     <Compile Include="Compression\ZLIB.cs" />
     <Compile Include="Internals\FlashTools.cs" />
     <Compile Include="Tags\DefineBinaryDataTag.cs" />
