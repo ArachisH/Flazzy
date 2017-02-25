@@ -448,6 +448,9 @@ namespace Flazzy.ABC.AVM2.Instructions
                 case OPCode.NextValue:
                 return new NextValueIns();
 
+                case OPCode.Nop:
+                return new NopIns();
+
                 case OPCode.Not:
                 return new NotIns();
 
