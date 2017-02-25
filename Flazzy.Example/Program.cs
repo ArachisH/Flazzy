@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 
 using Flazzy.IO;
 using Flazzy.Tags;
 using Flazzy.Example.Utilities;
-using System.Security.Cryptography;
 
 namespace Flazzy.Example
 {
