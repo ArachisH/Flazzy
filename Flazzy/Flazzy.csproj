@@ -132,6 +132,7 @@
     <Compile Include="ABC\AVM2\Instructions\DxnsLateIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Enums\OPCode.cs" />
     <Compile Include="ABC\AVM2\Instructions\EscXAttrIns.cs" />
+    <Compile Include="ABC\AVM2\Instructions\EscXElemIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\FindPropertyIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\FindPropStrictIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\GetDescendantsIns.cs" />
