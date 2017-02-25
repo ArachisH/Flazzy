@@ -376,6 +376,9 @@ namespace Flazzy.ABC.AVM2.Instructions
                 case OPCode.DxnsLate:
                 return new DxnsLateIns();
 
+                case OPCode.Esc_XElem:
+                return new EscXElemIns();
+
                 case OPCode.Esc_XAttr:
                 return new EscXAttrIns();
 
