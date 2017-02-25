@@ -156,6 +156,7 @@
     <Compile Include="ABC\AVM2\Instructions\NewObjectIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\NextNameIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\NextValueIns.cs" />
+    <Compile Include="ABC\AVM2\Instructions\NopIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\NotIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\PopIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\PopScopeIns.cs" />
