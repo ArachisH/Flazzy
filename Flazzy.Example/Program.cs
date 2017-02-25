@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 
 using Flazzy.IO;
+using Flazzy.ABC;
 using Flazzy.Tags;
 using Flazzy.Example.Utilities;
 
@@ -36,7 +38,18 @@ namespace Flazzy.Example
             Assemble();
         }
         private void Modify()
-        { }
+        {
+#if DEBUG
+            foreach (DoABCTag abcTag in Flash.Tags.Where(t => t.Kind == TagKind.DoABC))
+            {
+                var abc = new ABCFile(abcTag.ABCData);
+                foreach (ASMethodBody body in abc.MethodBodies)
+                {
+                    body.ParseCode();
+                }
+            }
+#endif
+        }
         private void Assemble()
         {
             ConsoleEx.WriteLineTitle("Assembling");
