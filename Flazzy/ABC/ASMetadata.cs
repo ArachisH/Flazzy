@@ -38,6 +38,7 @@ namespace Flazzy.ABC
         public override void WriteTo(FlashWriter output)
         {
             output.WriteInt30(NameIndex);
+            output.WriteInt30(Items.Count);
             for (int i = 0; i < Items.Count; i++)
             {
                 ASItemInfo item = Items[i];
