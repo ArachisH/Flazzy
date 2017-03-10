@@ -195,7 +195,9 @@ namespace Flazzy.ABC
         {
             output.Write((ushort)Version.Minor);
             output.Write((ushort)Version.Major);
+
             Pool.WriteTo(output);
+
             WriteTo(output, Methods);
             WriteTo(output, Metadata);
             WriteTo(output, Instances);
