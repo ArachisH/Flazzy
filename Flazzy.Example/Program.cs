@@ -40,12 +40,19 @@ namespace Flazzy.Example
         private void Modify()
         {
 #if DEBUG
-            foreach (DoABCTag abcTag in Flash.Tags.Where(t => t.Kind == TagKind.DoABC))
+            foreach (DoABCTag abcTag in Flash.Tags
+                .Where(t => t.Kind == TagKind.DoABC))
             {
                 var abc = new ABCFile(abcTag.ABCData);
-                foreach (ASMethodBody body in abc.MethodBodies)
+                byte[] newData = abc.ToArray();
+
+                int minSize = (Math.Min(abcTag.ABCData.Length, newData.Length));
+                for (int i = 0; i < minSize; i++)
                 {
-                    body.ParseCode();
+                    if (newData[i] != abcTag.ABCData[i])
+                    {
+                        System.Diagnostics.Debugger.Break();
+                    }
                 }
             }
 #endif
@@ -99,8 +106,7 @@ namespace Flazzy.Example
             var groups = new Dictionary<TagKind, List<TagItem>>();
             foreach (TagItem tag in Flash.Tags)
             {
-                List<TagItem> group = null;
-                if (!groups.TryGetValue(tag.Kind, out group))
+                if (!groups.TryGetValue(tag.Kind, out List<TagItem> group))
                 {
                     group = new List<TagItem>();
                     groups.Add(tag.Kind, group);
