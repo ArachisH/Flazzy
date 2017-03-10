@@ -99,6 +99,12 @@ namespace Flazzy
                 }
                 callback?.Invoke(tag);
                 Tags.Add(tag);
+
+                if (tag.Kind == TagKind.End)
+                {
+                    FileLength = (uint)position;
+                    break;
+                }
             }
         }
 
