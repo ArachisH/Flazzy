@@ -238,10 +238,7 @@
     <Compile Include="Compression\ComponentAce\ZlibConstants.cs" />
     <Compile Include="Compression\ComponentAce\ZOutputStream.cs" />
     <Compile Include="Compression\ComponentAce\ZStream.cs" />
-    <Compile Include="Compression\SevenZip\Common\CommandLineParser.cs" />
     <Compile Include="Compression\SevenZip\Common\CRC.cs" />
-    <Compile Include="Compression\SevenZip\Common\InBuffer.cs" />
-    <Compile Include="Compression\SevenZip\Common\OutBuffer.cs" />
     <Compile Include="Compression\SevenZip\Compress\LZMA\LzmaBase.cs" />
     <Compile Include="Compression\SevenZip\Compress\LZMA\LzmaDecoder.cs" />
     <Compile Include="Compression\SevenZip\Compress\LZMA\LzmaEncoder.cs" />
