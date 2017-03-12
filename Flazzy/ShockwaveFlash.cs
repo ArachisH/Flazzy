@@ -13,12 +13,10 @@ namespace Flazzy
     {
         private readonly FlashReader _input;
 
-        public string Signature
-        {
-            get { return $"{(char)Compression}WS"; }
-        }
-        public byte Version { get; set; }
         public List<TagItem> Tags { get; }
+        public string Signature => ((char)Compression + "WS");
+
+        public byte Version { get; set; }
         public uint FileLength { get; set; }
         public FrameRecord Frame { get; set; }
         public CompressionKind Compression { get; set; }
