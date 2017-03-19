@@ -78,23 +78,21 @@ namespace Flazzy.ABC
         public ASMethod GetMethod(string qualifiedName)
         {
             return GetMethods()
-                .Where(m => m.Trait.QName.Name == qualifiedName)
-                .SingleOrDefault();
+                .FirstOrDefault(m => m.Trait.QName.Name == qualifiedName);
         }
         public ASMethod GetMethod(int paramCount, string qualifiedName)
         {
-            return GetMethods()
-                .Where(m => m.Trait.QName.Name == qualifiedName &&
-                            m.Parameters.Count == paramCount)
-                .FirstOrDefault();
+            ASMethod method = GetMethod(qualifiedName);
+            if (method?.Parameters.Count != paramCount) return null;
+
+            return method;
         }
         public ASMethod GetMethod(int paramCount, string qualifiedName, string returnTypeName)
         {
-            return GetMethods()
-                .Where(m => m.Trait.QName.Name == qualifiedName &&
-                            m.Parameters.Count == paramCount &&
-                            m.ReturnType.Name == returnTypeName)
-                .FirstOrDefault();
+            ASMethod method = GetMethod(paramCount, qualifiedName);
+            if (method?.ReturnType?.Name != returnTypeName) return null;
+
+            return method;
         }
 
         public IEnumerable<ASTrait> GetGetters()
