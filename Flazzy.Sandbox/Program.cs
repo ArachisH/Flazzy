@@ -2,14 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 
 using Flazzy.IO;
 using Flazzy.ABC;
 using Flazzy.Tags;
-using Flazzy.Example.Utilities;
+using Flazzy.Sandbox.Utilities;
+using Flazzy.ABC.AVM2;
 
-namespace Flazzy.Example
+namespace Flazzy.Sandbox
 {
     public class Program
     {
@@ -26,7 +26,8 @@ namespace Flazzy.Example
             Console.Title = ("Flazzy v" +
                 typeof(ShockwaveFlash).Assembly.GetName().Version);
 
-            new Program(args).Run();
+            var app = new Program(args);
+            app.Run();
         }
 
         public void Run()
@@ -37,6 +38,7 @@ namespace Flazzy.Example
 
             Assemble();
         }
+
         private void Modify()
         {
 #if DEBUG
@@ -44,14 +46,34 @@ namespace Flazzy.Example
                 .Where(t => t.Kind == TagKind.DoABC))
             {
                 var abc = new ABCFile(abcTag.ABCData);
-                byte[] newData = abc.ToArray();
 
-                int minSize = (Math.Min(abcTag.ABCData.Length, newData.Length));
+                byte[] newData = abc.ToArray();
+                byte[] oldData = abcTag.ABCData;
+                
+                int minSize = (Math.Min(oldData.Length, newData.Length));
                 for (int i = 0; i < minSize; i++)
                 {
                     if (newData[i] != abcTag.ABCData[i])
                     {
                         System.Diagnostics.Debugger.Break();
+                        return;
+                    }
+                }
+                if (oldData.Length != newData.Length)
+                {
+                    System.Diagnostics.Debugger.Break();
+                    return;
+                }
+
+                foreach (ASMethodBody body in abc.MethodBodies)
+                {
+                    if (body.Exceptions.Count > 0) continue;
+                    if (body.Code[0] == 0x27 && body.Code[1] == 0x26) // PushFalse, PushTrue
+                    {
+                        ASCode code = body.ParseCode();
+                        code.Deobfuscate();
+
+                        byte[] newCode = code.ToArray();
                     }
                 }
             }
@@ -61,15 +83,12 @@ namespace Flazzy.Example
         {
             ConsoleEx.WriteLineTitle("Assembling");
 
-            string fileName = "Assembled.swf";
-            using (var asmFile = File.Open(fileName, FileMode.Create))
-            using (var asmStream = new FlashWriter(asmFile))
+            string asmdPath = Path.Combine(Info.DirectoryName, ("asmd_" + Info.Name));
+            using (var asmdFile = File.Open(asmdPath, FileMode.Create))
+            using (var asmdStream = new FlashWriter(asmdFile))
             {
-                Flash.Assemble(asmStream, CompressionKind.None);
-
-                asmFile.Position = 0;
-                Console.WriteLine("SHA1: " + GetSHA1(asmFile));
-                Console.WriteLine("File Assembled: " + Path.Combine(Info.DirectoryName, fileName));
+                Flash.Assemble(asmdStream, CompressionKind.None);
+                Console.WriteLine("File Assembled: " + asmdPath);
             }
         }
         private void Disassemble()
@@ -77,30 +96,20 @@ namespace Flazzy.Example
             ConsoleEx.WriteLineTitle("Disassembling");
             Flash.Disassemble();
 
+            var productInfo = (ProductInfoTag)Flash.Tags
+                .FirstOrDefault(t => t.Kind == TagKind.ProductInfo);
+
+            if (productInfo != null)
+            {
+                Console.WriteLine("Compilation Date: {0}", (productInfo?.CompilationDate.ToString() ?? "?"));
+            }
             IDictionary<TagKind, List<TagItem>> groups = GetTagGroups();
             foreach (KeyValuePair<TagKind, List<TagItem>> groupPair in groups)
             {
                 Console.WriteLine($"{groupPair.Key}: {groupPair.Value.Count:n0}");
             }
-            Console.WriteLine();
         }
 
-        public string GetSHA1(string path)
-        {
-            using (var input = File.OpenRead(path))
-            {
-                return GetSHA1(input);
-            }
-        }
-        public string GetSHA1(Stream input)
-        {
-            using (var sha1 = new SHA1Managed())
-            {
-                return BitConverter.ToString(sha1.ComputeHash(input))
-                    .Replace("-", string.Empty)
-                    .ToLower();
-            }
-        }
         private IDictionary<TagKind, List<TagItem>> GetTagGroups()
         {
             var groups = new Dictionary<TagKind, List<TagItem>>();
