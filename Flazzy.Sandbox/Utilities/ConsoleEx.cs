@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Flazzy.Example.Utilities
+namespace Flazzy.Sandbox.Utilities
 {
     public static class ConsoleEx
     {

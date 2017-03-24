@@ -1,24 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{41C5BB50-939E-4F53-9C24-203B180943EE}</ProjectGuid>
+    <ProjectGuid>{84D3802E-16AA-4DD1-906C-3D4AEE5FF8C6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Flazzy</RootNamespace>
     <AssemblyName>Flazzy</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-    <PrimaryVersionType>AssemblyVersionAttribute</PrimaryVersionType>
     <UpdateAssemblyVersion>True</UpdateAssemblyVersion>
     <UpdateAssemblyFileVersion>True</UpdateAssemblyFileVersion>
     <UpdateAssemblyInfoVersion>False</UpdateAssemblyInfoVersion>
-    <AssemblyVersionSettings>None.IncrementOnDemandWithReset.None.None</AssemblyVersionSettings>
-    <AssemblyFileVersionSettings>None.IncrementOnDemandWithReset.None.None</AssemblyFileVersionSettings>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersionSettings>None.IncrementOnDemand.None.None</AssemblyVersionSettings>
+    <AssemblyFileVersionSettings>None.IncrementOnDemand.None.None</AssemblyFileVersionSettings>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -28,7 +25,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -37,11 +33,10 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
@@ -49,6 +44,7 @@
   <ItemGroup>
     <Compile Include="ABC\ABCFile.cs" />
     <Compile Include="ABC\AS3Item.cs" />
+    <Compile Include="ABC\ASClass.cs" />
     <Compile Include="ABC\ASConstantPool.cs" />
     <Compile Include="ABC\ASContainer.cs" />
     <Compile Include="ABC\ASException.cs" />
@@ -60,7 +56,6 @@
     <Compile Include="ABC\ASMultiname.cs" />
     <Compile Include="ABC\ASNamespace.cs" />
     <Compile Include="ABC\ASNamespaceSet.cs" />
-    <Compile Include="ABC\ASClass.cs" />
     <Compile Include="ABC\ASParameter.cs" />
     <Compile Include="ABC\ASScript.cs" />
     <Compile Include="ABC\ASTrait.cs" />
@@ -90,6 +85,7 @@
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\StrictEqualsIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\SubtractIIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\SubtractIns.cs" />
+    <Compile Include="ABC\AVM2\Instructions\ASInstruction.cs" />
     <Compile Include="ABC\AVM2\Instructions\AsTypeLateIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Bit Manipulation\BitAndIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Bit Manipulation\BitNotIns.cs" />
@@ -146,7 +142,6 @@
     <Compile Include="ABC\AVM2\Instructions\HasNextIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\InitPropertyIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\InstanceOfIns.cs" />
-    <Compile Include="ABC\AVM2\Instructions\ASInstruction.cs" />
     <Compile Include="ABC\AVM2\Instructions\LabelIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\LookUpSwitchIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\NewActivationIns.cs" />
@@ -164,15 +159,15 @@
     <Compile Include="ABC\AVM2\Instructions\PushScopeIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\PushUndefinedIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\PushWithIns.cs" />
-    <Compile Include="ABC\AVM2\Instructions\Register Management\DecLocalIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\DecLocalIIns.cs" />
+    <Compile Include="ABC\AVM2\Instructions\Register Management\DecLocalIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\GetLocal0Ins.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\GetLocal1Ins.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\GetLocal2Ins.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\GetLocal3Ins.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\GetLocalIns.cs" />
-    <Compile Include="ABC\AVM2\Instructions\Register Management\IncLocalIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\IncLocalIIns.cs" />
+    <Compile Include="ABC\AVM2\Instructions\Register Management\IncLocalIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\KillIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\Local.cs" />
     <Compile Include="ABC\AVM2\Instructions\Register Management\SetLocal0Ins.cs" />
@@ -208,12 +203,12 @@
     <Compile Include="ABC\AVM2\Instructions\Type Conversion\ConvertSIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Type Conversion\ConvertUIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\TypeOfIns.cs" />
+    <Compile Include="ABC\ConstantItem.cs" />
     <Compile Include="ABC\Enums\ClassFlags.cs" />
     <Compile Include="ABC\Enums\ConstantKind.cs" />
     <Compile Include="ABC\Enums\MethodFlags.cs" />
     <Compile Include="ABC\Enums\MultinameKind.cs" />
     <Compile Include="ABC\Enums\NamespaceKind.cs" />
-    <Compile Include="ABC\ConstantItem.cs" />
     <Compile Include="ABC\Enums\TraitAttributes.cs" />
     <Compile Include="ABC\Enums\TraitKind.cs" />
     <Compile Include="ABC\Multinames\IMultiname.cs" />
@@ -238,6 +233,7 @@
     <Compile Include="Compression\ComponentAce\ZlibConstants.cs" />
     <Compile Include="Compression\ComponentAce\ZOutputStream.cs" />
     <Compile Include="Compression\ComponentAce\ZStream.cs" />
+    <Compile Include="Compression\LZMA.cs" />
     <Compile Include="Compression\SevenZip\Common\CRC.cs" />
     <Compile Include="Compression\SevenZip\Compress\LZMA\LzmaBase.cs" />
     <Compile Include="Compression\SevenZip\Compress\LZMA\LzmaDecoder.cs" />
@@ -250,15 +246,9 @@
     <Compile Include="Compression\SevenZip\Compress\RangeCoder\RangeCoderBit.cs" />
     <Compile Include="Compression\SevenZip\Compress\RangeCoder\RangeCoderBitTree.cs" />
     <Compile Include="Compression\SevenZip\ICoder.cs" />
-    <Compile Include="Compression\LZMA.cs" />
     <Compile Include="Compression\ZLIB.cs" />
-    <Compile Include="Internals\FlashTools.cs" />
-    <Compile Include="Tags\DefineBinaryDataTag.cs" />
-    <Compile Include="Tags\DefineBitsLossless2Tag.cs" />
-    <Compile Include="Tags\DefineFontNameTag.cs" />
-    <Compile Include="Tags\DefineSoundTag.cs" />
-    <Compile Include="Tags\DoABCTag.cs" />
     <Compile Include="FlashItem.cs" />
+    <Compile Include="Internals\FlashTools.cs" />
     <Compile Include="IO\FlashReader.cs" />
     <Compile Include="IO\FlashWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -266,10 +256,15 @@
     <Compile Include="Records\HeaderRecord.cs" />
     <Compile Include="Records\RectangeRecord.cs" />
     <Compile Include="ShockwaveFlash.cs" />
+    <Compile Include="Tags\DefineBinaryDataTag.cs" />
+    <Compile Include="Tags\DefineBitsLossless2Tag.cs" />
+    <Compile Include="Tags\DefineFontNameTag.cs" />
+    <Compile Include="Tags\DefineSoundTag.cs" />
+    <Compile Include="Tags\DoABCTag.cs" />
     <Compile Include="Tags\EndTag.cs" />
+    <Compile Include="Tags\Enums\FlashEdition.cs" />
     <Compile Include="Tags\Enums\FlashProduct.cs" />
     <Compile Include="Tags\Enums\TagKind.cs" />
-    <Compile Include="Tags\Enums\FlashEdition.cs" />
     <Compile Include="Tags\ExportAssetsTag.cs" />
     <Compile Include="Tags\FileAttributesTag.cs" />
     <Compile Include="Tags\FrameLabelTag.cs" />
@@ -281,13 +276,5 @@
     <Compile Include="Tags\TagItem.cs" />
     <Compile Include="Tags\UnknownTag.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
