@@ -12,7 +12,7 @@
         }
         public override void Execute(ASMachine machine)
         {
-            // TODO: Pop from Scope
+            machine.Scopes.Pop();
             machine.Values.Push(null);
         }
     }
