@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Collections;
@@ -20,7 +21,7 @@ namespace Flazzy.ABC.AVM2
         private readonly Dictionary<OPCode, List<ASInstruction>> _opGroups;
 
         public Dictionary<Jumper, ASInstruction> JumpExits { get; }
-        public Dictionary<LookUpSwitchIns, List<ASInstruction>> SwitchExits { get; }
+        public Dictionary<LookUpSwitchIns, ASInstruction[]> SwitchExits { get; }
 
         public bool IsReadOnly => false;
         public int Count => _instructions.Count;
@@ -51,7 +52,7 @@ namespace Flazzy.ABC.AVM2
             _opGroups = new Dictionary<OPCode, List<ASInstruction>>();
 
             JumpExits = new Dictionary<Jumper, ASInstruction>();
-            SwitchExits = new Dictionary<LookUpSwitchIns, List<ASInstruction>>();
+            SwitchExits = new Dictionary<LookUpSwitchIns, ASInstruction[]>();
 
             // TODO Implement deobfuscation while reading.
             LoadInstructions();
@@ -256,7 +257,7 @@ namespace Flazzy.ABC.AVM2
             var localReferences = new Dictionary<int, List<ASInstruction>>();
             var swappedValues = new Dictionary<ASInstruction, ASInstruction[]>();
             KeyValuePair<Jumper, ASInstruction>[] jumpExits = JumpExits.ToArray();
-            KeyValuePair<LookUpSwitchIns, List<ASInstruction>>[] switchExits = SwitchExits.ToArray();
+            KeyValuePair<LookUpSwitchIns, ASInstruction[]>[] switchExits = SwitchExits.ToArray();
             for (int i = 0; i < _instructions.Count; i++)
             {
                 ASInstruction instruction = _instructions[i];
@@ -289,10 +290,10 @@ namespace Flazzy.ABC.AVM2
                                     // Do not break, another jump instruction can share the same exit.
                                 }
                             }
-                            foreach (KeyValuePair<LookUpSwitchIns, List<ASInstruction>> switchExit in switchExits)
+                            foreach (KeyValuePair<LookUpSwitchIns, ASInstruction[]> switchExit in switchExits)
                             {
-                                List<ASInstruction> cases = switchExit.Value;
-                                for (int j = 0; j < cases.Count; j++)
+                                ASInstruction[] cases = switchExit.Value;
+                                for (int j = 0; j < cases.Length; j++)
                                 {
                                     ASInstruction exit = cases[j];
                                     if (leftPusher == exit)
@@ -441,7 +442,7 @@ namespace Flazzy.ABC.AVM2
         }
         public LookUpSwitchIns GetSwitchEntry(ASInstruction exit)
         {
-            foreach (KeyValuePair<LookUpSwitchIns, List<ASInstruction>> switchExit in SwitchExits)
+            foreach (KeyValuePair<LookUpSwitchIns, ASInstruction[]> switchExit in SwitchExits)
             {
                 if (!switchExit.Value.Contains(exit)) continue;
                 return switchExit.Key;
@@ -488,8 +489,10 @@ namespace Flazzy.ABC.AVM2
         }
         private void LoadInstructions()
         {
+            var caseIndices = new Dictionary<long, int>();
             var marks = new Dictionary<long, ASInstruction>();
             var sharedExits = new Dictionary<long, List<Jumper>>();
+            var forwardCaseExits = new Dictionary<long, LookUpSwitchIns>();
             using (var input = new FlashReader(_body.Code))
             {
                 while (input.IsDataAvailable)
@@ -520,28 +523,39 @@ namespace Flazzy.ABC.AVM2
                         sharedExits.Remove(previousPosition);
                     }
 
+                    LookUpSwitchIns lookUpSwitch = null;
+                    if (forwardCaseExits.TryGetValue(previousPosition, out lookUpSwitch))
+                    {
+                        int index = caseIndices[previousPosition];
+                        SwitchExits[lookUpSwitch][index] = instruction;
+
+                        caseIndices.Remove(previousPosition);
+                        forwardCaseExits.Remove(previousPosition);
+                    }
+
                     if (instruction.OP == OPCode.LookUpSwitch)
                     {
-                        var lookUp = (LookUpSwitchIns)instruction;
-                        var offsets = new List<uint>(lookUp.CaseOffsets);
-                        offsets.Add(lookUp.DefaultOffset);
+                        lookUpSwitch = (LookUpSwitchIns)instruction;
+                        var offsets = new List<uint>(lookUpSwitch.CaseOffsets);
+                        offsets.Add(lookUpSwitch.DefaultOffset);
 
-                        var cases = new List<ASInstruction>();
-                        foreach (uint offset in offsets)
+                        var cases = new ASInstruction[offsets.Count];
+                        for (int i = 0; i < offsets.Count; i++)
                         {
                             ASInstruction exit = null;
-                            long exitPosition = (previousPosition + offset);
+                            long exitPosition = (previousPosition + offsets[i]);
                             if (exitPosition <= input.Length)
                             {
-                                // TODO
+                                caseIndices.Add(exitPosition, i);
+                                forwardCaseExits.Add(exitPosition, lookUpSwitch);
                             }
                             else
                             {
+                                cases[i] = exit;
                                 exit = marks[(exitPosition - uint.MaxValue) - 1];
                             }
-                            cases.Add(exit);
                         }
-                        SwitchExits.Add(lookUp, cases);
+                        SwitchExits.Add(lookUpSwitch, cases);
                     }
                     else if (Jumper.IsValid(instruction.OP))
                     {
@@ -691,7 +705,7 @@ namespace Flazzy.ABC.AVM2
                         return 0;
                     }
                 }
-                foreach (KeyValuePair<LookUpSwitchIns, List<ASInstruction>> switchExit in SwitchExits)
+                foreach (KeyValuePair<LookUpSwitchIns, ASInstruction[]> switchExit in SwitchExits)
                 {
                     foreach (ASInstruction caseExit in switchExit.Value)
                     {
@@ -737,6 +751,7 @@ namespace Flazzy.ABC.AVM2
         {
             var marks = new Dictionary<ASInstruction, long>();
             var sharedExits = new Dictionary<ASInstruction, List<ASInstruction>>();
+            var forwardCaseExits = new Dictionary<ASInstruction, Tuple<LookUpSwitchIns, int>>();
             foreach (ASInstruction instruction in _instructions)
             {
                 long previousPosition = output.Position;
@@ -757,35 +772,59 @@ namespace Flazzy.ABC.AVM2
                     sharedExits.Remove(instruction);
                 }
 
+                Tuple<LookUpSwitchIns, int> switchIdentity = null;
+                if (forwardCaseExits.TryGetValue(instruction, out switchIdentity))
+                {
+                    int caseIndex = switchIdentity.Item2;
+                    LookUpSwitchIns lookUpSwitch = switchIdentity.Item1;
+
+                    long position = marks[lookUpSwitch];
+                    var fixedOffset = (uint)(previousPosition - position);
+
+                    if (caseIndex == lookUpSwitch.CaseOffsets.Count)
+                    {
+                        lookUpSwitch.DefaultOffset = fixedOffset;
+                    }
+                    else
+                    {
+                        lookUpSwitch.CaseOffsets[caseIndex] = fixedOffset;
+                    }
+                    Rewrite(output, lookUpSwitch, position);
+                }
+
                 if (instruction.OP == OPCode.LookUpSwitch)
                 {
-                    var lookUp = (LookUpSwitchIns)instruction;
-                    List<ASInstruction> cases = SwitchExits[lookUp];
-                    for (int i = 0; i < cases.Count; i++)
+                    bool requiresRewrite = false;
+                    var lookUpSwitch = (LookUpSwitchIns)instruction;
+                    ASInstruction[] cases = SwitchExits[lookUpSwitch];
+                    for (int i = 0; i < cases.Length; i++)
                     {
                         ASInstruction exit = cases[i];
-                        long exitPosition = marks[exit];
-
-                        uint fixedOffset = 0;
                         if (exit.OP != OPCode.Label)
                         {
-                            // TODO
+                            forwardCaseExits.Add(exit, Tuple.Create(lookUpSwitch, i));
                         }
                         else
                         {
+                            requiresRewrite = true;
+                            long exitPosition = marks[exit];
                             long jumpCount = (previousPosition - (exitPosition + 1));
-                            fixedOffset = (uint)(uint.MaxValue - jumpCount);
-                        }
-                        if (i == (cases.Count - 1))
-                        {
-                            lookUp.DefaultOffset = fixedOffset;
-                        }
-                        else
-                        {
-                            lookUp.CaseOffsets[i] = fixedOffset;
+
+                            uint fixedOffset = (uint)(uint.MaxValue - jumpCount);
+                            if (i == (cases.Length - 1))
+                            {
+                                lookUpSwitch.DefaultOffset = fixedOffset;
+                            }
+                            else
+                            {
+                                lookUpSwitch.CaseOffsets[i] = fixedOffset;
+                            }
                         }
                     }
-                    Rewrite(output, lookUp, previousPosition);
+                    if (requiresRewrite)
+                    {
+                        Rewrite(output, lookUpSwitch, previousPosition);
+                    }
                 }
                 else if (Jumper.IsValid(instruction.OP))
                 {
