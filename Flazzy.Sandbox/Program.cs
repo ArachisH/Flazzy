@@ -7,7 +7,6 @@ using Flazzy.IO;
 using Flazzy.ABC;
 using Flazzy.Tags;
 using Flazzy.Sandbox.Utilities;
-using Flazzy.ABC.AVM2;
 
 namespace Flazzy.Sandbox
 {
@@ -63,18 +62,6 @@ namespace Flazzy.Sandbox
                 {
                     System.Diagnostics.Debugger.Break();
                     return;
-                }
-
-                foreach (ASMethodBody body in abc.MethodBodies)
-                {
-                    if (body.Exceptions.Count > 0) continue;
-                    if (body.Code[0] == 0x27 && body.Code[1] == 0x26) // PushFalse, PushTrue
-                    {
-                        ASCode code = body.ParseCode();
-                        code.Deobfuscate();
-
-                        byte[] newCode = code.ToArray();
-                    }
                 }
             }
 #endif
