@@ -12,7 +12,6 @@
         }
         public override void Execute(ASMachine machine)
         {
-            machine.Scopes.Pop();
             machine.Values.Push(null);
         }
     }
