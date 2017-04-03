@@ -542,7 +542,6 @@ namespace Flazzy.ABC.AVM2
                         var cases = new ASInstruction[offsets.Count];
                         for (int i = 0; i < offsets.Count; i++)
                         {
-                            ASInstruction exit = null;
                             long exitPosition = (previousPosition + offsets[i]);
                             if (exitPosition <= input.Length)
                             {
@@ -551,8 +550,7 @@ namespace Flazzy.ABC.AVM2
                             }
                             else
                             {
-                                cases[i] = exit;
-                                exit = marks[(exitPosition - uint.MaxValue) - 1];
+                                cases[i] = marks[(exitPosition - uint.MaxValue) - 1];
                             }
                         }
                         SwitchExits.Add(lookUpSwitch, cases);
