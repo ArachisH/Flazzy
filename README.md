@@ -5,7 +5,7 @@ Managed .NET 4.0 library for editing, and viewing the contents inside a SWF file
 There aren't a lot of tags supported yet in this library for modifiyng, but there is one important one that is probably the main reason for the existence of this library. This is the [DoABCTag](/Flazzy/Tags/DoABCTag.cs), or more accurately the [ABCFile](/Flazzy/ABC/ABCFile.cs) type.  
 
 The ABCFile type provides us will all the methods, classes, scripts, and all other good stuff that allow the SWF file to run like it does.
-A property named **Pool** is contained in this type, this property is of type [ASConstantPool](https://github.com/ArachisH/Flazzy/blob/master/Flazzy/ABC/ASConstantPool.cs), which contains collections of constant values used throughout the ABC file.  
+A property named **Pool** is contained in this type, this property is of type [ASConstantPool](/Flazzy/ABC/ASConstantPool.cs), which contains collections of constant values used throughout the ABC file.  
 
 Almost everything is index-based in the ABC file, if a class has a name **foo**, it will instead point to the index of **foo** in the Strings collection in the constant pool. The same format applies to other constant types found throughout the ABC file, although there are some cases where the raw value is simply provided to the type for reading. Therefore, be careful when inserting, or removing values from any collection in the constant pool, as this will undoubtedly affect every object utilizing that collection.  
 
@@ -17,7 +17,7 @@ This library provides functionality for adding, removing, or modifying instructi
 The **ASCode** type also allows for basic control-flow deobfuscation, you can acheive this by calling the **Deobfuscate()** method after the type is initialized. For a list of supported instructions see [here](/Flazzy/ABC/AVM2/Instructions).
 
 ## Usage/Tutorials
-For some tutorials to get you started, proceed to the project [Wiki](https://github.com/ArachisH/Flazzy/wiki). This is were you can read up on how to actually use this thing.
+For some tutorials to get you started, proceed to the project wiki.
 
 ## Resources
 * [Shockwave Flash File Format v19](/Docs/SWF Format.pdf)  
