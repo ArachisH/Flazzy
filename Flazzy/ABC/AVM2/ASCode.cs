@@ -419,7 +419,7 @@ namespace Flazzy.ABC.AVM2
         }
         public bool IsBackwardsJump(Jumper jumper)
         {
-            return (JumpExits[jumper].OP == OPCode.Label);
+            return (IndexOf(jumper) > IndexOf(JumpExits[jumper]));
         }
         public Jumper GetJumperEntry(ASInstruction exit)
         {
