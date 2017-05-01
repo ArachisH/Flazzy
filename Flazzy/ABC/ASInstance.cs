@@ -123,8 +123,7 @@ namespace Flazzy.ABC
             else as3 += "class ";
 
             as3 += QName.Name;
-
-            if (!isInterface && Super.Name != "Object")
+            if (!isInterface && ((Super?.Name ?? "Object") != "Object"))
             {
                 as3 += $" extends {Super.Name}";
             }
