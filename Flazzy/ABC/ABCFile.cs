@@ -10,7 +10,6 @@ namespace Flazzy.ABC
     public class ABCFile : FlashItem, IDisposable
     {
         private readonly FlashReader _input;
-        private readonly int _initialLength;
         private readonly Dictionary<string, List<ASClass>> _classCache;
 
         public List<ASMethod> Methods { get; }
@@ -43,15 +42,17 @@ namespace Flazzy.ABC
             MethodBodies = new List<ASMethodBody>();
         }
         public ABCFile(byte[] data)
+            : this(new FlashReader(data))
+        { }
+        public ABCFile(FlashReader input)
             : this()
         {
-            _initialLength = data.Length;
-            _input = new FlashReader(data);
+            _input = input;
 
-            ushort minor = _input.ReadUInt16();
-            ushort major = _input.ReadUInt16();
+            ushort minor = input.ReadUInt16();
+            ushort major = input.ReadUInt16();
             Version = new Version(major, minor);
-            Pool = new ASConstantPool(this, _input);
+            Pool = new ASConstantPool(this, input);
 
             PopulateList(Methods, ReadMethod);
             PopulateList(Metadata, ReadMetadata);
@@ -221,7 +222,7 @@ namespace Flazzy.ABC
 
         public byte[] ToArray()
         {
-            using (var memOutput = new MemoryStream(_initialLength))
+            using (var memOutput = new MemoryStream())
             using (var output = new FlashWriter(memOutput))
             {
                 WriteTo(output);
