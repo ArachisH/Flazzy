@@ -146,6 +146,10 @@ namespace Flazzy.ABC
             return index;
         }
 
+        public int GetMultinameIndex(string name)
+        {
+            return GetMultinameIndices(name).FirstOrDefault();
+        }
         public IEnumerable<int> GetMultinameIndices(string name)
         {
             for (int i = 1; i < Multinames.Count; i++)
