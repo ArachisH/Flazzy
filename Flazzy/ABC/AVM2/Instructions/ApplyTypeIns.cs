@@ -9,6 +9,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         public ApplyTypeIns()
             : base(OPCode.ApplyType)
         { }
+        public ApplyTypeIns(int paramCount)
+            : this()
+        {
+            ParamCount = paramCount;
+        }
         public ApplyTypeIns(FlashReader input)
             : this()
         {

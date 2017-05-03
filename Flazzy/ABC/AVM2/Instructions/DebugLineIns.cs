@@ -9,6 +9,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         public DebugLineIns()
             : base(OPCode.DebugLine)
         { }
+        public DebugLineIns(int lineNumber)
+            : this()
+        {
+            LineNumber = lineNumber;
+        }
         public DebugLineIns(FlashReader input)
             : this()
         {

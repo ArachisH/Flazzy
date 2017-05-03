@@ -18,6 +18,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             TypeNameIndex = input.ReadInt30();
         }
+        public GetLexIns(ABCFile abc, int typeNameIndex)
+            : this(abc)
+        {
+            TypeNameIndex = typeNameIndex;
+        }
 
         public override int GetPushCount()
         {

@@ -4,9 +4,6 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public abstract class Jumper : ASInstruction
     {
-        /// <summary>
-        /// Gets or sets the number of bytes to jump.
-        /// </summary>
         public uint Offset { get; set; }
 
         public Jumper(OPCode op)
