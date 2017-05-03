@@ -32,8 +32,15 @@ namespace Flazzy.ABC.AVM2
             set
             {
                 ASInstruction previous = _instructions[index];
-                _indices.Remove(previous);
 
+                Jumper jumper = GetJumperEntry(previous);
+                if (jumper != null)
+                {
+                    JumpExits[jumper] = value;
+                }
+                // TODO: Replace switch exit if needed.
+
+                _indices.Remove(previous);
                 _indices.Add(value, index);
                 _instructions[index] = value;
             }
