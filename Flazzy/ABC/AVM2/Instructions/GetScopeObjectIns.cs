@@ -9,6 +9,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         public GetScopeObjectIns()
             : base(OPCode.GetScopeObject)
         { }
+        public GetScopeObjectIns(byte scopeIndex)
+            : this()
+        {
+            ScopeIndex = scopeIndex;
+        }
         public GetScopeObjectIns(FlashReader input)
             : this()
         {

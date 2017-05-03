@@ -16,6 +16,12 @@ namespace Flazzy.ABC.AVM2.Instructions
             ObjectIndex = input.ReadInt30();
             RegisterIndex = input.ReadInt30();
         }
+        public HasNext2Ins(int objectIndex, int registerIndex)
+            : this()
+        {
+            ObjectIndex = objectIndex;
+            RegisterIndex = registerIndex;
+        }
 
         public override int GetPushCount()
         {

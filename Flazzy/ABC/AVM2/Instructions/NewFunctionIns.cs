@@ -13,6 +13,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         public NewFunctionIns(ABCFile abc)
             : base(OPCode.NewFunction, abc)
         { }
+        public NewFunctionIns(ABCFile abc, int methodIndex)
+            : this(abc)
+        {
+            MethodIndex = methodIndex;
+        }
         public NewFunctionIns(ABCFile abc, FlashReader input)
             : this(abc)
         {

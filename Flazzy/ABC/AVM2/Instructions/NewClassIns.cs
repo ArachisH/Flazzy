@@ -13,6 +13,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         public NewClassIns(ABCFile abc)
             : base(OPCode.NewClass, abc)
         { }
+        public NewClassIns(ABCFile abc, int classIndex)
+            : this(abc)
+        {
+            ClassIndex = classIndex;
+        }
         public NewClassIns(ABCFile abc, FlashReader input)
             : this(abc)
         {

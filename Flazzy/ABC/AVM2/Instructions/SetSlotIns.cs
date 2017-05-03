@@ -9,6 +9,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         public SetSlotIns()
             : base(OPCode.SetSlot)
         { }
+        public SetSlotIns(int slotIndex)
+            : this()
+        {
+            SlotIndex = slotIndex;
+        }
         public SetSlotIns(FlashReader input)
             : this()
         {

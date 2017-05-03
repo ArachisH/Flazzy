@@ -4,14 +4,16 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class ConstructIns : ASInstruction
     {
-        /// <summary>
-        /// Gets or sets the number of arguments present on the stack.
-        /// </summary>
         public int ArgCount { get; set; }
 
         public ConstructIns()
             : base(OPCode.Construct)
         { }
+        public ConstructIns(int argCount)
+            : this()
+        {
+            ArgCount = argCount;
+        }
         public ConstructIns(FlashReader input)
             : this()
         {

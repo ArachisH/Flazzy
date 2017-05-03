@@ -9,6 +9,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         public NewObjectIns()
             : base(OPCode.NewObject)
         { }
+        public NewObjectIns(int argCount)
+            : this()
+        {
+            ArgCount = argCount;
+        }
         public NewObjectIns(FlashReader input)
             : this()
         {
