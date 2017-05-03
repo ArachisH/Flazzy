@@ -14,6 +14,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             ExceptionIndex = input.ReadInt30();
         }
+        public NewCatchIns(int exceptionIndex)
+            : this()
+        {
+            ExceptionIndex = exceptionIndex;
+        }
 
         public override int GetPushCount()
         {

@@ -13,6 +13,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         public CoerceIns(ABCFile abc)
             : base(OPCode.Coerce, abc)
         { }
+        public CoerceIns(ABCFile abc, int typeNameIndex)
+            : this(abc)
+        {
+            TypeNameIndex = typeNameIndex;
+        }
         public CoerceIns(ABCFile abc, FlashReader input)
             : this(abc)
         {

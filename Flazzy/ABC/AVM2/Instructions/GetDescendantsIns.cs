@@ -18,6 +18,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             DescendantIndex = input.ReadInt30();
         }
+        public GetDescendantsIns(ABCFile abc, int descendantIndex)
+            : this(abc)
+        {
+            DescendantIndex = descendantIndex;
+        }
 
         public override int GetPopCount()
         {

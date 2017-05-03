@@ -4,14 +4,16 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class CallIns : ASInstruction
     {
-        /// <summary>
-        /// Gets or sets the number of arguments present on the stack.
-        /// </summary>
         public int ArgCount { get; set; }
 
         public CallIns()
             : base(OPCode.Call)
         { }
+        public CallIns(int argCount)
+            : this()
+        {
+            ArgCount = argCount;
+        }
         public CallIns(FlashReader input)
             : this()
         {

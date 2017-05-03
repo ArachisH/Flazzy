@@ -24,6 +24,14 @@ namespace Flazzy.ABC.AVM2.Instructions
                 CaseOffsets.Add(input.ReadUInt24());
             }
         }
+        public LookUpSwitchIns(uint defaultOffset, params uint[] caseOffsets)
+            : this()
+        {
+            DefaultOffset = defaultOffset;
+
+            CaseOffsets.AddRange(caseOffsets);
+            CaseOffsets.Add(DefaultOffset);
+        }
 
         public override int GetPopCount()
         {

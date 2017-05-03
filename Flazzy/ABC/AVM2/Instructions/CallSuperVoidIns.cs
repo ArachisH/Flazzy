@@ -10,9 +10,6 @@ namespace Flazzy.ABC.AVM2.Instructions
         }
         public int MethodNameIndex { get; set; }
 
-        /// <summary>
-        /// Gets or sets the number of arguments present on the stack.
-        /// </summary>
         public int ArgCount { get; set; }
 
         public CallSuperVoidIns(ABCFile abc)
@@ -23,6 +20,17 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             MethodNameIndex = input.ReadInt30();
             ArgCount = input.ReadInt30();
+        }
+        public CallSuperVoidIns(ABCFile abc, int methodNameIndex)
+            : this(abc)
+        {
+            MethodNameIndex = methodNameIndex;
+        }
+        public CallSuperVoidIns(ABCFile abc, int methodNameIndex, int argCount)
+            : this(abc)
+        {
+            MethodNameIndex = methodNameIndex;
+            ArgCount = argCount;
         }
 
         public override int GetPopCount()

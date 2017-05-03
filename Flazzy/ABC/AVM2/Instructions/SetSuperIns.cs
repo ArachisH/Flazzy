@@ -18,6 +18,11 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             PropertyNameIndex = input.ReadInt30();
         }
+        public SetSuperIns(ABCFile abc, int propertyNameIndex)
+            : this(abc)
+        {
+            PropertyNameIndex = propertyNameIndex;
+        }
 
         public override int GetPopCount()
         {
