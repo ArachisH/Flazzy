@@ -117,5 +117,30 @@ namespace Flazzy.ABC.AVM2.Instructions
                 default: return false;
             }
         }
+
+        public static Local CreateSet(int register)
+        {
+            switch (register)
+            {
+                case 0: return new SetLocal0Ins();
+                case 1: return new SetLocal1Ins();
+                case 2: return new SetLocal2Ins();
+                case 3: return new SetLocal3Ins();
+
+                default: return new SetLocalIns(register);
+            }
+        }
+        public static Local CreateGet(int register)
+        {
+            switch (register)
+            {
+                case 0: return new GetLocal0Ins();
+                case 1: return new GetLocal1Ins();
+                case 2: return new GetLocal2Ins();
+                case 3: return new GetLocal3Ins();
+
+                default: return new GetLocalIns(register);
+            }
+        }
     }
 }
