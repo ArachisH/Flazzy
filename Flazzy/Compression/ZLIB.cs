@@ -22,11 +22,12 @@ namespace Flazzy.Compression
         }
         public static byte[] Decompress(byte[] data)
         {
+            using (var output = new MemoryStream())
             using (var input = new MemoryStream(data))
             using (var decompressor = new ZInputStream(input))
             {
-                decompressor.CopyTo(input);
-                return input.ToArray();
+                decompressor.CopyTo(output);
+                return output.ToArray();
             }
         }
 
