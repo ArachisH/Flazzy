@@ -325,6 +325,9 @@ namespace Flazzy.ABC.AVM2.Instructions
                 case OPCode.ApplyType:
                 return new ApplyTypeIns(input);
 
+                case OPCode.AsType:
+                return new AsTypeIns(abc, input);
+
                 case OPCode.AsTypeLate:
                 return new AsTypeLateIns();
 
