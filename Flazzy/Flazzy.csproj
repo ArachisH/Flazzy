@@ -89,6 +89,7 @@
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\SubtractIIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\SubtractIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\ASInstruction.cs" />
+    <Compile Include="ABC\AVM2\Instructions\AsTypeIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\AsTypeLateIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Bit Manipulation\BitAndIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Bit Manipulation\BitNotIns.cs" />
