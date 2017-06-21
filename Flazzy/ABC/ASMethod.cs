@@ -32,7 +32,7 @@ namespace Flazzy.ABC
             get
             {
                 string display = ToAS3();
-                if (ReturnType == null)
+                if (IsConstructor)
                 {
                     display += (".ctor");
                 }
