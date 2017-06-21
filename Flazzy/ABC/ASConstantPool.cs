@@ -136,7 +136,7 @@ namespace Flazzy.ABC
         protected virtual int AddConstant<T>(List<T> constants, T value, bool recycle)
         {
             int index = (recycle ?
-                constants.IndexOf(value) : -1);
+                constants.IndexOf(value, 1) : -1);
 
             if (index == -1)
             {
