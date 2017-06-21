@@ -21,7 +21,11 @@ namespace Flazzy.ABC.AVM2.Instructions
             object value = machine.Values.Pop();
             if (value != null)
             {
-                value = !Convert.ToBoolean(value);
+                if (value is string)
+                {
+                    value = !string.IsNullOrEmpty((string)value);
+                }
+                else value = !Convert.ToBoolean(value);
             }
             machine.Values.Push(value);
         }
