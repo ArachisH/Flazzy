@@ -48,7 +48,6 @@ namespace Flazzy
             {
                 case CompressionKind.LZMA:
                 {
-                    // Sup...
                     byte[] decompressed = LZMA.Decompress(input.BaseStream, ((int)FileLength - 8));
                     _input = new FlashReader(decompressed);
                     break;
