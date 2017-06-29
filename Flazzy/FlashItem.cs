@@ -1,5 +1,6 @@
 ﻿using Flazzy.IO;
 
+using System.IO;
 using System.Diagnostics;
 
 namespace Flazzy
@@ -13,6 +14,15 @@ namespace Flazzy
             get { return "{" + ToString() + "}"; }
         }
 
+        public byte[] ToArray()
+        {
+            using (var outputMem = new MemoryStream())
+            using (var output = new FlashWriter(outputMem))
+            {
+                WriteTo(output);
+                return outputMem.ToArray();
+            }
+        }
         public abstract void WriteTo(FlashWriter output);
     }
 }
