@@ -115,12 +115,12 @@ namespace Flazzy.ABC
         public IEnumerable<ASTrait> GetSlotTraits(string returnTypeName)
         {
             return GetTraits(TraitKind.Slot)
-                .Where(sct => sct.Type.Name == returnTypeName);
+                .Where(sct => (sct.Type?.Name ?? "*") == returnTypeName);
         }
         public IEnumerable<ASTrait> GetConstantTraits(string returnTypeName)
         {
             return GetTraits(TraitKind.Constant)
-                .Where(sct => sct.Type.Name == returnTypeName);
+                .Where(sct => (sct.Type?.Name ?? "*") == returnTypeName);
         }
 
         public IEnumerable<ASTrait> GetTraits(params TraitKind[] kinds)
