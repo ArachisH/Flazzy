@@ -220,16 +220,6 @@ namespace Flazzy.ABC
             }
         }
 
-        public byte[] ToArray()
-        {
-            using (var memOutput = new MemoryStream())
-            using (var output = new FlashWriter(memOutput))
-            {
-                WriteTo(output);
-                return memOutput.ToArray();
-            }
-        }
-
         public void Dispose()
         {
             Dispose(true);
