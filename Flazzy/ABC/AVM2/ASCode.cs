@@ -552,8 +552,14 @@ namespace Flazzy.ABC.AVM2
                             long exitPosition = (previousPosition + offsets[i]);
                             if (exitPosition <= input.Length)
                             {
-                                caseIndices.Add(exitPosition, i);
-                                forwardCaseExits.Add(exitPosition, lookUpSwitch);
+                                if (!caseIndices.ContainsKey(exitPosition))
+                                {
+                                    caseIndices.Add(exitPosition, i);
+                                }
+                                if (!caseIndices.ContainsKey(exitPosition))
+                                {
+                                    forwardCaseExits.Add(exitPosition, lookUpSwitch);
+                                }
                             }
                             else
                             {
@@ -743,15 +749,6 @@ namespace Flazzy.ABC.AVM2
             return (block?.Count() ?? 0);
         }
 
-        public byte[] ToArray()
-        {
-            using (var outMem = new MemoryStream())
-            using (var outCode = new FlashWriter(outMem))
-            {
-                WriteTo(outCode);
-                return outMem.ToArray();
-            }
-        }
         public override void WriteTo(FlashWriter output)
         {
             var marks = new Dictionary<ASInstruction, long>();
@@ -785,8 +782,9 @@ namespace Flazzy.ABC.AVM2
 
                     long position = marks[lookUpSwitch];
                     var fixedOffset = (uint)(previousPosition - position);
+                    int defaultIndex = lookUpSwitch.CaseOffsets.IndexOf(lookUpSwitch.DefaultOffset);
 
-                    if (caseIndex == lookUpSwitch.CaseOffsets.Count)
+                    if (caseIndex == defaultIndex)
                     {
                         lookUpSwitch.DefaultOffset = fixedOffset;
                     }
@@ -801,15 +799,18 @@ namespace Flazzy.ABC.AVM2
                 {
                     bool requiresRewrite = false;
                     var lookUpSwitch = (LookUpSwitchIns)instruction;
+
                     ASInstruction[] cases = SwitchExits[lookUpSwitch];
+                    cases[cases.Length - 1] = cases[lookUpSwitch.CaseOffsets.IndexOf(lookUpSwitch.DefaultOffset)];
+
                     for (int i = 0; i < cases.Length; i++)
                     {
                         ASInstruction exit = cases[i];
-                        if (exit.OP != OPCode.Label)
+                        if (exit.OP != OPCode.Label && i != (cases.Length - 1))
                         {
                             forwardCaseExits.Add(exit, Tuple.Create(lookUpSwitch, i));
                         }
-                        else
+                        else if (exit.OP == OPCode.Label)
                         {
                             requiresRewrite = true;
                             long exitPosition = marks[exit];
