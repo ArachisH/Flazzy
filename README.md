@@ -18,7 +18,3 @@ The **ASCode** type also allows for basic control-flow deobfuscation, you can ac
 
 ## Usage/Tutorials
 For some tutorials to get you started, proceed to the project wiki.
-
-## Resources
-* [Shockwave Flash File Format v19](/Docs/SWF Format.pdf)  
-* [ActionScript Virtual Machine 2 Format](/Docs/AVM2 Format.pdf)
