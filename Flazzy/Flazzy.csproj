@@ -67,7 +67,7 @@
     <Compile Include="ABC\AVM2\Instructions\ApplyTypeIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\AddIIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\AddIns.cs" />
-    <Compile Include="ABC\AVM2\Instructions\Arithmetic\Compuation.cs" />
+    <Compile Include="ABC\AVM2\Instructions\Arithmetic\Computation.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\DecrementIIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\DecrementIns.cs" />
     <Compile Include="ABC\AVM2\Instructions\Arithmetic\DivideIns.cs" />
