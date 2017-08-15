@@ -111,20 +111,14 @@ namespace Flazzy.Tags
             {
                 case CompressionMode.Compress:
                 {
-                    if (_compressedData == null)
-                    {
-                        _compressedData =
-                            ZLIB.Compress(_uncompressedData);
-                    }
+                    _compressedData =
+                        ZLIB.Compress(_uncompressedData);
                     break;
                 }
                 case CompressionMode.Decompress:
                 {
-                    if (_uncompressedData == null)
-                    {
-                        _uncompressedData =
-                            ZLIB.Decompress(_compressedData);
-                    }
+                    _uncompressedData =
+                        ZLIB.Decompress(_compressedData);
                     break;
                 }
             }
