@@ -27,7 +27,6 @@ namespace Flazzy.IO
         public FlashReader(byte[] data)
             : this(new MemoryStream(data))
         { }
-
         public FlashReader(Stream output)
             : this(output, new UTF8Encoding(false, true), false)
         { }
