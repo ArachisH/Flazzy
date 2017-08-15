@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.IO.Compression;
-using System.Drawing.Imaging;
 
 using Flazzy.IO;
 using Flazzy.Records;
@@ -12,18 +11,19 @@ namespace Flazzy.Tags
     public class DefineBitsLossless2Tag : TagItem
     {
         private byte _format;
-        private ushort _width;
-        private ushort _height;
-        private byte[] _pixelData;
+        private Color[,] _argbMap;
         private byte _colorTableSize;
-        private byte[] _compressedBitmapData;
+
+        private byte[] _compressedData;
+        private byte[] _uncompressedData;
 
         public ushort Id { get; set; }
 
         public DefineBitsLossless2Tag()
             : base(TagKind.DefineBitsLossless2)
         {
-            _compressedBitmapData = new byte[0];
+            _argbMap = new Color[0, 0];
+            _compressedData = new byte[0];
         }
         public DefineBitsLossless2Tag(HeaderRecord header, FlashReader input)
             : base(header)
@@ -31,8 +31,9 @@ namespace Flazzy.Tags
             Id = input.ReadUInt16();
             _format = input.ReadByte();
 
-            _width = input.ReadUInt16();
-            _height = input.ReadUInt16();
+            ushort width = input.ReadUInt16();
+            ushort height = input.ReadUInt16();
+            _argbMap = new Color[width, height];
 
             if (_format == 3)
             {
@@ -40,7 +41,54 @@ namespace Flazzy.Tags
             }
 
             int partialLength = (7 + (_format == 3 ? 1 : 0));
-            _compressedBitmapData = input.ReadBytes(header.Length - partialLength);
+            _compressedData = input.ReadBytes(header.Length - partialLength);
+        }
+
+        public Color[,] GetARGBMap()
+        {
+            if (_format == 3)
+            {
+                throw new NotSupportedException(
+                    "8-bit asset generator not supported.");
+            }
+
+            Compressor(CompressionMode.Decompress);
+            for (int y = 0, i = 0; y < _argbMap.GetLength(1); y++)
+            {
+                for (int x = 0; x < _argbMap.GetLength(0); i += 4, x++)
+                {
+                    byte a = _uncompressedData[i];
+                    byte r = _uncompressedData[i + 1];
+                    byte g = _uncompressedData[i + 2];
+                    byte b = _uncompressedData[i + 3];
+                    _argbMap[x, y] = Color.FromArgb(a, r, g, b);
+                }
+            }
+
+            _uncompressedData = null;
+            return _argbMap;
+        }
+        public void SetARGBMap(Color[,] argbMap)
+        {
+            _argbMap = argbMap;
+            int width = argbMap.GetLength(0);
+            int height = argbMap.GetLength(1);
+
+            _uncompressedData = new byte[width * height * 4];
+            for (int y = 0, i = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; i += 4, x++)
+                {
+                    Color pixel = argbMap[x, y];
+                    _uncompressedData[i + 0] = pixel.A;
+                    _uncompressedData[i + 1] = pixel.R;
+                    _uncompressedData[i + 2] = pixel.G;
+                    _uncompressedData[i + 3] = pixel.B;
+                }
+            }
+            _compressedData = null;
+            Compressor(CompressionMode.Compress);
+            _uncompressedData = null;
         }
 
         public override int GetBodySize()
@@ -54,82 +102,28 @@ namespace Flazzy.Tags
             {
                 size += sizeof(byte);
             }
-            size += _compressedBitmapData.Length;
+            size += _compressedData.Length;
             return size;
         }
-        public Bitmap GenerateAsset()
-        {
-            if (_format == 3)
-            {
-                throw new NotSupportedException(
-                    "8-bit asset generator not supported.");
-            }
-
-            Compressor(CompressionMode.Decompress);
-            var asset = new Bitmap(_width, _height, PixelFormat.Format32bppArgb);
-            for (int y = 0, i = 0; y < _height; y++)
-            {
-                for (int x = 0; x < _width; i += 4, x++)
-                {
-                    byte a = _pixelData[i];
-                    byte r = _pixelData[i + 1];
-                    byte g = _pixelData[i + 2];
-                    byte b = _pixelData[i + 3];
-                    asset.SetPixel(x, y, Color.FromArgb(a, r, g, b));
-                }
-            }
-
-            _pixelData = null;
-            return asset;
-        }
-        public void SetPixelData(Bitmap asset)
-        {
-            if (asset.PixelFormat !=
-                PixelFormat.Format32bppArgb)
-            {
-                throw new NotSupportedException("Not valid 32-bit ARGB bitmap.");
-            }
-
-            _width = (ushort)asset.Width;
-            _height = (ushort)asset.Height;
-
-            _pixelData = new byte[(_width * _height) * 4];
-            for (int y = 0, i = 0; y < _height; y++)
-            {
-                for (int x = 0; x < _width; i += 4, x++)
-                {
-                    Color pixel = asset.GetPixel(x, y);
-                    _pixelData[i] = pixel.A;
-                    _pixelData[i + 1] = pixel.R;
-                    _pixelData[i + 2] = pixel.G;
-                    _pixelData[i + 3] = pixel.B;
-                }
-            }
-
-            _compressedBitmapData = null;
-            Compressor(CompressionMode.Compress);
-            _pixelData = null;
-        }
-
         protected void Compressor(CompressionMode mode)
         {
             switch (mode)
             {
                 case CompressionMode.Compress:
                 {
-                    if (_compressedBitmapData == null)
+                    if (_compressedData == null)
                     {
-                        _compressedBitmapData =
-                            ZLIB.Compress(_pixelData);
+                        _compressedData =
+                            ZLIB.Compress(_uncompressedData);
                     }
                     break;
                 }
                 case CompressionMode.Decompress:
                 {
-                    if (_pixelData == null)
+                    if (_uncompressedData == null)
                     {
-                        _pixelData =
-                            ZLIB.Decompress(_compressedBitmapData);
+                        _uncompressedData =
+                            ZLIB.Decompress(_compressedData);
                     }
                     break;
                 }
@@ -139,15 +133,13 @@ namespace Flazzy.Tags
         {
             output.Write(Id);
             output.Write(_format);
-            output.Write(_width);
-            output.Write(_height);
-
+            output.Write((ushort)_argbMap.GetLength(0));
+            output.Write((ushort)_argbMap.GetLength(1));
             if (_format == 3)
             {
                 output.Write(_colorTableSize);
             }
-
-            output.Write(_compressedBitmapData);
+            output.Write(_compressedData);
         }
     }
 }
