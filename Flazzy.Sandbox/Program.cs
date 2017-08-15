@@ -13,7 +13,7 @@ namespace Flazzy.Sandbox
     public class Program
     {
         public FileInfo Info { get; }
-        public ShockwaveFlash Flash { get; private set; }
+        public ShockwaveFlash Flash { get; }
 
         public Program(string[] args)
         {
@@ -32,15 +32,12 @@ namespace Flazzy.Sandbox
         public void Run()
         {
             Disassemble();
-
             Modify();
-
             Assemble();
         }
 
         private void Modify()
         {
-#if DEBUG
             foreach (DoABCTag abcTag in Flash.Tags
                 .Where(t => t.Kind == TagKind.DoABC))
             {
@@ -48,7 +45,7 @@ namespace Flazzy.Sandbox
 
                 byte[] newData = abc.ToArray();
                 byte[] oldData = abcTag.ABCData;
-                
+
                 int minSize = (Math.Min(oldData.Length, newData.Length));
                 for (int i = 0; i < minSize; i++)
                 {
@@ -64,7 +61,6 @@ namespace Flazzy.Sandbox
                     return;
                 }
             }
-#endif
         }
         private void Assemble()
         {
