@@ -240,3 +240,4 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/Flazzy.Sandbox/Properties/launchSettings.json
