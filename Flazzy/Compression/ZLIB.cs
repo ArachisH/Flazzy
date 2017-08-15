@@ -1,44 +1,40 @@
 ﻿using System.IO;
 
 using Flazzy.IO;
-using Flazzy.Compression.ComponentAce;
+
+using Ionic.Zlib;
 
 namespace Flazzy.Compression
 {
     public static class ZLIB
     {
-        /* The ZLIB compressor was not written by me, nor do I want the credit.
-         * My goodness, have you seen the code: Flazzy.Compression.ComponentAce
-         * Works fine though, so that's nice. */
-
         public static byte[] Compress(byte[] data)
         {
             using (var output = new MemoryStream())
-            using (var compressor = new ZOutputStream(output, 9))
+            using (var compressor = new ZlibStream(output,
+                CompressionMode.Compress, CompressionLevel.BestCompression))
             {
-                compressor.Write(data, 0, data.Length);
+                ZlibBaseStream.CompressBuffer(data, compressor);
                 return output.ToArray();
             }
         }
         public static byte[] Decompress(byte[] data)
         {
-            using (var output = new MemoryStream())
             using (var input = new MemoryStream(data))
-            using (var decompressor = new ZInputStream(input))
+            using (var decompressor = new ZlibStream(
+                input, CompressionMode.Decompress))
             {
-                decompressor.CopyTo(output);
-                return output.ToArray();
+                return ZlibBaseStream.UncompressBuffer(decompressor);
             }
         }
 
         public static FlashReader WrapDecompressor(Stream input)
         {
-            return new FlashReader(new ZInputStream(input));
+            return new FlashReader(new ZlibStream(input, CompressionMode.Decompress));
         }
         public static FlashWriter WrapCompressor(Stream output, bool leaveOpen = false)
         {
-            var compressionStream = new ZOutputStream(output, 9, leaveOpen);
-            return new FlashWriter(compressionStream);
+            return new FlashWriter(new ZlibStream(output, CompressionMode.Compress, CompressionLevel.BestCompression, leaveOpen));
         }
     }
 }
