@@ -368,7 +368,7 @@ namespace Flazzy.ABC.AVM2
                 bool isNeeded = false;
                 foreach (ASInstruction reference in references)
                 {
-                    // This checks if the local is being referenced by something else that retreives the value.
+                    // This checks if the local is being referenced by something else that retrieves the value.
                     if (Local.IsValid(reference.OP) && !Local.IsSetLocal(reference.OP))
                     {
                         isNeeded = true;
@@ -679,7 +679,7 @@ namespace Flazzy.ABC.AVM2
                 if (isBackwardsJump)
                 {
                     // Check if any of the locals used by the jump instruction is being set within the body.
-                    // If the anwser is yes, removing the jump instruction is a bad idea, since the output of the condition could change.
+                    // If the answer is yes, removing the jump instruction is a bad idea, since the output of the condition could change.
                     foreach (Local local in locals)
                     {
                         foreach (ASInstruction instruction in block)
