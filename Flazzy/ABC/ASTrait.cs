@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using Flazzy.IO;
 
@@ -7,11 +6,8 @@ namespace Flazzy.ABC
 {
     public class ASTrait : AS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait, IFunctionTrait
     {
-        public ASMultiname QName
-        {
-            get { return ABC.Pool.Multinames[QNameIndex]; }
-        }
         public int QNameIndex { get; set; }
+        public ASMultiname QName => ABC.Pool.Multinames[QNameIndex];
 
         public ASMultiname Type
         {
@@ -46,8 +42,8 @@ namespace Flazzy.ABC
         {
             get
             {
-                return (Kind == TraitKind.Function ?
-                  ABC.Methods[FunctionIndex] : null);
+                if (Kind != TraitKind.Function) return null;
+                return ABC.Methods[FunctionIndex];
             }
         }
         public int FunctionIndex { get; set; }
@@ -56,17 +52,15 @@ namespace Flazzy.ABC
         {
             get
             {
-                return (Kind == TraitKind.Class ?
-                    ABC.Classes[ClassIndex] : null);
+                if (Kind != TraitKind.Class) return null;
+                return ABC.Classes[ClassIndex];
             }
         }
         public int ClassIndex { get; set; }
 
-        public object Value
-        {
-            get { return ABC.Pool.GetConstant(ValueKind, ValueIndex); }
-        }
         public int ValueIndex { get; set; }
+        public object Value => ABC.Pool.GetConstant(ValueKind, ValueIndex);
+
         public ConstantKind ValueKind { get; set; }
 
         public int Id { get; set; }
@@ -77,13 +71,7 @@ namespace Flazzy.ABC
         public TraitKind Kind { get; set; }
         public TraitAttributes Attributes { get; set; }
 
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                return (Kind + ": " + QName.Name);
-            }
-        }
+        protected override string DebuggerDisplay => (Kind + ": " + QName.Name);
 
         public ASTrait(ABCFile abc)
             : base(abc)
@@ -157,10 +145,6 @@ namespace Flazzy.ABC
             }
         }
 
-        public override string ToAS3()
-        {
-            throw new NotImplementedException();
-        }
         public override void WriteTo(FlashWriter output)
         {
             var bitContainer = (byte)(

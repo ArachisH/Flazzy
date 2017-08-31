@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -22,13 +21,7 @@ namespace Flazzy.ABC
         public ASConstantPool Pool { get; }
         public Version Version { get; set; }
 
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                return "Version: " + Version;
-            }
-        }
+        protected override string DebuggerDisplay => ("Version: " + Version);
 
         public ABCFile()
         {

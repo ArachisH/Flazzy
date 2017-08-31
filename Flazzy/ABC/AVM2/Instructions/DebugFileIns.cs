@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class DebugFileIns : ASInstruction
     {
-        public string FileName
-        {
-            get { return ABC.Pool.Strings[FileNameIndex]; }
-        }
         public int FileNameIndex { get; set; }
+        public string FileName => ABC.Pool.Strings[FileNameIndex];
 
         public DebugFileIns(ABCFile abc)
             : base(OPCode.DebugFile, abc)

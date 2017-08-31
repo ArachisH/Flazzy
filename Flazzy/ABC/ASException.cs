@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 using Flazzy.IO;
 
 namespace Flazzy.ABC
@@ -10,17 +9,11 @@ namespace Flazzy.ABC
         public int From { get; set; }
         public int Target { get; set; }
 
-        public ASMultiname VariableName
-        {
-            get { return ABC.Pool.Multinames[VariableNameIndex]; }
-        }
         public int VariableNameIndex { get; set; }
+        public ASMultiname VariableName => ABC.Pool.Multinames[VariableNameIndex];
 
-        public ASMultiname ExceptionType
-        {
-            get { return ABC.Pool.Multinames[ExceptionTypeIndex]; }
-        }
         public int ExceptionTypeIndex { get; set; }
+        public ASMultiname ExceptionType => ABC.Pool.Multinames[ExceptionTypeIndex];
 
         public ASException(ABCFile abc)
             : base(abc)
@@ -34,11 +27,7 @@ namespace Flazzy.ABC
             ExceptionTypeIndex = input.ReadInt30();
             VariableNameIndex = input.ReadInt30();
         }
-
-        public override string ToAS3()
-        {
-            throw new NotImplementedException();
-        }
+        
         public override void WriteTo(FlashWriter output)
         {
             output.WriteInt30(From);

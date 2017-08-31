@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class AsTypeIns : ASInstruction
     {
-        public ASMultiname TypeName
-        {
-            get { return ABC.Pool.Multinames[TypeNameIndex]; }
-        }
         public int TypeNameIndex { get; set; }
+        public ASMultiname TypeName => ABC.Pool.Multinames[TypeNameIndex];
 
         public AsTypeIns(ABCFile abc)
             : base(OPCode.AsType, abc)

@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class CallSuperVoidIns : ASInstruction
     {
-        public ASMultiname MethodName
-        {
-            get { return ABC.Pool.Multinames[MethodNameIndex]; }
-        }
         public int MethodNameIndex { get; set; }
+        public ASMultiname MethodName => ABC.Pool.Multinames[MethodNameIndex];
 
         public int ArgCount { get; set; }
 

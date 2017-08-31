@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class DebugIns : ASInstruction
     {
-        public string Name
-        {
-            get { return ABC.Pool.Strings[NameIndex]; }
-        }
         public int NameIndex { get; set; }
+        public string Name => ABC.Pool.Strings[NameIndex];
 
         public int Extra { get; set; }
         public byte DebugType { get; set; }

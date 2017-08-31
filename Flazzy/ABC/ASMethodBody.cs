@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using Flazzy.IO;
 using Flazzy.ABC.AVM2;
@@ -14,28 +13,13 @@ namespace Flazzy.ABC
         public int MaxScopeDepth { get; set; }
         public int InitialScopeDepth { get; set; }
 
-        public ASMethod Method
-        {
-            get { return ABC.Methods[MethodIndex]; }
-        }
         public int MethodIndex { get; set; }
+        public ASMethod Method => ABC.Methods[MethodIndex];
 
         public List<ASException> Exceptions { get; }
 
-        public override ASMultiname QName
-        {
-            get
-            {
-                return Method.Trait?.QName;
-            }
-        }
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                return $"LocalCount: {LocalCount:n0}, MaxStack: {MaxStack:n0}";
-            }
-        }
+        public override ASMultiname QName => Method.Trait?.QName;
+        protected override string DebuggerDisplay => $"LocalCount: {LocalCount:n0}, MaxStack: {MaxStack:n0}";
 
         public ASMethodBody(ABCFile abc)
             : base(abc)
@@ -69,11 +53,7 @@ namespace Flazzy.ABC
         {
             return new ASCode(ABC, this);
         }
-
-        public override string ToAS3()
-        {
-            throw new NotImplementedException();
-        }
+        
         public override void WriteTo(FlashWriter output)
         {
             output.WriteInt30(MethodIndex);

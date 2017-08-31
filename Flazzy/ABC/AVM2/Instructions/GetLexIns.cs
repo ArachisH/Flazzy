@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class GetLexIns : ASInstruction
     {
-        public ASMultiname TypeName
-        {
-            get { return ABC.Pool.Multinames[TypeNameIndex]; }
-        }
         public int TypeNameIndex { get; set; }
+        public ASMultiname TypeName => ABC.Pool.Multinames[TypeNameIndex];
 
         public GetLexIns(ABCFile abc)
             : base(OPCode.GetLex, abc)

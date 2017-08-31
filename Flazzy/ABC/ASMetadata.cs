@@ -8,11 +8,8 @@ namespace Flazzy.ABC
     {
         private readonly ABCFile _abc;
 
-        public string Name
-        {
-            get { return _abc.Pool.Strings[NameIndex]; }
-        }
         public int NameIndex { get; set; }
+        public string Name => _abc.Pool.Strings[NameIndex];
 
         public List<ASItemInfo> Items { get; }
 
@@ -27,7 +24,6 @@ namespace Flazzy.ABC
         {
             NameIndex = input.ReadInt30();
             Items.Capacity = input.ReadInt30();
-
             for (int i = 0; i < Items.Capacity; i++)
             {
                 var itemInfo = new ASItemInfo(abc, input);

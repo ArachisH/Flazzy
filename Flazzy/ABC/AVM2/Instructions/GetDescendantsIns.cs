@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class GetDescendantsIns : ASInstruction
     {
-        public ASMultiname Descendant
-        {
-            get { return ABC.Pool.Multinames[DescendantIndex]; }
-        }
         public int DescendantIndex { get; set; }
+        public ASMultiname Descendant => ABC.Pool.Multinames[DescendantIndex];
 
         public GetDescendantsIns(ABCFile abc)
             : base(OPCode.GetDescendants, abc)

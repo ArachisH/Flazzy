@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class NewClassIns : ASInstruction
     {
-        public ASClass Class
-        {
-            get { return ABC.Classes[ClassIndex]; }
-        }
         public int ClassIndex { get; set; }
+        public ASClass Class => ABC.Classes[ClassIndex];
 
         public NewClassIns(ABCFile abc)
             : base(OPCode.NewClass, abc)

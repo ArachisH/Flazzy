@@ -8,44 +8,23 @@ namespace Flazzy.ABC
     public class ASInstance : ASContainer
     {
         public ClassFlags Flags { get; set; }
+        public bool IsInterface => Flags.HasFlag(ClassFlags.Interface);
 
-        public ASMultiname Super
-        {
-            get { return ABC.Pool.Multinames[SuperIndex]; }
-        }
         public int SuperIndex { get; set; }
+        public ASMultiname Super => ABC.Pool.Multinames[SuperIndex];
 
-        public ASMethod Constructor
-        {
-            get { return ABC.Methods[ConstructorIndex]; }
-        }
         public int ConstructorIndex { get; set; }
+        public ASMethod Constructor => ABC.Methods[ConstructorIndex];
 
-        public override ASMultiname QName
-        {
-            get { return ABC.Pool.Multinames[QNameIndex]; }
-        }
         public int QNameIndex { get; set; }
+        public override ASMultiname QName => ABC.Pool.Multinames[QNameIndex];
 
-        public ASNamespace ProtectedNamespace
-        {
-            get { return ABC.Pool.Namespaces[ProtectedNamespaceIndex]; }
-        }
         public int ProtectedNamespaceIndex { get; set; }
+        public ASNamespace ProtectedNamespace => ABC.Pool.Namespaces[ProtectedNamespaceIndex];
 
-        public bool IsInterface
-        {
-            get { return Flags.HasFlag(ClassFlags.Interface); }
-        }
+        protected override string DebuggerDisplay => ToAS3();
+
         public List<int> InterfaceIndices { get; }
-
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                return ToAS3();
-            }
-        }
 
         public ASInstance(ABCFile abc)
             : base(abc)

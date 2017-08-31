@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class CoerceIns : ASInstruction
     {
-        public ASMultiname TypeName
-        {
-            get { return ABC.Pool.Multinames[TypeNameIndex]; }
-        }
         public int TypeNameIndex { get; set; }
+        public ASMultiname TypeName => ABC.Pool.Multinames[TypeNameIndex];
 
         public CoerceIns(ABCFile abc)
             : base(OPCode.Coerce, abc)

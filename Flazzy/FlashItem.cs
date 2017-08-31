@@ -1,7 +1,7 @@
-﻿using Flazzy.IO;
-
-using System.IO;
+﻿using System.IO;
 using System.Diagnostics;
+
+using Flazzy.IO;
 
 namespace Flazzy
 {
@@ -9,10 +9,7 @@ namespace Flazzy
     public abstract class FlashItem
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        protected virtual string DebuggerDisplay
-        {
-            get { return "{" + ToString() + "}"; }
-        }
+        protected virtual string DebuggerDisplay => "{" + ToString() + "}";
 
         public byte[] ToArray()
         {

@@ -1445,8 +1445,8 @@ namespace Ionic.Zlib
         private bool _handleRfc1950HeaderBytes = true;
         internal bool HandleRfc1950HeaderBytes
         {
-            get { return _handleRfc1950HeaderBytes; }
-            set { _handleRfc1950HeaderBytes = value; }
+            get => _handleRfc1950HeaderBytes;
+            set => _handleRfc1950HeaderBytes = value;
         }
         internal int wbits; // log2(window size)  (8..15, defaults to 15)
 

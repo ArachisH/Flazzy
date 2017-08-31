@@ -7,19 +7,13 @@ namespace Flazzy.IO
     {
         private readonly bool _leaveOpen;
 
-        public long Length
-        {
-            get { return BaseStream.Length; }
-        }
         public long Position
         {
-            get { return BaseStream.Position; }
-            set { BaseStream.Position = value; }
+            get => BaseStream.Position;
+            set => BaseStream.Position = value;
         }
-        public bool IsDataAvailable
-        {
-            get { return Position < Length; }
-        }
+        public long Length => BaseStream.Length;
+        public bool IsDataAvailable => Position < Length;
 
         protected int BitPosition { get; set; }
         protected byte BitContainer { get; set; }

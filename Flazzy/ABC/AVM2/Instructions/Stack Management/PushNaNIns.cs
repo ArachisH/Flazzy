@@ -6,8 +6,8 @@ namespace Flazzy.ABC.AVM2.Instructions
     {
         public override object Value
         {
-            get { return double.NaN; }
-            set { throw new NotSupportedException(); }
+            get => double.NaN;
+            set => throw new NotSupportedException();
         }
 
         public PushNaNIns()

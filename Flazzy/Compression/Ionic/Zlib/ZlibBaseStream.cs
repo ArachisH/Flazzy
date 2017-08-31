@@ -69,45 +69,39 @@ namespace Ionic.Zlib
                               bool leaveOpen)
             : base()
         {
-            this._flushMode = FlushType.None;
+            _flushMode = FlushType.None;
             //this._workingBuffer = new byte[WORKING_BUFFER_SIZE_DEFAULT];
-            this._stream = stream;
-            this._leaveOpen = leaveOpen;
-            this._compressionMode = compressionMode;
-            this._flavor = flavor;
-            this._level = level;
+            _stream = stream;
+            _leaveOpen = leaveOpen;
+            _compressionMode = compressionMode;
+            _flavor = flavor;
+            _level = level;
             // workitem 7159
             if (flavor == ZlibStreamFlavor.GZIP)
             {
-                this.crc = new Ionic.Crc.CRC32();
+                crc = new Ionic.Crc.CRC32();
             }
         }
 
 
-        protected internal bool _wantCompress
-        {
-            get
-            {
-                return (this._compressionMode == CompressionMode.Compress);
-            }
-        }
+        protected internal bool _wantCompress => (_compressionMode == CompressionMode.Compress);
 
-        private ZlibCodec z
+        private ZlibCodec Z
         {
             get
             {
                 if (_z == null)
                 {
-                    bool wantRfc1950Header = (this._flavor == ZlibStreamFlavor.ZLIB);
+                    bool wantRfc1950Header = (_flavor == ZlibStreamFlavor.ZLIB);
                     _z = new ZlibCodec();
-                    if (this._compressionMode == CompressionMode.Decompress)
+                    if (_compressionMode == CompressionMode.Decompress)
                     {
                         _z.InitializeInflate(wantRfc1950Header);
                     }
                     else
                     {
                         _z.Strategy = Strategy;
-                        _z.InitializeDeflate(this._level, wantRfc1950Header);
+                        _z.InitializeDeflate(_level, wantRfc1950Header);
                     }
                 }
                 return _z;
@@ -116,7 +110,7 @@ namespace Ionic.Zlib
 
 
 
-        private byte[] workingBuffer
+        private byte[] WorkingBuffer
         {
             get
             {
@@ -144,13 +138,13 @@ namespace Ionic.Zlib
                 return;
 
             // first reference of z property will initialize the private var _z
-            z.InputBuffer = buffer;
+            Z.InputBuffer = buffer;
             _z.NextIn = offset;
             _z.AvailableBytesIn = count;
             bool done = false;
             do
             {
-                _z.OutputBuffer = workingBuffer;
+                _z.OutputBuffer = WorkingBuffer;
                 _z.NextOut = 0;
                 _z.AvailableBytesOut = _workingBuffer.Length;
                 int rc = (_wantCompress)
@@ -174,7 +168,7 @@ namespace Ionic.Zlib
 
 
 
-        private void finish()
+        private void Finish()
         {
             if (_z == null) return;
 
@@ -183,7 +177,7 @@ namespace Ionic.Zlib
                 bool done = false;
                 do
                 {
-                    _z.OutputBuffer = workingBuffer;
+                    _z.OutputBuffer = WorkingBuffer;
                     _z.NextOut = 0;
                     _z.AvailableBytesOut = _workingBuffer.Length;
                     int rc = (_wantCompress)
@@ -266,10 +260,10 @@ namespace Ionic.Zlib
                             Array.Copy(_z.InputBuffer, _z.NextIn, trailer, 0, trailer.Length);
                         }
 
-                        Int32 crc32_expected = BitConverter.ToInt32(trailer, 0);
+                        var crc32_expected = BitConverter.ToInt32(trailer, 0);
                         Int32 crc32_actual = crc.Crc32Result;
-                        Int32 isize_expected = BitConverter.ToInt32(trailer, 4);
-                        Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
+                        var isize_expected = BitConverter.ToInt32(trailer, 4);
+                        var isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
                         if (crc32_actual != crc32_expected)
                             throw new ZlibException(String.Format("Bad CRC32 in GZIP trailer. (actual({0:X8})!=expected({1:X8}))", crc32_actual, crc32_expected));
@@ -287,9 +281,9 @@ namespace Ionic.Zlib
         }
 
 
-        private void end()
+        private void End()
         {
-            if (z == null)
+            if (Z == null)
                 return;
             if (_wantCompress)
             {
@@ -308,11 +302,11 @@ namespace Ionic.Zlib
             if (_stream == null) return;
             try
             {
-                finish();
+                Finish();
             }
             finally
             {
-                end();
+                End();
                 if (!_leaveOpen) _stream.Close();
                 _stream = null;
             }
@@ -390,7 +384,7 @@ namespace Ionic.Zlib
             if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
                 throw new ZlibException("Bad GZIP header.");
 
-            Int32 timet = BitConverter.ToInt32(header, 4);
+            var timet = BitConverter.ToInt32(header, 4);
             _GzipMtime = GZipStream._unixEpoch.AddSeconds(timet);
             totalBytesRead += n;
             if ((header[3] & 0x04) == 0x04)
@@ -399,7 +393,7 @@ namespace Ionic.Zlib
                 n = _stream.Read(header, 0, 2); // 2-byte length field
                 totalBytesRead += n;
 
-                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                var extraLength = (Int16)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
                 n = _stream.Read(extra, 0, extra.Length);
                 if (n != extraLength)
@@ -428,12 +422,12 @@ namespace Ionic.Zlib
 
             if (_streamMode == StreamMode.Undefined)
             {
-                if (!this._stream.CanRead) throw new ZlibException("The stream is not readable.");
+                if (!_stream.CanRead) throw new ZlibException("The stream is not readable.");
                 // for the first read, set up some controls.
                 _streamMode = StreamMode.Reader;
                 // (The first reference to _z goes through the private accessor which
                 // may initialize it.)
-                z.AvailableBytesIn = 0;
+                Z.AvailableBytesIn = 0;
                 if (_flavor == ZlibStreamFlavor.GZIP)
                 {
                     _gzipHeaderByteCount = _ReadAndValidateGzipHeader();
@@ -463,7 +457,7 @@ namespace Ionic.Zlib
             // This is necessary in case _workingBuffer has been resized. (new byte[])
             // (The first reference to _workingBuffer goes through the private accessor which
             // may initialize it.)
-            _z.InputBuffer = workingBuffer;
+            _z.InputBuffer = WorkingBuffer;
 
             do
             {
@@ -529,31 +523,19 @@ namespace Ionic.Zlib
 
             return rc;
         }
-        
-        public override System.Boolean CanRead
-        {
-            get { return this._stream.CanRead; }
-        }
 
-        public override System.Boolean CanSeek
-        {
-            get { return this._stream.CanSeek; }
-        }
+        public override System.Boolean CanRead => _stream.CanRead;
 
-        public override System.Boolean CanWrite
-        {
-            get { return this._stream.CanWrite; }
-        }
+        public override System.Boolean CanSeek => _stream.CanSeek;
 
-        public override System.Int64 Length
-        {
-            get { return _stream.Length; }
-        }
+        public override System.Boolean CanWrite => _stream.CanWrite;
+
+        public override System.Int64 Length => _stream.Length;
 
         public override long Position
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
         }
 
         internal enum StreamMode

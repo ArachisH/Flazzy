@@ -319,11 +319,11 @@ namespace Ionic.Zlib
         /// </remarks>
         virtual public FlushType FlushMode
         {
-            get { return (this._baseStream._flushMode); }
+            get => (_baseStream._flushMode);
             set
             {
                 if (_disposed) throw new ObjectDisposedException("DeflateStream");
-                this._baseStream._flushMode = value;
+                _baseStream._flushMode = value;
             }
         }
 
@@ -346,18 +346,15 @@ namespace Ionic.Zlib
         /// </remarks>
         public int BufferSize
         {
-            get
-            {
-                return this._baseStream._bufferSize;
-            }
+            get => _baseStream._bufferSize;
             set
             {
                 if (_disposed) throw new ObjectDisposedException("DeflateStream");
-                if (this._baseStream._workingBuffer != null)
+                if (_baseStream._workingBuffer != null)
                     throw new ZlibException("The working buffer is already set.");
                 if (value < ZlibConstants.WorkingBufferSizeMin)
                     throw new ZlibException(String.Format("Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.", value, ZlibConstants.WorkingBufferSizeMin));
-                this._baseStream._bufferSize = value;
+                _baseStream._bufferSize = value;
             }
         }
 
@@ -371,34 +368,19 @@ namespace Ionic.Zlib
         /// </remarks>
         public CompressionStrategy Strategy
         {
-            get
-            {
-                return this._baseStream.Strategy;
-            }
+            get => _baseStream.Strategy;
             set
             {
                 if (_disposed) throw new ObjectDisposedException("DeflateStream");
-                this._baseStream.Strategy = value;
+                _baseStream.Strategy = value;
             }
         }
 
         /// <summary> Returns the total number of bytes input so far.</summary>
-        virtual public long TotalIn
-        {
-            get
-            {
-                return this._baseStream._z.TotalBytesIn;
-            }
-        }
+        virtual public long TotalIn => _baseStream._z.TotalBytesIn;
 
         /// <summary> Returns the total number of bytes output so far.</summary>
-        virtual public long TotalOut
-        {
-            get
-            {
-                return this._baseStream._z.TotalBytesOut;
-            }
-        }
+        virtual public long TotalOut => _baseStream._z.TotalBytesOut;
 
         #endregion
 
@@ -433,8 +415,8 @@ namespace Ionic.Zlib
             {
                 if (!_disposed)
                 {
-                    if (disposing && (this._baseStream != null))
-                        this._baseStream.Close();
+                    if (disposing && (_baseStream != null))
+                        _baseStream.Close();
                     _disposed = true;
                 }
             }
@@ -467,10 +449,7 @@ namespace Ionic.Zlib
         /// <remarks>
         /// Always returns false.
         /// </remarks>
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek => false;
 
 
         /// <summary>
@@ -500,10 +479,7 @@ namespace Ionic.Zlib
         /// <summary>
         /// Reading this property always throws a <see cref="NotImplementedException"/>.
         /// </summary>
-        public override long Length
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public override long Length => throw new NotImplementedException();
 
         /// <summary>
         /// The position of the stream pointer.
@@ -520,13 +496,13 @@ namespace Ionic.Zlib
         {
             get
             {
-                if (this._baseStream._streamMode == Ionic.Zlib.ZlibBaseStream.StreamMode.Writer)
-                    return this._baseStream._z.TotalBytesOut;
-                if (this._baseStream._streamMode == Ionic.Zlib.ZlibBaseStream.StreamMode.Reader)
-                    return this._baseStream._z.TotalBytesIn;
+                if (_baseStream._streamMode == ZlibBaseStream.StreamMode.Writer)
+                    return _baseStream._z.TotalBytesOut;
+                if (_baseStream._streamMode == ZlibBaseStream.StreamMode.Reader)
+                    return _baseStream._z.TotalBytesIn;
                 return 0;
             }
-            set { throw new NotImplementedException(); }
+            set => throw new NotImplementedException();
         }
 
         /// <summary>

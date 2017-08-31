@@ -390,10 +390,7 @@ namespace Ionic.Zlib
         /// </remarks>
         public int MaxBufferPairs
         {
-            get
-            {
-                return _maxBufferPairs;
-            }
+            get => _maxBufferPairs;
             set
             {
                 if (value < 4)
@@ -445,7 +442,7 @@ namespace Ionic.Zlib
         /// </remarks>
         public int BufferSize
         {
-            get { return _bufferSize;}
+            get => _bufferSize;
             set
             {
                 if (value < 1024)
@@ -461,7 +458,7 @@ namespace Ionic.Zlib
         /// <remarks>
         /// This value is meaningful only after a call to Close().
         /// </remarks>
-        public int Crc32 { get { return _Crc32; } }
+        public int Crc32 => _Crc32;
 
 
         /// <summary>
@@ -470,7 +467,7 @@ namespace Ionic.Zlib
         /// <remarks>
         /// This value is meaningful only after a call to Close().
         /// </remarks>
-        public Int64 BytesProcessed { get { return _totalBytesProcessed; } }
+        public Int64 BytesProcessed => _totalBytesProcessed;
 
 
         private void _InitializePoolOfWorkItems()
@@ -1150,11 +1147,11 @@ namespace Ionic.Zlib
         private void _DeflateOne(Object wi)
         {
             // compress one buffer
-            WorkItem workitem = (WorkItem) wi;
+            var workitem = (WorkItem) wi;
             try
             {
                 int myItem = workitem.index;
-                Ionic.Crc.CRC32 crc = new Ionic.Crc.CRC32();
+                var crc = new Ionic.Crc.CRC32();
 
                 // calc CRC on the buffer
                 crc.SlurpBlock(workitem.buffer, 0, workitem.inputBytesAvailable);
@@ -1275,10 +1272,7 @@ namespace Ionic.Zlib
         /// <remarks>
         /// Always returns false.
         /// </remarks>
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek => false;
 
 
         /// <summary>
@@ -1287,10 +1281,7 @@ namespace Ionic.Zlib
         /// <remarks>
         /// Always returns false.
         /// </remarks>
-        public override bool CanRead
-        {
-            get {return false;}
-        }
+        public override bool CanRead => false;
 
         /// <summary>
         /// Indicates whether the stream supports Write operations.
@@ -1298,18 +1289,12 @@ namespace Ionic.Zlib
         /// <remarks>
         /// Returns true if the provided stream is writable.
         /// </remarks>
-        public override bool CanWrite
-        {
-            get { return _outStream.CanWrite; }
-        }
+        public override bool CanWrite => _outStream.CanWrite;
 
         /// <summary>
         /// Reading this property always throws a NotSupportedException.
         /// </summary>
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length => throw new NotSupportedException();
 
         /// <summary>
         /// Returns the current position of the output stream.
@@ -1323,8 +1308,8 @@ namespace Ionic.Zlib
         /// </remarks>
         public override long Position
         {
-            get { return _outStream.Position; }
-            set { throw new NotSupportedException(); }
+            get => _outStream.Position;
+            set => throw new NotSupportedException();
         }
 
         /// <summary>
