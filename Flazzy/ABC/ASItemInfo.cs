@@ -6,17 +6,11 @@ namespace Flazzy.ABC
     {
         private readonly ABCFile _abc;
 
-        public string Key
-        {
-            get { return _abc.Pool.Strings[KeyIndex]; }
-        }
         public int KeyIndex { get; set; }
+        public string Key => _abc.Pool.Strings[KeyIndex];
 
-        public string Value
-        {
-            get { return _abc.Pool.Strings[ValueIndex]; }
-        }
         public int ValueIndex { get; set; }
+        public string Value => _abc.Pool.Strings[ValueIndex];
 
         public ASItemInfo(ABCFile abc)
         {

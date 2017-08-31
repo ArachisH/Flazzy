@@ -328,7 +328,7 @@ namespace Ionic.Zlib
             // establish sub-heaps of increasing lengths:
 
             for (n = s.heap_len / 2; n >= 1; n--)
-                s.pqdownheap(tree, n);
+                s.Pqdownheap(tree, n);
 
             // Construct the Huffman tree by repeatedly combining the least two
             // frequent nodes.
@@ -339,7 +339,7 @@ namespace Ionic.Zlib
                 // n = node of least frequency
                 n = s.heap[1];
                 s.heap[1] = s.heap[s.heap_len--];
-                s.pqdownheap(tree, 1);
+                s.Pqdownheap(tree, 1);
                 m = s.heap[1]; // m = node of next least frequency
 
                 s.heap[--s.heap_max] = n; // keep the nodes sorted by frequency
@@ -352,7 +352,7 @@ namespace Ionic.Zlib
 
                 // and insert the new node in the heap
                 s.heap[1] = node++;
-                s.pqdownheap(tree, 1);
+                s.Pqdownheap(tree, 1);
             }
             while (s.heap_len >= 2);
 

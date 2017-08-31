@@ -8,13 +8,7 @@ namespace Flazzy.ABC.AVM2.Instructions
     {
         public OPCode OP { get; }
         protected ABCFile ABC { get; }
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                return OP.ToString();
-            }
-        }
+        protected override string DebuggerDisplay => OP.ToString();
 
         public ASInstruction(OPCode op)
         {

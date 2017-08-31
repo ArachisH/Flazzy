@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Collections;
@@ -28,7 +27,7 @@ namespace Flazzy.ABC.AVM2
 
         public ASInstruction this[int index]
         {
-            get { return _instructions[index]; }
+            get => _instructions[index];
             set
             {
                 ASInstruction previous = _instructions[index];
@@ -38,7 +37,17 @@ namespace Flazzy.ABC.AVM2
                 {
                     JumpExits[jumper] = value;
                 }
-                // TODO: Replace switch exit if needed.
+                foreach (LookUpSwitchIns @switch in SwitchExits.Keys)
+                {
+                    ASInstruction[] exits = SwitchExits[@switch];
+                    for (int i = 0; i < exits.Length; i++)
+                    {
+                        ASInstruction exit = exits[i];
+                        if (previous != exit) continue;
+
+                        exits[i] = value;
+                    }
+                }
 
                 _indices.Remove(previous);
                 _indices.Add(value, index);
@@ -106,16 +115,25 @@ namespace Flazzy.ABC.AVM2
                     }
                     else group.Remove(instruction);
 
-                    // TODO: Recalibrate switch exits.
                     Jumper entry = GetJumperEntry(instruction);
                     if (entry != null)
                     {
                         if (index != _instructions.Count)
                         {
-                            ASInstruction exit = _instructions[index];
-                            JumpExits[entry] = exit;
+                            JumpExits[entry] = _instructions[index];
                         }
                         else JumpExits[entry] = null;
+                    }
+                    foreach (LookUpSwitchIns @switch in SwitchExits.Keys)
+                    {
+                        ASInstruction[] exits = SwitchExits[@switch];
+                        for (int j = 0; j < exits.Length; j++)
+                        {
+                            ASInstruction exit = exits[j];
+                            if (instruction != exit) continue;
+
+                            exits[j] = _instructions[index];
+                        }
                     }
 
                     if (Jumper.IsValid(instruction.OP))
@@ -159,8 +177,6 @@ namespace Flazzy.ABC.AVM2
                     JumpExits[deadJumps.Pop()] = collection.First();
                 }
 
-                // We'll try to keep the dictionary organized, even though it really doesn't matter.
-                // Looks nice though.
                 for (int i = ((index + collectionCount) - 1); i >= index; i--)
                 {
                     ASInstruction instruction = _instructions[i];
@@ -313,7 +329,7 @@ namespace Flazzy.ABC.AVM2
                         }
                         else
                         {
-                            // Do not attempt to optimize when a local is being use, as these values can change.
+                            // Do not attempt to optimize when a local is being used, because these values can still change.
                             valuePushers.Push(leftPusher);
                             valuePushers.Push(rightPusher);
                             machine.Values.Push(result);
@@ -522,7 +538,7 @@ namespace Flazzy.ABC.AVM2
                     List<Jumper> jumpers = null;
                     if (sharedExits.TryGetValue(previousPosition, out jumpers))
                     {
-                        // This is an exit position for a jump instruction, or more.
+                        // This is an exit position for one, or more jump instructions.
                         foreach (Jumper jumper in jumpers)
                         {
                             JumpExits.Add(jumper, instruction);

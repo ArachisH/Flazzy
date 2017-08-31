@@ -6,8 +6,8 @@ namespace Flazzy.ABC.AVM2.Instructions
     {
         public override object Value
         {
-            get { return false; }
-            set { throw new NotSupportedException(); }
+            get => false;
+            set => throw new NotSupportedException();
         }
 
         public PushFalseIns()

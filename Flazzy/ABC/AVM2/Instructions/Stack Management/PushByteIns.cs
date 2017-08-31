@@ -7,7 +7,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         private byte _value;
         new public byte Value
         {
-            get { return _value; }
+            get => _value;
             set
             {
                 _value = value;

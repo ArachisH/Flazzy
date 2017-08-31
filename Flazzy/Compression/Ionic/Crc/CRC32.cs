@@ -50,24 +50,12 @@ namespace Ionic.Crc
         /// <summary>
         ///   Indicates the total number of bytes applied to the CRC.
         /// </summary>
-        public long TotalBytesRead
-        {
-            get
-            {
-                return _TotalBytesRead;
-            }
-        }
+        public long TotalBytesRead => _TotalBytesRead;
 
         /// <summary>
         /// Indicates the current CRC for all blocks slurped in.
         /// </summary>
-        public Int32 Crc32Result
-        {
-            get
-            {
-                return unchecked((Int32)(~_register));
-            }
-        }
+        public Int32 Crc32Result => unchecked((Int32)(~_register));
 
         /// <summary>
         /// Returns the CRC32 for the specified stream.
@@ -297,7 +285,7 @@ namespace Ionic.Crc
         }
 
 
-        private uint gf2_matrix_times(uint[] matrix, uint vec)
+        private uint Gf2_matrix_times(uint[] matrix, uint vec)
         {
             uint sum = 0;
             int i = 0;
@@ -311,10 +299,10 @@ namespace Ionic.Crc
             return sum;
         }
 
-        private void gf2_matrix_square(uint[] square, uint[] mat)
+        private void Gf2_matrix_square(uint[] square, uint[] mat)
         {
             for (int i = 0; i < 32; i++)
-                square[i] = gf2_matrix_times(mat, mat[i]);
+                square[i] = Gf2_matrix_times(mat, mat[i]);
         }
 
 
@@ -351,10 +339,10 @@ namespace Ionic.Crc
             }
 
             // put operator for two zero bits in even
-            gf2_matrix_square(even, odd);
+            Gf2_matrix_square(even, odd);
 
             // put operator for four zero bits in odd
-            gf2_matrix_square(odd, even);
+            Gf2_matrix_square(odd, even);
 
             uint len2 = (uint)length;
 
@@ -363,19 +351,19 @@ namespace Ionic.Crc
             do
             {
                 // apply zeros operator for this bit of len2
-                gf2_matrix_square(even, odd);
+                Gf2_matrix_square(even, odd);
 
                 if ((len2 & 1) == 1)
-                    crc1 = gf2_matrix_times(even, crc1);
+                    crc1 = Gf2_matrix_times(even, crc1);
                 len2 >>= 1;
 
                 if (len2 == 0)
                     break;
 
                 // another iteration of the loop with odd and even swapped
-                gf2_matrix_square(odd, even);
+                Gf2_matrix_square(odd, even);
                 if ((len2 & 1) == 1)
-                    crc1 = gf2_matrix_times(odd, crc1);
+                    crc1 = Gf2_matrix_times(odd, crc1);
                 len2 >>= 1;
 
 
@@ -629,10 +617,7 @@ namespace Ionic.Crc
         ///   This is either the total number of bytes read, or the total number of
         ///   bytes written, depending on the direction of this stream.
         /// </remarks>
-        public long TotalBytesSlurped
-        {
-            get { return _Crc32.TotalBytesRead; }
-        }
+        public long TotalBytesSlurped => _Crc32.TotalBytesRead;
 
         /// <summary>
         ///   Provides the current CRC for all blocks slurped in.
@@ -644,10 +629,7 @@ namespace Ionic.Crc
         ///     get an accurate CRC for the entire stream.
         ///   </para>
         /// </remarks>
-        public Int32 Crc
-        {
-            get { return _Crc32.Crc32Result; }
-        }
+        public Int32 Crc => _Crc32.Crc32Result;
 
         /// <summary>
         ///   Indicates whether the underlying stream will be left open when the
@@ -660,8 +642,8 @@ namespace Ionic.Crc
         /// </remarks>
         public bool LeaveOpen
         {
-            get { return _leaveOpen; }
-            set { _leaveOpen = value; }
+            get => _leaveOpen;
+            set => _leaveOpen = value;
         }
 
         /// <summary>
@@ -709,10 +691,7 @@ namespace Ionic.Crc
         /// <summary>
         /// Indicates whether the stream supports reading.
         /// </summary>
-        public override bool CanRead
-        {
-            get { return _innerStream.CanRead; }
-        }
+        public override bool CanRead => _innerStream.CanRead;
 
         /// <summary>
         ///   Indicates whether the stream supports seeking.
@@ -722,18 +701,12 @@ namespace Ionic.Crc
         ///     Always returns false.
         ///   </para>
         /// </remarks>
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek => false;
 
         /// <summary>
         /// Indicates whether the stream supports writing.
         /// </summary>
-        public override bool CanWrite
-        {
-            get { return _innerStream.CanWrite; }
-        }
+        public override bool CanWrite => _innerStream.CanWrite;
 
         /// <summary>
         /// Flush the stream.
@@ -763,8 +736,8 @@ namespace Ionic.Crc
         /// </summary>
         public override long Position
         {
-            get { return _Crc32.TotalBytesRead; }
-            set { throw new NotSupportedException(); }
+            get => _Crc32.TotalBytesRead;
+            set => throw new NotSupportedException();
         }
 
         /// <summary>

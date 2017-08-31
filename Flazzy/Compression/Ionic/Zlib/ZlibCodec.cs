@@ -179,7 +179,7 @@ namespace Ionic.Zlib
         /// <summary>
         /// The Adler32 checksum on the data transferred through the codec so far. You probably don't need to look at this.
         /// </summary>
-        public int Adler32 { get { return (int)_Adler32; } }
+        public int Adler32 => (int)_Adler32;
 
 
         /// <summary>
@@ -655,7 +655,7 @@ namespace Ionic.Zlib
         // through this function so some applications may wish to modify it
         // to avoid allocating a large strm->next_out buffer and copying into it.
         // (See also read_buf()).
-        internal void flush_pending()
+        internal void Flush_pending()
         {
             int len = dstate.pendingCount;
 
@@ -691,7 +691,7 @@ namespace Ionic.Zlib
         // this function so some applications may wish to modify it to avoid
         // allocating a large strm->next_in buffer and copying from it.
         // (See also flush_pending()).
-        internal int read_buf(byte[] buf, int start, int size)
+        internal int Read_buf(byte[] buf, int start, int size)
         {
             int len = AvailableBytesIn;
 

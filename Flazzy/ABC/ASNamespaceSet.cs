@@ -24,13 +24,7 @@ namespace Flazzy.ABC
             }
         }
 
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                return $"Namespaces: {NamespaceIndices.Count:n0}";
-            }
-        }
+        protected override string DebuggerDisplay => $"Namespaces: {NamespaceIndices.Count:n0}";
 
         public IEnumerable<ASNamespace> GetNamespaces()
         {

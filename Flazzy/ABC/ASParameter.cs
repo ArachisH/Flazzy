@@ -1,50 +1,33 @@
-﻿using System;
-using System.Linq;
-
-using Flazzy.IO;
+﻿using System.Linq;
+using System.Diagnostics;
 
 namespace Flazzy.ABC
 {
-    public class ASParameter : AS3Item
+    [DebuggerDisplay("{ToString(),nq}")]
+    public class ASParameter
     {
         private readonly ASMethod _method;
+        private readonly ASConstantPool _pool;
 
-        public object Value
-        {
-            get { return ABC.Pool.GetConstant(ValueKind, ValueIndex); }
-        }
         public int ValueIndex { get; set; }
+        public object Value => _pool.GetConstant(ValueKind, ValueIndex);
 
-        public string Name
-        {
-            get { return ABC.Pool.Strings[NameIndex]; }
-        }
         public int NameIndex { get; set; }
+        public string Name => _pool.Strings[NameIndex];
 
-        public ASMultiname Type
-        {
-            get { return ABC.Pool.Multinames[TypeIndex]; }
-        }
         public int TypeIndex { get; set; }
+        public ASMultiname Type => _pool.Multinames[TypeIndex];
 
         public bool IsOptional { get; set; }
         public ConstantKind ValueKind { get; set; }
 
-        protected override string DebuggerDisplay
+        public ASParameter(ASConstantPool pool, ASMethod method)
         {
-            get
-            {
-                return ToAS3();
-            }
-        }
-
-        public ASParameter(ABCFile abc, ASMethod method)
-            : base(abc)
-        {
+            _pool = pool;
             _method = method;
         }
 
-        public override string ToAS3()
+        public override string ToString()
         {
             string name = Name;
             if (string.IsNullOrWhiteSpace(name))
@@ -86,10 +69,6 @@ namespace Flazzy.ABC
             }
 
             return $"{name}:{type}{optionalSuffix}";
-        }
-        public override void WriteTo(FlashWriter output)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         private int _value;
         new public int Value
         {
-            get { return _value; }
+            get => _value;
             set
             {
                 _value = value;
