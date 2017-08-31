@@ -1,38 +1,18 @@
-﻿using System;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
     public class ASClass : ASContainer
     {
-        public ASInstance Instance
-        {
-            get { return ABC.Instances[InstanceIndex]; }
-        }
         internal int InstanceIndex { get; set; }
+        public ASInstance Instance => ABC.Instances[InstanceIndex];
 
-        public ASMethod Constructor
-        {
-            get { return ABC.Methods[ConstructorIndex]; }
-        }
         public int ConstructorIndex { get; set; }
+        public ASMethod Constructor => ABC.Methods[ConstructorIndex];
 
-        public override ASMultiname QName
-        {
-            get
-            {
-                return Instance.QName;
-            }
-        }
         public override bool IsStatic => true;
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                return Instance.ToAS3();
-            }
-        }
+        public override ASMultiname QName => Instance.QName;
+        protected override string DebuggerDisplay => ToAS3();
 
         public ASClass(ABCFile abc)
             : base(abc)

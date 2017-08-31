@@ -1,24 +1,13 @@
-﻿using System;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
-    public class ASScript : ASContainer
+    public class ASScript : ASContainer // TODO: Check QName usages
     {
-        public ASMethod Initializer
-        {
-            get { return ABC.Methods[InitializerIndex]; }
-        }
         public int InitializerIndex { get; set; }
+        public ASMethod Initializer => ABC.Methods[InitializerIndex];
 
-        public override ASMultiname QName
-        {
-            get
-            {
-                return Traits[0].QName;
-            }
-        }
+        public override ASMultiname QName => Traits[0].QName;
 
         public ASScript(ABCFile abc)
             : base(abc)
@@ -30,10 +19,6 @@ namespace Flazzy.ABC
             PopulateTraits(input);
         }
 
-        public override string ToAS3()
-        {
-            throw new NotImplementedException();
-        }
         public override void WriteTo(FlashWriter output)
         {
             output.WriteInt30(InitializerIndex);

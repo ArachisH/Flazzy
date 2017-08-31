@@ -7,17 +7,11 @@ namespace Flazzy.ABC
 {
     public class ASMethod : AS3Item
     {
-        public string Name
-        {
-            get { return ABC.Pool.Strings[NameIndex]; }
-        }
         public int NameIndex { get; set; }
+        public string Name => ABC.Pool.Strings[NameIndex];
 
-        public ASMultiname ReturnType
-        {
-            get { return ABC.Pool.Multinames[ReturnTypeIndex]; }
-        }
         public int ReturnTypeIndex { get; set; }
+        public ASMultiname ReturnType => ABC.Pool.Multinames[ReturnTypeIndex];
 
         public MethodFlags Flags { get; set; }
         public List<ASParameter> Parameters { get; }
@@ -53,7 +47,7 @@ namespace Flazzy.ABC
 
             for (int i = 0; i < Parameters.Capacity; i++)
             {
-                var parameter = new ASParameter(abc, this);
+                var parameter = new ASParameter(abc.Pool, this);
                 parameter.TypeIndex = input.ReadInt30();
                 Parameters.Add(parameter);
             }
@@ -109,7 +103,7 @@ namespace Flazzy.ABC
                 prefix = string.Empty;
             }
             
-            IEnumerable<string> rawParams = Parameters.Select(p => p.ToAS3());
+            IEnumerable<string> rawParams = Parameters.Select(p => p.ToString());
             if (Flags.HasFlag(MethodFlags.NeedRest))
             {
                 rawParams = rawParams.Concat(

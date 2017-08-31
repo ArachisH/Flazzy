@@ -1,4 +1,6 @@
-﻿namespace Flazzy.ABC
+﻿using System;
+
+namespace Flazzy.ABC
 {
     public abstract class AS3Item : FlashItem
     {
@@ -13,6 +15,9 @@
         {
             return ABC;
         }
-        public abstract string ToAS3();
+        public virtual string ToAS3()
+        {
+            throw new NotSupportedException();
+        }
     }
 }

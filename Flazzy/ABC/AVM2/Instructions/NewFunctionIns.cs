@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class NewFunctionIns : ASInstruction
     {
-        public ASMethod Method
-        {
-            get { return ABC.Methods[MethodIndex]; }
-        }
         public int MethodIndex { get; set; }
+        public ASMethod Method => ABC.Methods[MethodIndex];
 
         public NewFunctionIns(ABCFile abc)
             : base(OPCode.NewFunction, abc)

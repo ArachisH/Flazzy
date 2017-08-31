@@ -5,16 +5,10 @@ namespace Flazzy.Tags
 {
     public abstract class TagItem : FlashItem
     {
-        public TagKind Kind
-        {
-            get { return Header.Kind; }
-        }
+        public TagKind Kind => Header.Kind;
         public HeaderRecord Header { get; }
 
-        protected override string DebuggerDisplay
-        {
-            get { return Kind.ToString(); }
-        }
+        protected override string DebuggerDisplay => Kind.ToString();
 
         public TagItem(TagKind kind)
             : this(new HeaderRecord(kind))

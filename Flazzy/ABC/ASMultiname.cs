@@ -79,39 +79,20 @@ namespace Flazzy.ABC
             }
         }
 
-        public string Name
-        {
-            get { return Pool.Strings[NameIndex]; }
-        }
         public int NameIndex { get; set; }
+        public string Name => Pool.Strings[NameIndex];
 
-        public ASMultiname QName
-        {
-            get { return Pool.Multinames[QNameIndex]; }
-        }
         public int QNameIndex { get; set; }
+        public ASMultiname QName => Pool.Multinames[QNameIndex];
+
+        public int NamespaceIndex { get; set; }
+        public ASNamespace Namespace => Pool.Namespaces[NamespaceIndex];
+
+        public int NamespaceSetIndex { get; set; }
+        public ASNamespaceSet NamespaceSet => Pool.NamespaceSets[NamespaceSetIndex];
 
         public List<int> TypeIndices { get; }
-
-        public ASNamespace Namespace
-        {
-            get { return Pool.Namespaces[NamespaceIndex]; }
-        }
-        public int NamespaceIndex { get; set; }
-
-        public ASNamespaceSet NamespaceSet
-        {
-            get { return Pool.NamespaceSets[NamespaceSetIndex]; }
-        }
-        public int NamespaceSetIndex { get; set; }
-
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                return $"{Kind}: \"{Name}\"";
-            }
-        }
+        protected override string DebuggerDisplay => $"{Kind}: \"{Name}\"";
 
         public ASMultiname(ASConstantPool pool)
             : base(pool)

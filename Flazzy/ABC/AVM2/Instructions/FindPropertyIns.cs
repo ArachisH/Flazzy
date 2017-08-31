@@ -4,11 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class FindPropertyIns : ASInstruction
     {
-        public ASMultiname PropertyName
-        {
-            get { return ABC.Pool.Multinames[PropertyNameIndex]; }
-        }
         public int PropertyNameIndex { get; set; }
+        public ASMultiname PropertyName => ABC.Pool.Multinames[PropertyNameIndex];
 
         public FindPropertyIns(ABCFile abc)
             : base(OPCode.FindProperty, abc)

@@ -5,8 +5,8 @@ namespace Flazzy.ABC.AVM2.Instructions
     {
         public override int Register
         {
-            get { return 1; }
-            set { throw new NotSupportedException(); }
+            get => 1;
+            set => throw new NotSupportedException();
         }
 
         public GetLocal1Ins()

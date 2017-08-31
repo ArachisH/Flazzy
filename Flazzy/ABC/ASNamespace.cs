@@ -10,29 +10,20 @@ namespace Flazzy.ABC
     public class ASNamespace : ConstantItem
     {
         /// <summary>
-        /// Gets the name of the namespace.
-        /// </summary>
-        public string Name
-        {
-            get { return Pool.Strings[NameIndex]; }
-        }
-        /// <summary>
         /// Gets or sets the index of the string in <see cref="ASConstantPool.Strings"/> representing the namespace name.
         /// </summary>
         public int NameIndex { get; set; }
+        /// <summary>
+        /// Gets the name of the namespace.
+        /// </summary>
+        public string Name => Pool.Strings[NameIndex];
 
         /// <summary>
         /// Gets or sets the kind of namespace this entry should be interpreted as by the loader.
         /// </summary>
         public NamespaceKind Kind { get; set; }
 
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                return $"{Kind}: \"{Name}\"";
-            }
-        }
+        protected override string DebuggerDisplay => $"{Kind}: \"{Name}\"";
 
         public ASNamespace(ASConstantPool pool)
             : base(pool)

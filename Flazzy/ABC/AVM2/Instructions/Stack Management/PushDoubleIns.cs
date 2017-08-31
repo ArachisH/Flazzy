@@ -7,7 +7,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         private double _value;
         new public double Value
         {
-            get { return _value; }
+            get => _value;
             set
             {
                 _value = value;
@@ -20,7 +20,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         private int _valueIndex;
         public int ValueIndex
         {
-            get { return _valueIndex; }
+            get => _valueIndex;
             set
             {
                 _valueIndex = value;
