@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Diagnostics;
 using System.Collections.Generic;
 
 using Flazzy.IO;
@@ -51,13 +52,13 @@ namespace Flazzy.Sandbox
                 {
                     if (newData[i] != abcTag.ABCData[i])
                     {
-                        System.Diagnostics.Debugger.Break();
+                        Debugger.Break();
                         return;
                     }
                 }
                 if (oldData.Length != newData.Length)
                 {
-                    System.Diagnostics.Debugger.Break();
+                    Debugger.Break();
                     return;
                 }
             }
