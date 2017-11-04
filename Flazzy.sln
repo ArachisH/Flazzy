@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.27004.2006
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flazzy", "Flazzy\Flazzy.csproj", "{5AAE363A-4446-4489-9F1D-EB15D9299944}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flazzy.Sandbox", "Flazzy.Sandbox\Flazzy.Sandbox.csproj", "{BD3B62EC-74D8-4CB9-863B-04AAC61B8E9C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{5AAE363A-4446-4489-9F1D-EB15D9299944}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5AAE363A-4446-4489-9F1D-EB15D9299944}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5AAE363A-4446-4489-9F1D-EB15D9299944}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BD3B62EC-74D8-4CB9-863B-04AAC61B8E9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD3B62EC-74D8-4CB9-863B-04AAC61B8E9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD3B62EC-74D8-4CB9-863B-04AAC61B8E9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD3B62EC-74D8-4CB9-863B-04AAC61B8E9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
