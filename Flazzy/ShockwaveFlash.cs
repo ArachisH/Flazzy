@@ -172,71 +172,26 @@ namespace Flazzy
         }
         protected virtual TagItem ReadTag(HeaderRecord header, FlashReader input)
         {
-            TagItem tag = null;
             switch (header.Kind)
             {
-                case TagKind.DefineBinaryData:
-                tag = new DefineBinaryDataTag(header, input);
-                break;
-
-                case TagKind.DefineBitsLossless2:
-                tag = new DefineBitsLossless2Tag(header, input);
-                break;
-
-                case TagKind.DefineFontName:
-                tag = new DefineFontNameTag(header, input);
-                break;
-
-                case TagKind.DefineSound:
-                tag = new DefineSoundTag(header, input);
-                break;
-
-                case TagKind.DoABC:
-                tag = new DoABCTag(header, input);
-                break;
-
-                case TagKind.End:
-                tag = new EndTag(header);
-                break;
-
-                case TagKind.ExportAssets:
-                tag = new ExportAssetsTag(header, input);
-                break;
-
-                case TagKind.FileAttributes:
-                tag = new FileAttributesTag(header, input);
-                break;
-
-                case TagKind.FrameLabel:
-                tag = new FrameLabelTag(header, input);
-                break;
-
-                case TagKind.ProductInfo:
-                tag = new ProductInfoTag(header, input);
-                break;
-
-                case TagKind.ScriptLimits:
-                tag = new ScriptLimitsTag(header, input);
-                break;
-
-                case TagKind.SetBackgroundColor:
-                tag = new SetBackgroundColorTag(header, input);
-                break;
-
-                case TagKind.ShowFrame:
-                tag = new ShowFrameTag(header);
-                break;
-
-                case TagKind.SymbolClass:
-                tag = new SymbolClassTag(header, input);
-                break;
+                case TagKind.DefineBinaryData: return new DefineBinaryDataTag(header, input);
+                case TagKind.DefineBitsLossless2: return new DefineBitsLossless2Tag(header, input);
+                case TagKind.DefineFontName: return new DefineFontNameTag(header, input);
+                case TagKind.DefineSound: return new DefineSoundTag(header, input);
+                case TagKind.DoABC: return new DoABCTag(header, input);
+                case TagKind.End: return new EndTag(header);
+                case TagKind.ExportAssets: return new ExportAssetsTag(header, input);
+                case TagKind.FileAttributes: return new FileAttributesTag(header, input);
+                case TagKind.FrameLabel: return new FrameLabelTag(header, input);
+                case TagKind.ProductInfo: return new ProductInfoTag(header, input);
+                case TagKind.ScriptLimits: return new ScriptLimitsTag(header, input);
+                case TagKind.SetBackgroundColor: return new SetBackgroundColorTag(header, input);
+                case TagKind.ShowFrame: return new ShowFrameTag(header);
+                case TagKind.SymbolClass: return new SymbolClassTag(header, input);
 
                 default:
-                case TagKind.Unknown:
-                tag = new UnknownTag(header, input);
-                break;
+                case TagKind.Unknown: return new UnknownTag(header, input);
             }
-            return tag;
         }
 
         public byte[] ToArray()
