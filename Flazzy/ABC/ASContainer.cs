@@ -108,8 +108,7 @@ namespace Flazzy.ABC
         public ASTrait GetGetter(string qualifiedName)
         {
             return GetGetters()
-                .Where(g => g.QName.Name == qualifiedName)
-                .FirstOrDefault();
+                .FirstOrDefault(g => g.QName.Name == qualifiedName);
         }
 
         public IEnumerable<ASTrait> GetSlotTraits(string returnTypeName)
