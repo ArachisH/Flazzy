@@ -95,41 +95,22 @@ namespace Flazzy.ABC
 
         public int AddConstant(object value, bool recycle = true)
         {
-            switch (Type.GetTypeCode(value.GetType()))
+            switch (value)
             {
-                case TypeCode.String:
-                return AddConstant(Strings, (string)value, recycle);
-
-                case TypeCode.Double:
-                return AddConstant(Doubles, (double)value, recycle);
-
-                case TypeCode.UInt32:
-                return AddConstant(UIntegers, (uint)value, recycle);
-
-                case TypeCode.Int32:
-                return AddConstant(Integers, (int)value, recycle);
-
-                default:
-                {
-                    var multiname = (value as ASMultiname);
-                    if (multiname != null)
-                    {
-                        return AddConstant(Multinames, multiname, recycle);
-                    }
-
-                    var @namespace = (value as ASNamespace);
-                    if (@namespace != null)
-                    {
-                        return AddConstant(Namespaces, @namespace, recycle);
-                    }
-
-                    var namespaceSet = (value as ASNamespaceSet);
-                    if (namespaceSet != null)
-                    {
-                        return AddConstant(NamespaceSets, namespaceSet, recycle);
-                    }
-                    break;
-                }
+                case string @string:
+                    return AddConstant(Strings, @string, recycle);
+                case double @double:
+                    return AddConstant(Doubles, @double, recycle);
+                case uint @uint:
+                    return AddConstant(UIntegers, @uint, recycle);
+                case int @int:
+                    return AddConstant(Integers, @int, recycle);
+                case ASMultiname multiname:
+                    return AddConstant(Multinames, multiname, recycle);
+                case ASNamespace @namespace:
+                    return AddConstant(Namespaces, @namespace, recycle);
+                case ASNamespaceSet namespaceSet:
+                    return AddConstant(NamespaceSets, namespaceSet, recycle);
             }
             return -1;
         }
