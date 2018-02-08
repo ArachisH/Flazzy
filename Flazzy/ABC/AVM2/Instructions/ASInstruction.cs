@@ -4,7 +4,7 @@ using Flazzy.IO;
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public abstract class ASInstruction : FlashItem
+    public abstract class ASInstruction : FlashItem, ICloneable
     {
         public OPCode OP { get; }
         protected ABCFile ABC { get; }
@@ -495,6 +495,15 @@ namespace Flazzy.ABC.AVM2.Instructions
                 #endregion
             }
             throw new Exception("Unhandled OPCode: " + op);
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+        public ASInstruction Clone()
+        {
+            return (ASInstruction)MemberwiseClone();
         }
     }
 }
