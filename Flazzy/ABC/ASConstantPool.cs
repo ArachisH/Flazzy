@@ -97,20 +97,13 @@ namespace Flazzy.ABC
         {
             switch (value)
             {
-                case string @string:
-                    return AddConstant(Strings, @string, recycle);
-                case double @double:
-                    return AddConstant(Doubles, @double, recycle);
-                case uint @uint:
-                    return AddConstant(UIntegers, @uint, recycle);
-                case int @int:
-                    return AddConstant(Integers, @int, recycle);
-                case ASMultiname multiname:
-                    return AddConstant(Multinames, multiname, recycle);
-                case ASNamespace @namespace:
-                    return AddConstant(Namespaces, @namespace, recycle);
-                case ASNamespaceSet namespaceSet:
-                    return AddConstant(NamespaceSets, namespaceSet, recycle);
+                case string @string: return AddConstant(Strings, @string, recycle);
+                case double @double: return AddConstant(Doubles, @double, recycle);
+                case uint @uint: return AddConstant(UIntegers, @uint, recycle);
+                case int @int: return AddConstant(Integers, @int, recycle);
+                case ASMultiname multiname: return AddConstant(Multinames, multiname, recycle);
+                case ASNamespace @namespace: return AddConstant(Namespaces, @namespace, recycle);
+                case ASNamespaceSet namespaceSet: return AddConstant(NamespaceSets, namespaceSet, recycle);
             }
             return -1;
         }
