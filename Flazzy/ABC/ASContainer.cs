@@ -55,45 +55,41 @@ namespace Flazzy.ABC
 
         public IEnumerable<ASMethod> GetMethods()
         {
-            return GetTraits(TraitKind.Method, TraitKind.Getter, TraitKind.Setter)
-                .Select(t => t.Method);
+            return GetTraits(TraitKind.Method, TraitKind.Getter, TraitKind.Setter).Select(t => t.Method);
         }
-        public IEnumerable<ASMethod> GetMethods(int paramCount)
+        public IEnumerable<ASMethod> GetMethods(string qualifiedName) => GetMethods(qualifiedName, null, null);
+        public IEnumerable<ASMethod> GetMethods(string qualifiedName, string returnTypeName) => GetMethods(qualifiedName, returnTypeName, null);
+        public IEnumerable<ASMethod> GetMethods(string qualifiedName, string returnTypeName, int paramCount) => GetMethods(qualifiedName, returnTypeName, new string[paramCount]);
+        public IEnumerable<ASMethod> GetMethods(string qualifiedName, string returnTypeName, string[] paramTypeNames)
         {
-            return GetMethods()
-                .Where(m => m.Parameters.Count == paramCount);
-        }
-        public IEnumerable<ASMethod> GetMethods(string returnTypeName)
-        {
-            return GetMethods()
-                .Where(m => m.ReturnType.Name == returnTypeName);
-        }
-        public IEnumerable<ASMethod> GetMethods(int paramCount, string returnTypeName)
-        {
-            return GetMethods()
-                .Where(m => m.Parameters.Count == paramCount &&
-                            m.ReturnType.Name == returnTypeName);
+            foreach (ASMethod method in GetMethods())
+            {
+                if (qualifiedName != null && method.Trait.QName.Name != qualifiedName) continue;
+                if (returnTypeName != null && method.ReturnType.Name != returnTypeName) continue;
+                if (paramTypeNames != null)
+                {
+                    if (method.Parameters.Count != paramTypeNames.Length) continue;
+
+                    bool isContinuing = false;
+                    for (int i = 0; i < paramTypeNames.Length; i++)
+                    {
+                        if (paramTypeNames[i] == null) continue;
+                        if (method.Parameters[i].Type.Name != paramTypeNames[i])
+                        {
+                            isContinuing = true;
+                            break;
+                        }
+                    }
+                    if (isContinuing) continue;
+                }
+                yield return method;
+            }
         }
 
-        public ASMethod GetMethod(string qualifiedName)
-        {
-            return GetMethods()
-                .FirstOrDefault(m => m.Trait.QName.Name == qualifiedName);
-        }
-        public ASMethod GetMethod(int paramCount, string qualifiedName)
-        {
-            ASMethod method = GetMethod(qualifiedName);
-            if (method?.Parameters.Count != paramCount) return null;
-
-            return method;
-        }
-        public ASMethod GetMethod(int paramCount, string qualifiedName, string returnTypeName)
-        {
-            ASMethod method = GetMethod(paramCount, qualifiedName);
-            if (method?.ReturnType?.Name != returnTypeName) return null;
-
-            return method;
-        }
+        public ASMethod GetMethod(string qualifiedName) => GetMethods(qualifiedName).FirstOrDefault();
+        public ASMethod GetMethod(string qualifiedName, string returnTypeName) => GetMethods(qualifiedName, returnTypeName).FirstOrDefault();
+        public ASMethod GetMethod(string qualifiedName, string returnTypeName, int paramCount) => GetMethods(qualifiedName, returnTypeName, paramCount).FirstOrDefault();
+        public ASMethod GetMethod(string qualifiedName, string returnTypeName, string[] paramTypeNames) => GetMethods(qualifiedName, returnTypeName, paramTypeNames).FirstOrDefault();
 
         public IEnumerable<ASTrait> GetGetters()
         {
@@ -122,16 +118,19 @@ namespace Flazzy.ABC
                 .Where(sct => (sct.Type?.Name ?? "*") == returnTypeName);
         }
 
+        public ASTrait GetSlot(string qualifiedName)
+        {
+            return GetTraits(TraitKind.Slot).Single(st => st.QName.Name == qualifiedName);
+        }
+        public ASTrait GetConstant(string qualifiedName)
+        {
+            return GetTraits(TraitKind.Constant).Single(ct => ct.QName.Name == qualifiedName);
+        }
+
         public IEnumerable<ASTrait> GetTraits(params TraitKind[] kinds)
         {
-            if (kinds.Length > 0)
-            {
-                foreach (ASTrait trait in Traits)
-                {
-                    if (kinds.Contains(trait.Kind))
-                        yield return trait;
-                }
-            }
+            if ((kinds?.Length ?? 0) == 0) Enumerable.Empty<ASTrait>();
+            return Traits.Where(t => kinds.Contains(t.Kind));
         }
 
         protected void PopulateTraits(FlashReader input)
