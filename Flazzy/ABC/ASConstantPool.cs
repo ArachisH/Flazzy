@@ -14,33 +14,12 @@ namespace Flazzy.ABC
 
         public ABCFile ABC { get; }
 
-        /// <summary>
-        /// Gets a list of integer constants referenced by the bytecode.
-        /// </summary>
         public List<int> Integers { get; }
-        /// <summary>
-        /// Gets a list of unsigned integer constants references by the bytecode.
-        /// </summary>
         public List<uint> UIntegers { get; }
-        /// <summary>
-        /// Gets a list of IEEE double-precision floating point constants referenced by the bytecode.
-        /// </summary>
         public List<double> Doubles { get; }
-        /// <summary>
-        /// Gets a list of UTF-8 encoded strings referenced by the compiled code, and by many other parts of the <see cref="ABCFile"/>.
-        /// </summary>
         public List<string> Strings { get; }
-        /// <summary>
-        /// Gets a list of namespaces used by the bytecode.
-        /// </summary>
         public List<ASNamespace> Namespaces { get; }
-        /// <summary>
-        /// Gets a of list of namespace sets used in the descriptions of multinames.
-        /// </summary>
         public List<ASNamespaceSet> NamespaceSets { get; }
-        /// <summary>
-        /// Gets a list of names used by the bytecode.
-        /// </summary>
         public List<ASMultiname> Multinames { get; }
 
         public ASConstantPool()
@@ -95,23 +74,28 @@ namespace Flazzy.ABC
 
         public int AddConstant(object value, bool recycle = true)
         {
-            switch (value)
+            switch (Type.GetTypeCode(value.GetType()))
             {
-                case string @string: return AddConstant(Strings, @string, recycle);
-                case double @double: return AddConstant(Doubles, @double, recycle);
-                case uint @uint: return AddConstant(UIntegers, @uint, recycle);
-                case int @int: return AddConstant(Integers, @int, recycle);
-                case ASMultiname multiname: return AddConstant(Multinames, multiname, recycle);
-                case ASNamespace @namespace: return AddConstant(Namespaces, @namespace, recycle);
-                case ASNamespaceSet namespaceSet: return AddConstant(NamespaceSets, namespaceSet, recycle);
+                case TypeCode.Int32: return AddConstant(Integers, (int)value, recycle);
+                case TypeCode.UInt32: return AddConstant(UIntegers, (uint)value, recycle);
+                case TypeCode.Double: return AddConstant(Doubles, (double)value, recycle);
+                case TypeCode.String: return AddConstant(Strings, (string)value, recycle);
+
+                default:
+                {
+                    switch (value)
+                    {
+                        case ASMultiname multiname: return AddConstant(Multinames, multiname, recycle);
+                        case ASNamespace @namespace: return AddConstant(Namespaces, @namespace, recycle);
+                        case ASNamespaceSet namespaceSet: return AddConstant(NamespaceSets, namespaceSet, recycle);
+                    }
+                    throw new ArgumentException("The provided value does not belone anywhere in the constant pool.", nameof(value));
+                }
             }
-            return -1;
         }
         protected virtual int AddConstant<T>(List<T> constants, T value, bool recycle)
         {
-            int index = (recycle ?
-                constants.IndexOf(value, 1) : -1);
-
+            int index = (recycle ? constants.IndexOf(value, 1) : -1);
             if (index == -1)
             {
                 constants.Add(value);
@@ -124,24 +108,23 @@ namespace Flazzy.ABC
         {
             return GetMultinameIndices(name).FirstOrDefault();
         }
+        public ASMultiname GetMultiname(string name)
+        {
+            return GetMultinames(name).FirstOrDefault();
+        }
+
         public IEnumerable<int> GetMultinameIndices(string name)
         {
             for (int i = 1; i < Multinames.Count; i++)
             {
-                if (Multinames[i].Name == name)
-                {
-                    yield return i;
-                }
+                if (Multinames[i].Name == name) yield return i;
             }
         }
         public IEnumerable<ASMultiname> GetMultinames(string name)
         {
             for (int i = 1; i < Multinames.Count; i++)
             {
-                if (Multinames[i].Name == name)
-                {
-                    yield return Multinames[i];
-                }
+                if (Multinames[i].Name == name) yield return Multinames[i];
             }
         }
 
