@@ -67,7 +67,9 @@ namespace Flazzy.Compression
             var decoder = new LZMADecoder();
             using (var output = new MemoryStream(outputLength))
             {
-                input.Position += 4;
+                var ignoredData = new byte[4];
+                input.Read(ignoredData, 0, ignoredData.Length);
+
                 var lzmaProperties = new byte[5];
                 input.Read(lzmaProperties, 0, 5);
 
