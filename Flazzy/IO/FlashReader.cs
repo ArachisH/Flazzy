@@ -13,6 +13,7 @@ namespace Flazzy.IO
             set => BaseStream.Position = value;
         }
         public long Length => BaseStream.Length;
+        public bool IsDisposed { get; private set; }
         public bool IsDataAvailable => Position < Length;
 
         protected int BitPosition { get; set; }
@@ -217,6 +218,10 @@ namespace Flazzy.IO
         protected override void Dispose(bool disposing)
         {
             base.Dispose(!_leaveOpen);
+            if (disposing)
+            {
+                IsDisposed = true;
+            }
         }
     }
 }
