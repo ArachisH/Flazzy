@@ -14,12 +14,12 @@ namespace Flazzy
         private readonly FlashReader _input;
 
         public List<TagItem> Tags { get; }
+        public CompressionKind Compression { get; }
         public string Signature => ((char)Compression + "WS");
 
         public byte Version { get; set; }
         public uint FileLength { get; set; }
         public FrameRecord Frame { get; set; }
-        public CompressionKind Compression { get; set; }
 
         public ShockwaveFlash()
             : this(true)
@@ -80,6 +80,10 @@ namespace Flazzy
         }
         public virtual void Disassemble(Action<TagItem> callback)
         {
+            if (_input.IsDisposed)
+            {
+                throw new ObjectDisposedException(nameof(_input), "Input stream has already been disposed, or disassembly of the file has already occured.");
+            }
             long position = (8 + Frame.Area.GetByteSize() + 4);
             while (position != FileLength)
             {
@@ -103,6 +107,7 @@ namespace Flazzy
                     break;
                 }
             }
+            _input.Dispose();
         }
 
         public void Assemble(FlashWriter output)
@@ -166,6 +171,40 @@ namespace Flazzy
             output.Position = output.Length;
         }
 
+        public void CopyTo(Stream output)
+        {
+            CopyTo(output, Compression, null);
+        }
+        public void CopyTo(Stream output, Action<TagItem> callback)
+        {
+            CopyTo(output, Compression, callback);
+        }
+
+        public void CopyTo(Stream output, CompressionKind compression)
+        {
+            CopyTo(output, compression, null);
+        }
+        public void CopyTo(Stream output, CompressionKind compression, Action<TagItem> callback)
+        {
+            using (var fOutput = new FlashWriter(output, true))
+            {
+                Assemble(fOutput, compression, callback);
+            }
+        }
+
+        public byte[] ToArray()
+        {
+            return ToArray(Compression);
+        }
+        public byte[] ToArray(CompressionKind compression)
+        {
+            using (var output = new MemoryStream((int)FileLength))
+            {
+                CopyTo(output, compression, null);
+                return output.ToArray();
+            }
+        }
+
         protected virtual void WriteTag(TagItem tag, FlashWriter output)
         {
             tag.WriteTo(output);
@@ -191,20 +230,6 @@ namespace Flazzy
 
                 default:
                 case TagKind.Unknown: return new UnknownTag(header, input);
-            }
-        }
-
-        public byte[] ToArray()
-        {
-            return ToArray(Compression);
-        }
-        public byte[] ToArray(CompressionKind compression)
-        {
-            using (var outputMem = new MemoryStream((int)FileLength))
-            using (var output = new FlashWriter(outputMem))
-            {
-                Assemble(output, compression);
-                return outputMem.ToArray();
             }
         }
 
