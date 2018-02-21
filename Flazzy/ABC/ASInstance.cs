@@ -70,7 +70,7 @@ namespace Flazzy.ABC
         {
             if (Super.Name != "Object")
             {
-                ASInstance superInstance = ABC.GetFirstInstance(Super.Name);
+                ASInstance superInstance = ABC.GetInstance(Super);
                 if (superInstance.ContainsInterface(qualifiedName))
                 {
                     return true;
