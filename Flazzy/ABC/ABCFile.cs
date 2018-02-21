@@ -9,7 +9,7 @@ namespace Flazzy.ABC
     public class ABCFile : FlashItem, IDisposable
     {
         private readonly FlashReader _input;
-        private readonly Dictionary<string, List<ASClass>> _classCache;
+        private readonly Dictionary<ASMultiname, List<ASClass>> _classesCache;
 
         public List<ASMethod> Methods { get; }
         public List<ASMetadata> Metadata { get; }
@@ -25,7 +25,7 @@ namespace Flazzy.ABC
 
         public ABCFile()
         {
-            _classCache = new Dictionary<string, List<ASClass>>();
+            _classesCache = new Dictionary<ASMultiname, List<ASClass>>();
 
             Methods = new List<ASMethod>();
             Metadata = new List<ASMetadata>();
@@ -93,50 +93,36 @@ namespace Flazzy.ABC
             return index;
         }
 
-        public void RebuildCache()
-        {
-            _classCache.Clear();
-            foreach (ASClass @class in Classes)
-            {
-                List<ASClass> classes = null;
-                string qualifiedName = @class.Instance.QName.Name;
-                if (!_classCache.TryGetValue(qualifiedName, out classes))
-                {
-                    classes = new List<ASClass>();
-                    _classCache[qualifiedName] = classes;
-                }
-                classes.Add(@class);
-            }
-        }
+        public ASClass GetClass(ASMultiname multiname) => GetClasses(multiname).FirstOrDefault();
+        public ASClass GetClass(string qualifiedName) => GetClass(GetMultiname(qualifiedName));
 
-        public ASClass GetFirstClass(string qualifiedName)
-        {
-            return GetClasses(qualifiedName).FirstOrDefault();
-        }
-        public IEnumerable<ASClass> GetClasses(string qualifiedName)
-        {
-            List<ASClass> classes = null;
-            if (_classCache.TryGetValue(qualifiedName, out classes))
-            {
-                foreach (ASClass @class in classes)
-                {
-                    if (@class.Instance.QName.Name != qualifiedName) continue;
-                    yield return @class;
-                }
-            }
-        }
+        public ASInstance GetInstance(ASMultiname multiname) => GetInstances(multiname).FirstOrDefault();
+        public ASInstance GetInstance(string qualifiedName) => GetInstance(GetMultiname(qualifiedName));
 
-        public ASInstance GetFirstInstance(string qualifiedName)
+        public IEnumerable<ASClass> GetClasses(ASMultiname multiname)
         {
-            return GetInstances(qualifiedName).FirstOrDefault();
-        }
-        public IEnumerable<ASInstance> GetInstances(string qualifiedName)
-        {
-            foreach (ASClass @class in GetClasses(qualifiedName))
+            if (multiname == null || !_classesCache.TryGetValue(multiname, out List<ASClass> classes)) yield break;
+            for (int i = 0; i < classes.Count; i++)
             {
-                yield return @class.Instance;
+                ASClass @class = classes[i];
+                if (@class.QName != multiname)
+                {
+                    i--;
+                    classes.RemoveAt(i);
+                    if (!_classesCache.TryGetValue(@class.QName, out List<ASClass> newClasses))
+                    {
+                        newClasses = new List<ASClass>();
+                        _classesCache.Add(@class.QName, newClasses);
+                    }
+                    newClasses.Add(@class);
+                }
+                else yield return @class;
             }
         }
+        public IEnumerable<ASClass> GetClasses(string qualifiedName) => GetClasses(GetMultiname(qualifiedName));
+
+        public IEnumerable<ASInstance> GetInstances(ASMultiname multiname) => GetClasses(multiname).Select(c => c.Instance);
+        public IEnumerable<ASInstance> GetInstances(string qualifiedName) => GetInstances(GetMultiname(qualifiedName));
 
         private ASMethod ReadMethod(int index)
         {
@@ -155,12 +141,10 @@ namespace Flazzy.ABC
             var @class = new ASClass(this, _input);
             @class.InstanceIndex = index;
 
-            List<ASClass> classes = null;
-            string qualifedName = @class.Instance.QName.Name;
-            if (!_classCache.TryGetValue(qualifedName, out classes))
+            if (!_classesCache.TryGetValue(@class.QName, out List<ASClass> classes))
             {
                 classes = new List<ASClass>();
-                _classCache[qualifedName] = classes;
+                _classesCache.Add(@class.QName, classes);
             }
 
             classes.Add(@class);
@@ -175,6 +159,14 @@ namespace Flazzy.ABC
             return new ASMethodBody(this, _input);
         }
 
+        private ASMultiname GetMultiname(string qualifiedName)
+        {
+            foreach (ASMultiname multiname in Pool.GetMultinames(qualifiedName))
+            {
+                if (multiname.Kind == MultinameKind.QName) return multiname;
+            }
+            return null;
+        }
         private void PopulateList<T>(List<T> list, Func<int, T> reader, int count = -1)
         {
             list.Capacity = (count < 0 ? _input.ReadInt30() : count);
