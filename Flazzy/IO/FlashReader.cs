@@ -22,14 +22,14 @@ namespace Flazzy.IO
         public FlashReader(byte[] data)
             : this(new MemoryStream(data))
         { }
-        public FlashReader(Stream output)
-            : this(output, new UTF8Encoding(false, true), false)
+        public FlashReader(Stream input)
+            : this(input, new UTF8Encoding(false, true), false)
         { }
-        public FlashReader(Stream output, bool leaveOpen)
-            : this(output, new UTF8Encoding(false, true), leaveOpen)
+        public FlashReader(Stream input, bool leaveOpen)
+            : this(input, new UTF8Encoding(false, true), leaveOpen)
         { }
-        public FlashReader(Stream output, Encoding encoding)
-            : this(output, encoding, false)
+        public FlashReader(Stream input, Encoding encoding)
+            : this(input, encoding, false)
         { }
         public FlashReader(Stream output, Encoding encoding, bool leaveOpen)
             : base(output, encoding)
