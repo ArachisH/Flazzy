@@ -50,8 +50,27 @@ namespace Flazzy.IO
 
         public int ReadInt30()
         {
-            Align();
-            return Read7BitEncodedInt();
+            int result = ReadByte();
+            if ((result & 0x00000080) == 0)
+            {
+                return result;
+            }
+            result = (result & 0x0000007f) | (ReadByte()) << 7;
+            if ((result & 0x00004000) == 0)
+            {
+                return result;
+            }
+            result = (result & 0x00003fff) | (ReadByte()) << 14;
+            if ((result & 0x00200000) == 0)
+            {
+                return result;
+            }
+            result = (result & 0x001fffff) | (ReadByte()) << 21;
+            if ((result & 0x10000000) == 0)
+            {
+                return result;
+            }
+            return (result & 0x0fffffff) | (ReadByte()) << 28;
         }
         public uint ReadUInt30()
         {
