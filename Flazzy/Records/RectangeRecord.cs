@@ -1,4 +1,5 @@
-﻿using Flazzy.IO;
+﻿using System.IO;
+using Flazzy.IO;
 
 namespace Flazzy.Records
 {
@@ -28,14 +29,14 @@ namespace Flazzy.Records
 
         public int GetByteSize()
         {
-            int maxBits = 0;
-            long[] paddedValues = FlashTools.GetMaxPaddedBitsNeeded(
-                out maxBits, X, TwipsWidth, Y, TwipsHeight);
+            using (var rectMem = new MemoryStream())
+            using (var rectFlash = new FlashWriter(rectMem))
+            {
+                WriteTo(rectFlash);
 
-            int maxBytes = (maxBits / 8);
-            maxBytes += (maxBits % 8) * 8;
-
-            return (((maxBits / 8) * paddedValues.Length) + 1);
+                rectFlash.Flush(); // Align the bits
+                return (rectMem.ToArray().Length);
+            }
         }
 
         public override void WriteTo(FlashWriter output)
