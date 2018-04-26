@@ -52,14 +52,16 @@ namespace Flazzy
                     _input = new FlashReader(decompressed);
                     break;
                 }
-
                 case CompressionKind.ZLIB:
-                _input = ZLIB.WrapDecompressor(input.BaseStream);
-                break;
-
+                {
+                    _input = ZLIB.WrapDecompressor(input.BaseStream);
+                    break;
+                }
                 case CompressionKind.None:
-                _input = input;
-                break;
+                {
+                    _input = input;
+                    break;
+                }
             }
             Frame = new FrameRecord(_input);
         }
@@ -101,11 +103,7 @@ namespace Flazzy
                 callback?.Invoke(tag);
                 Tags.Add(tag);
 
-                if (tag.Kind == TagKind.End)
-                {
-                    FileLength = (uint)position;
-                    break;
-                }
+                if (tag.Kind == TagKind.End) break;
             }
             _input.Dispose();
         }
@@ -222,6 +220,7 @@ namespace Flazzy
                 case TagKind.ExportAssets: return new ExportAssetsTag(header, input);
                 case TagKind.FileAttributes: return new FileAttributesTag(header, input);
                 case TagKind.FrameLabel: return new FrameLabelTag(header, input);
+                case TagKind.Metadata: return new MetadataTag(header, input);
                 case TagKind.ProductInfo: return new ProductInfoTag(header, input);
                 case TagKind.ScriptLimits: return new ScriptLimitsTag(header, input);
                 case TagKind.SetBackgroundColor: return new SetBackgroundColorTag(header, input);
