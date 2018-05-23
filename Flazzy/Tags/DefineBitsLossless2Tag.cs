@@ -12,7 +12,7 @@ namespace Flazzy.Tags
     {
         private byte _format;
         private Color[,] _argbMap;
-        private byte _colorTableSize;
+        private readonly byte _colorTableSize;
 
         private byte[] _compressedData;
         private byte[] _uncompressedData;
@@ -68,18 +68,18 @@ namespace Flazzy.Tags
             _uncompressedData = null;
             return _argbMap;
         }
-        public void SetARGBMap(Color[,] argbMap)
+        public void SetARGBMap(Color[,] map)
         {
-            _argbMap = argbMap;
-            int width = argbMap.GetLength(0);
-            int height = argbMap.GetLength(1);
+            _argbMap = map;
+            int width = map.GetLength(0);
+            int height = map.GetLength(1);
 
             _uncompressedData = new byte[width * height * 4];
             for (int y = 0, i = 0; y < height; y++)
             {
                 for (int x = 0; x < width; i += 4, x++)
                 {
-                    Color pixel = argbMap[x, y];
+                    Color pixel = map[x, y];
                     _uncompressedData[i + 0] = pixel.A;
                     _uncompressedData[i + 1] = pixel.R;
                     _uncompressedData[i + 2] = pixel.G;
