@@ -214,6 +214,22 @@ namespace Flazzy.ABC
             if (disposing)
             {
                 _input.Dispose();
+                _classesCache.Clear();
+
+                Methods.Clear();
+                Metadata.Clear();
+                Instances.Clear();
+                Classes.Clear();
+                Scripts.Clear();
+                MethodBodies.Clear();
+
+                Pool.Integers.Clear();
+                Pool.UIntegers.Clear();
+                Pool.Doubles.Clear();
+                Pool.Strings.Clear();
+                Pool.Namespaces.Clear();
+                Pool.NamespaceSets.Clear();
+                Pool.Multinames.Clear();
             }
         }
     }

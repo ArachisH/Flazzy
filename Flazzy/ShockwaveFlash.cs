@@ -241,6 +241,7 @@ namespace Flazzy
         {
             if (disposing)
             {
+                Tags.Clear();
                 _input.Dispose();
             }
         }
