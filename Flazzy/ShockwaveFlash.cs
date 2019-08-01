@@ -212,7 +212,7 @@ namespace Flazzy
             switch (header.Kind)
             {
                 case TagKind.DefineBinaryData: return new DefineBinaryDataTag(header, input);
-                //TagKind.DefineBitsJPEG3: return new DefineBitsJPEG3(header, input); // TODO: Fix this..
+                case TagKind.DefineBitsJPEG3: return new DefineBitsJPEG3(header, input);
                 case TagKind.DefineBitsLossless2: return new DefineBitsLossless2Tag(header, input);
                 case TagKind.DefineFontName: return new DefineFontNameTag(header, input);
                 case TagKind.DefineSound: return new DefineSoundTag(header, input);

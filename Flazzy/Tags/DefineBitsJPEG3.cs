@@ -10,7 +10,7 @@ namespace Flazzy.Tags
     {
         public ushort Id { get; set; }
         public byte[] Data { get; set; }
-        public byte[] AlphaData { get; set; }
+        public byte[] AlphaData { get; set; } = new byte[0];
 
         public DefineBitsJPEG3()
             : base(TagKind.DefineBitsJPEG3)
@@ -29,6 +29,11 @@ namespace Flazzy.Tags
                 int partialLength = (2 + 4 + alphaDataOffset);
                 AlphaData = input.ReadBytes(Header.Length - partialLength);
             }
+            else if (Format == ImageFormat.PNG)
+            {
+                const int EMPTY_DATA_COMPRESSED_LENGTH = 8;
+                AlphaData = input.ReadBytes(EMPTY_DATA_COMPRESSED_LENGTH);
+            }
         }
 
         public override Color[,] GetARGBMap()
@@ -46,10 +51,7 @@ namespace Flazzy.Tags
             size += sizeof(ushort);
             size += sizeof(uint);
             size += Data.Length;
-            if (Format == ImageFormat.JPEG)
-            {
-                size += AlphaData.Length;
-            }
+            size += AlphaData.Length;
             return size;
         }
         protected override void WriteBodyTo(FlashWriter output)
@@ -57,10 +59,7 @@ namespace Flazzy.Tags
             output.Write(Id);
             output.Write((uint)Data.Length);
             output.Write(Data);
-            if (Format == ImageFormat.JPEG)
-            {
-                output.Write(AlphaData);
-            }
+            output.Write(AlphaData);
         }
     }
 }
