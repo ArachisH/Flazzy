@@ -46,7 +46,10 @@ namespace Flazzy.Tags
             size += sizeof(ushort);
             size += sizeof(uint);
             size += Data.Length;
-            size += AlphaData.Length;
+            if (Format == ImageFormat.JPEG)
+            {
+                size += AlphaData.Length;
+            }
             return size;
         }
         protected override void WriteBodyTo(FlashWriter output)
@@ -54,7 +57,10 @@ namespace Flazzy.Tags
             output.Write(Id);
             output.Write((uint)Data.Length);
             output.Write(Data);
-            output.Write(AlphaData);
+            if (Format == ImageFormat.JPEG)
+            {
+                output.Write(AlphaData);
+            }
         }
     }
 }
