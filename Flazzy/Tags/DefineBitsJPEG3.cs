@@ -10,7 +10,7 @@ namespace Flazzy.Tags
     {
         public ushort Id { get; set; }
         public byte[] Data { get; set; }
-        public byte[] AlphaData { get; set; } = new byte[0];
+        public byte[] AlphaData { get; set; }
 
         public DefineBitsJPEG3()
             : base(TagKind.DefineBitsJPEG3)
@@ -29,10 +29,10 @@ namespace Flazzy.Tags
                 int partialLength = (2 + 4 + alphaDataOffset);
                 AlphaData = input.ReadBytes(Header.Length - partialLength);
             }
-            else if (Format == ImageFormat.PNG)
+            else
             {
-                const int EMPTY_DATA_COMPRESSED_LENGTH = 8;
-                AlphaData = input.ReadBytes(EMPTY_DATA_COMPRESSED_LENGTH);
+                // Minimum Compressed Empty Data Length
+                AlphaData = input.ReadBytes(8);
             }
         }
 
