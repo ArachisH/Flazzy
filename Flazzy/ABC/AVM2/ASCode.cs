@@ -607,8 +607,13 @@ namespace Flazzy.ABC.AVM2
                         }
                         else // Backwards jump.
                         {
-                            var label = (LabelIns)marks[(exitPosition - uint.MaxValue) - 1];
-                            JumpExits.Add(jumper, label);
+                            long markIndex = exitPosition - uint.MaxValue - 1;
+                            if (marks[markIndex].OP == OPCode.Label)
+                            {
+                                var label = (LabelIns)marks[markIndex];
+                                JumpExits.Add(jumper, label);
+                            }
+                            // TODO: Check if not adding an impossible label is fine...
                         }
                     }
                 }
