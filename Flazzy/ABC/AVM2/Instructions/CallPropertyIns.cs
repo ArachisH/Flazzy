@@ -1,8 +1,9 @@
 ﻿using Flazzy.IO;
+using Flazzy.ABC.AVM2.Instructions.Containers;
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class CallPropertyIns : ASInstruction
+    public class CallPropertyIns : ASInstruction, IPropertyContainer
     {
         public int PropertyNameIndex { get; set; }
         public ASMultiname PropertyName => ABC.Pool.Multinames[PropertyNameIndex];

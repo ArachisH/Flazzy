@@ -64,6 +64,17 @@ namespace Flazzy.ABC.AVM2.Instructions
             }
         }
 
+        // TODO: Use source generator to add new items at compile time.
+        public static bool IsPropertyContainer(OPCode op)
+        {
+            switch (op)
+            {
+                case OPCode.CallPropVoid:
+                case OPCode.CallProperty:
+                case OPCode.ConstructProp: return true;
+                default: return false;
+            }
+        }
         public static ASInstruction Create(ABCFile abc, FlashReader input)
         {
             var op = (OPCode)input.ReadByte();
@@ -328,9 +339,6 @@ namespace Flazzy.ABC.AVM2.Instructions
                 case OPCode.Call:
                 return new CallIns(input);
 
-                case OPCode.CallMethod:
-                return new CallMethodIns(abc, input);
-
                 case OPCode.CallProperty:
                 return new CallPropertyIns(abc, input);
 
@@ -339,9 +347,6 @@ namespace Flazzy.ABC.AVM2.Instructions
 
                 case OPCode.CallPropVoid:
                 return new CallPropVoidIns(abc, input);
-
-                case OPCode.CallStatic:
-                return new CallStaticIns(abc, input);
 
                 case OPCode.CallSuper:
                 return new CallSuperIns(abc, input);
@@ -375,9 +380,6 @@ namespace Flazzy.ABC.AVM2.Instructions
 
                 case OPCode.Dup:
                 return new DupIns();
-
-                case OPCode.Dxns:
-                return new DxnsIns(abc, input);
 
                 case OPCode.DxnsLate:
                 return new DxnsLateIns();
