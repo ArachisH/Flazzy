@@ -339,6 +339,9 @@ namespace Flazzy.ABC.AVM2.Instructions
                 case OPCode.Call:
                 return new CallIns(input);
 
+                case OPCode.CallMethod:
+                return new CallMethodIns(abc, input);
+
                 case OPCode.CallProperty:
                 return new CallPropertyIns(abc, input);
 
@@ -347,6 +350,9 @@ namespace Flazzy.ABC.AVM2.Instructions
 
                 case OPCode.CallPropVoid:
                 return new CallPropVoidIns(abc, input);
+
+                case OPCode.CallStatic:
+                return new CallStaticIns(abc, input);
 
                 case OPCode.CallSuper:
                 return new CallSuperIns(abc, input);
@@ -380,6 +386,9 @@ namespace Flazzy.ABC.AVM2.Instructions
 
                 case OPCode.Dup:
                 return new DupIns();
+
+                case OPCode.Dxns:
+                return new DxnsIns(abc, input);
 
                 case OPCode.DxnsLate:
                 return new DxnsLateIns();
