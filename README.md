@@ -1,5 +1,5 @@
 # Flazzy
-.NET Standard 2.0 library for editing, and viewing the contents inside a SWF file. There are only a couple of supported tags that this library can manipulate, but instead of listing them here, it would be better just to link you [here](/Flazzy/Tags). It would be easier to see the directory of where the supported tags are contained in this project, rather than having to update this file when a new tag is added.
+.NET 5.0+ library for editing, and viewing the contents inside a SWF file. There are only a couple of supported tags that this library can manipulate, but instead of listing them here, it would be better just to link you [here](/Flazzy/Tags). It would be easier to see the directory of where the supported tags are contained in this project, rather than having to update this file when a new tag is added.
 
 ## Now I know my ABC's
 There aren't a lot of tags supported yet in this library for modifiyng, but there is one important one that is probably the main reason for the existence of this library. This is the [DoABCTag](/Flazzy/Tags/DoABCTag.cs), or more accurately the [ABCFile](/Flazzy/ABC/ABCFile.cs) type.  
