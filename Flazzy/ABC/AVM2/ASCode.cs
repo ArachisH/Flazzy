@@ -80,8 +80,7 @@ namespace Flazzy.ABC.AVM2
         }
         public bool Remove(ASInstruction instruction)
         {
-            int index = -1;
-            if (_indices.TryGetValue(instruction, out index))
+            if (_indices.TryGetValue(instruction, out var index))
             {
                 RemoveAt(index);
                 return true;

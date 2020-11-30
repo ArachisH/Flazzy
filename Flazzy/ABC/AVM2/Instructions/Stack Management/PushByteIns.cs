@@ -4,8 +4,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public class PushByteIns : Primitive
     {
-        private byte _value;
-        new public byte Value
+        private sbyte _value;
+        new public sbyte Value
         {
             get => _value;
             set
@@ -18,7 +18,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public PushByteIns()
             : base(OPCode.PushByte)
         { }
-        public PushByteIns(byte value)
+        public PushByteIns(sbyte value)
             : this()
         {
             Value = value;
@@ -26,7 +26,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public PushByteIns(FlashReader input)
             : this()
         {
-            Value = input.ReadByte();
+            Value = input.ReadSByte();
         }
 
         protected override void WriteValuesTo(FlashWriter output)
