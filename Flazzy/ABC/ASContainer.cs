@@ -65,7 +65,7 @@ namespace Flazzy.ABC
             foreach (ASMethod method in GetMethods())
             {
                 if (qualifiedName != null && method.Trait.QName.Name != qualifiedName) continue;
-                if (returnTypeName != null && method.ReturnType.Name != returnTypeName) continue;
+                if (returnTypeName != null && method.ReturnType?.Name != returnTypeName) continue;
                 if (paramTypeNames != null)
                 {
                     if (method.Parameters.Count != paramTypeNames.Length) continue;
