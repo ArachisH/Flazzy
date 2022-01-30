@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Flazzy.IO;
+﻿using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
@@ -10,6 +7,9 @@ namespace Flazzy.ABC
     /// </summary>
     public class ASConstantPool : FlashItem
     {
+        private readonly Dictionary<ASMultiname, int> _multinamesIndicesCache;
+        private readonly Dictionary<string, List<ASMultiname>> _multinamesByNameCache;
+
         private readonly FlashReader _input;
 
         public ABCFile ABC { get; }
@@ -24,6 +24,9 @@ namespace Flazzy.ABC
 
         public ASConstantPool()
         {
+            _multinamesIndicesCache = new Dictionary<ASMultiname, int>();
+            _multinamesByNameCache = new Dictionary<string, List<ASMultiname>>();
+
             Integers = new List<int>();
             UIntegers = new List<uint>();
             Doubles = new List<double>();
@@ -49,6 +52,9 @@ namespace Flazzy.ABC
             PopulateList(Namespaces, ReadNamespace, null);
             PopulateList(NamespaceSets, ReadNamespaceSet, null);
             PopulateList(Multinames, ReadMultiname, null);
+
+            _multinamesByNameCache.TrimExcess();
+            _multinamesIndicesCache.TrimExcess();
         }
 
         public object GetConstant(ConstantKind type, int index)
@@ -80,16 +86,15 @@ namespace Flazzy.ABC
                 case TypeCode.UInt32: return AddConstant(UIntegers, (uint)value, recycle);
                 case TypeCode.Double: return AddConstant(Doubles, (double)value, recycle);
                 case TypeCode.String: return AddConstant(Strings, (string)value, recycle);
-
                 default:
                 {
-                    switch (value)
+                    return value switch
                     {
-                        case ASMultiname multiname: return AddConstant(Multinames, multiname, recycle);
-                        case ASNamespace @namespace: return AddConstant(Namespaces, @namespace, recycle);
-                        case ASNamespaceSet namespaceSet: return AddConstant(NamespaceSets, namespaceSet, recycle);
-                    }
-                    throw new ArgumentException("The provided value does not belone anywhere in the constant pool.", nameof(value));
+                        ASMultiname multiname => AddConstant(Multinames, multiname, recycle),
+                        ASNamespace @namespace => AddConstant(Namespaces, @namespace, recycle),
+                        ASNamespaceSet namespaceSet => AddConstant(NamespaceSets, namespaceSet, recycle),
+                        _ => throw new ArgumentException("The provided value does not belone anywhere in the constant pool.", nameof(value)),
+                    };
                 }
             }
         }
@@ -115,22 +120,30 @@ namespace Flazzy.ABC
 
         public IEnumerable<int> GetMultinameIndices(string name)
         {
-            for (int i = 1; i < Multinames.Count; i++)
+            foreach (ASMultiname multiname in GetMultinames(name))
             {
-                if (Multinames[i].Name == name) yield return i;
+                yield return _multinamesIndicesCache[multiname];
             }
         }
         public IEnumerable<ASMultiname> GetMultinames(string name)
         {
-            for (int i = 1; i < Multinames.Count; i++)
-            {
-                if (Multinames[i].Name == name) yield return Multinames[i];
-            }
+            return _multinamesByNameCache.GetValueOrDefault(name) ?? Enumerable.Empty<ASMultiname>();
         }
 
         private ASMultiname ReadMultiname()
         {
-            return new ASMultiname(this, _input);
+            ASMultiname multiname = new(this, _input);
+            if (!string.IsNullOrWhiteSpace(multiname.Name))
+            {
+                if (!_multinamesByNameCache.TryGetValue(multiname.Name, out List<ASMultiname> multinames))
+                {
+                    multinames = new List<ASMultiname>();
+                    _multinamesByNameCache.Add(multiname.Name, multinames);
+                }
+                multinames.Add(multiname);
+            }
+            _multinamesIndicesCache.Add(multiname, Multinames.Count);
+            return multiname;
         }
         private ASNamespace ReadNamespace()
         {
@@ -144,6 +157,11 @@ namespace Flazzy.ABC
         private void PopulateList<T>(List<T> list, Func<T> reader, T defaultValue)
         {
             list.Capacity = _input.ReadInt30();
+            if (list.Equals(Multinames))
+            {
+                _multinamesByNameCache.EnsureCapacity(list.Capacity);
+                _multinamesIndicesCache.EnsureCapacity(list.Capacity);
+            }
             if (list.Capacity > 0)
             {
                 list.Add(defaultValue);
