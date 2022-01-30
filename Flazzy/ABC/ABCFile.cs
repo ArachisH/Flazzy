@@ -1,15 +1,12 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
     public class ABCFile : FlashItem, IDisposable
     {
         private readonly FlashReader _input;
-        private readonly Dictionary<ASMultiname, List<ASClass>> _classesCache;
+        private readonly Dictionary<ASMultiname, List<ASClass>> _classByQNameCache;
+        private readonly Dictionary<string, ASInstance> _instanceByConstructorCache;
 
         public List<ASMethod> Methods { get; }
         public List<ASMetadata> Metadata { get; }
@@ -21,11 +18,12 @@ namespace Flazzy.ABC
         public ASConstantPool Pool { get; }
         public Version Version { get; set; }
 
-        protected override string DebuggerDisplay => ("Version: " + Version);
+        protected override string DebuggerDisplay => "Version: " + Version;
 
         public ABCFile()
         {
-            _classesCache = new Dictionary<ASMultiname, List<ASClass>>();
+            _classByQNameCache = new Dictionary<ASMultiname, List<ASClass>>();
+            _instanceByConstructorCache = new Dictionary<string, ASInstance>();
 
             Methods = new List<ASMethod>();
             Metadata = new List<ASMetadata>();
@@ -50,9 +48,46 @@ namespace Flazzy.ABC
             PopulateList(Methods, ReadMethod);
             PopulateList(Metadata, ReadMetadata);
             PopulateList(Instances, ReadInstance);
+            _classByQNameCache.EnsureCapacity(Instances.Count);
+            _instanceByConstructorCache.EnsureCapacity(Instances.Count);
+
             PopulateList(Classes, ReadClass, Instances.Count);
             PopulateList(Scripts, ReadScript);
             PopulateList(MethodBodies, ReadMethodBody);
+
+            _classByQNameCache.TrimExcess();
+            _instanceByConstructorCache.TrimExcess();
+        }
+
+        public void ResetCache()
+        {
+            _classByQNameCache.Clear();
+            _instanceByConstructorCache.Clear();
+            foreach (ASClass @class in Classes)
+            {
+                CacheByNaming(@class);
+            }
+            _classByQNameCache.TrimExcess();
+            _instanceByConstructorCache.TrimExcess();
+        }
+        private void CacheByNaming(ASClass @class)
+        {
+            if (!string.IsNullOrWhiteSpace(@class.Instance.Constructor.Name))
+            {
+                string prefix = null;
+                if (!string.IsNullOrWhiteSpace(@class.QName.Namespace.Name) && !@class.QName.Namespace.Name.StartsWith("_-"))
+                {
+                    prefix = @class.QName.Namespace.Name + ".";
+                }
+                _instanceByConstructorCache.Add(prefix + @class.Instance.Constructor.Name, @class.Instance);
+            }
+
+            if (!_classByQNameCache.TryGetValue(@class.QName, out List<ASClass> classes))
+            {
+                classes = new List<ASClass>();
+                _classByQNameCache.Add(@class.QName, classes);
+            }
+            classes.Add(@class);
         }
 
         public int AddMethod(ASMethod method, bool recycle = true)
@@ -82,9 +117,7 @@ namespace Flazzy.ABC
         }
         protected virtual int AddValue<T>(List<T> valueList, T value, bool recycle)
         {
-            int index = (recycle ?
-                valueList.IndexOf(value) : -1);
-
+            int index = recycle ? valueList.IndexOf(value) : -1;
             if (index == -1)
             {
                 index = (valueList.Count);
@@ -101,63 +134,27 @@ namespace Flazzy.ABC
 
         public IEnumerable<ASClass> GetClasses(ASMultiname multiname)
         {
-            if (multiname == null || !_classesCache.TryGetValue(multiname, out List<ASClass> classes)) yield break;
-            for (int i = 0; i < classes.Count; i++)
-            {
-                ASClass @class = classes[i];
-                if (@class.QName != multiname)
-                {
-                    i--;
-                    classes.RemoveAt(i);
-                    if (!_classesCache.TryGetValue(@class.QName, out List<ASClass> newClasses))
-                    {
-                        newClasses = new List<ASClass>();
-                        _classesCache.Add(@class.QName, newClasses);
-                    }
-                    newClasses.Add(@class);
-                }
-                else yield return @class;
-            }
+            return _classByQNameCache.GetValueOrDefault(multiname) ?? Enumerable.Empty<ASClass>();
         }
         public IEnumerable<ASClass> GetClasses(string qualifiedName) => GetClasses(GetMultiname(qualifiedName));
 
         public IEnumerable<ASInstance> GetInstances(ASMultiname multiname) => GetClasses(multiname).Select(c => c.Instance);
         public IEnumerable<ASInstance> GetInstances(string qualifiedName) => GetInstances(GetMultiname(qualifiedName));
 
-        private ASMethod ReadMethod(int index)
-        {
-            return new ASMethod(this, _input);
-        }
-        private ASMetadata ReadMetadata(int index)
-        {
-            return new ASMetadata(this, _input);
-        }
-        private ASInstance ReadInstance(int index)
-        {
-            return new ASInstance(this, _input);
-        }
+        private ASMethod ReadMethod(int index) => new(this, _input);
+        private ASMetadata ReadMetadata(int index) => new(this, _input);
+        private ASInstance ReadInstance(int index) => new(this, _input);
         private ASClass ReadClass(int index)
         {
-            var @class = new ASClass(this, _input);
-            @class.InstanceIndex = index;
-
-            if (!_classesCache.TryGetValue(@class.QName, out List<ASClass> classes))
+            var @class = new ASClass(this, _input)
             {
-                classes = new List<ASClass>();
-                _classesCache.Add(@class.QName, classes);
-            }
-
-            classes.Add(@class);
+                InstanceIndex = index
+            };
+            CacheByNaming(@class);
             return @class;
         }
-        private ASScript ReadScript(int index)
-        {
-            return new ASScript(this, _input);
-        }
-        private ASMethodBody ReadMethodBody(int index)
-        {
-            return new ASMethodBody(this, _input);
-        }
+        private ASScript ReadScript(int index) => new(this, _input);
+        private ASMethodBody ReadMethodBody(int index) => new(this, _input);
 
         private ASMultiname GetMultiname(string qualifiedName)
         {
@@ -169,7 +166,7 @@ namespace Flazzy.ABC
         }
         private void PopulateList<T>(List<T> list, Func<int, T> reader, int count = -1)
         {
-            list.Capacity = (count < 0 ? _input.ReadInt30() : count);
+            list.Capacity = count < 0 ? _input.ReadInt30() : count;
             for (int i = 0; i < list.Capacity; i++)
             {
                 T value = reader(i);
@@ -214,7 +211,8 @@ namespace Flazzy.ABC
             if (disposing)
             {
                 _input.Dispose();
-                _classesCache.Clear();
+                _classByQNameCache.Clear();
+                _instanceByConstructorCache.Clear();
 
                 Methods.Clear();
                 Metadata.Clear();
