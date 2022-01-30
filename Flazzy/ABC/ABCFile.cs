@@ -141,6 +141,8 @@ namespace Flazzy.ABC
         public IEnumerable<ASInstance> GetInstances(ASMultiname multiname) => GetClasses(multiname).Select(c => c.Instance);
         public IEnumerable<ASInstance> GetInstances(string qualifiedName) => GetInstances(GetMultiname(qualifiedName));
 
+        public ASInstance GetInstanceByConstructor(string constructorName) => _instanceByConstructorCache.GetValueOrDefault(constructorName);
+
         private ASMethod ReadMethod(int index) => new(this, _input);
         private ASMetadata ReadMetadata(int index) => new(this, _input);
         private ASInstance ReadInstance(int index) => new(this, _input);
