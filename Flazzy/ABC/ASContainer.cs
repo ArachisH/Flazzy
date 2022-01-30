@@ -1,7 +1,4 @@
-﻿using System.Linq;
-using System.Collections.Generic;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
@@ -129,8 +126,9 @@ namespace Flazzy.ABC
 
         public IEnumerable<ASTrait> GetTraits(params TraitKind[] kinds)
         {
-            if ((kinds?.Length ?? 0) == 0) Enumerable.Empty<ASTrait>();
-            return Traits.Where(t => kinds.Contains(t.Kind));
+            return (kinds?.Length ?? 0) == 0 ?
+                Enumerable.Empty<ASTrait>() :
+                Traits.Where(t => kinds.Contains(t.Kind));
         }
 
         protected void PopulateTraits(FlashReader input)
