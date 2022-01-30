@@ -134,6 +134,10 @@ namespace Flazzy.ABC
 
         public IEnumerable<ASClass> GetClasses(ASMultiname multiname)
         {
+            if (multiname == null)
+            {
+                return Enumerable.Empty<ASClass>();
+            }
             return _classByQNameCache.GetValueOrDefault(multiname) ?? Enumerable.Empty<ASClass>();
         }
         public IEnumerable<ASClass> GetClasses(string qualifiedName) => GetClasses(GetMultiname(qualifiedName));
