@@ -175,28 +175,27 @@ namespace Flazzy
         }
         protected virtual TagItem ReadTag(HeaderRecord header, FlashReader input)
         {
-            switch (header.Kind)
+            return header.Kind switch
             {
-                case TagKind.DefineBinaryData: return new DefineBinaryDataTag(header, input);
-                case TagKind.DefineBitsJPEG3: return new DefineBitsJPEG3(header, input);
-                case TagKind.DefineBitsLossless2: return new DefineBitsLossless2Tag(header, input);
-                case TagKind.DefineFontName: return new DefineFontNameTag(header, input);
-                case TagKind.DefineSound: return new DefineSoundTag(header, input);
-                case TagKind.DoABC: return new DoABCTag(header, input);
-                case TagKind.End: return new EndTag(header);
-                case TagKind.ExportAssets: return new ExportAssetsTag(header, input);
-                case TagKind.FileAttributes: return new FileAttributesTag(header, input);
-                case TagKind.FrameLabel: return new FrameLabelTag(header, input);
-                case TagKind.Metadata: return new MetadataTag(header, input);
-                case TagKind.ProductInfo: return new ProductInfoTag(header, input);
-                case TagKind.ScriptLimits: return new ScriptLimitsTag(header, input);
-                case TagKind.SetBackgroundColor: return new SetBackgroundColorTag(header, input);
-                case TagKind.ShowFrame: return new ShowFrameTag(header);
-                case TagKind.SymbolClass: return new SymbolClassTag(header, input);
+                TagKind.DefineBinaryData => new DefineBinaryDataTag(header, input),
+                TagKind.DefineBitsJPEG3 => new DefineBitsJPEG3(header, input),
+                TagKind.DefineBitsLossless or TagKind.DefineBitsLossless2 => new DefineBitsLosslessTag(header, input),
+                TagKind.DefineFontName => new DefineFontNameTag(header, input),
+                TagKind.DefineSound => new DefineSoundTag(header, input),
+                TagKind.DoABC => new DoABCTag(header, input),
+                TagKind.End => new EndTag(header),
+                TagKind.ExportAssets => new ExportAssetsTag(header, input),
+                TagKind.FileAttributes => new FileAttributesTag(header, input),
+                TagKind.FrameLabel => new FrameLabelTag(header, input),
+                TagKind.Metadata => new MetadataTag(header, input),
+                TagKind.ProductInfo => new ProductInfoTag(header, input),
+                TagKind.ScriptLimits => new ScriptLimitsTag(header, input),
+                TagKind.SetBackgroundColor => new SetBackgroundColorTag(header, input),
+                TagKind.ShowFrame => new ShowFrameTag(header),
+                TagKind.SymbolClass => new SymbolClassTag(header, input),
 
-                default:
-                case TagKind.Unknown: return new UnknownTag(header, input);
-            }
+                _ => new UnknownTag(header, input),
+            };
         }
 
         public void Dispose()
