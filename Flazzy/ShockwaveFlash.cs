@@ -1,11 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 using Flazzy.Tags;
 using Flazzy.Records;
-using Flazzy.Compression;
+using Flazzy.IO.Compression;
 
 namespace Flazzy
 {
@@ -44,25 +40,13 @@ namespace Flazzy
             Version = input.ReadByte();
             FileLength = input.ReadUInt32();
 
-            switch (Compression)
+            if (Compression == CompressionKind.LZMA)
             {
-                case CompressionKind.LZMA:
-                {
-                    byte[] decompressed = LZMA.Decompress(input.BaseStream, ((int)FileLength - 8));
-                    _input = new FlashReader(decompressed);
-                    break;
-                }
-                case CompressionKind.ZLIB:
-                {
-                    _input = ZLIB.WrapDecompressor(input.BaseStream);
-                    break;
-                }
-                case CompressionKind.None:
-                {
-                    _input = input;
-                    break;
-                }
+                throw new NotSupportedException("LZMA compression is not supported.");
             }
+
+            _input = (Compression == CompressionKind.ZLIB) ?
+                ZLib.WrapDecompressor(input.BaseStream) : input;
             Frame = new FrameRecord(_input);
         }
         protected ShockwaveFlash(bool isCreatingTemplate)
@@ -127,41 +111,27 @@ namespace Flazzy
             output.Write(Version);
             output.Write(uint.MinValue);
 
-            int fileLength = 8;
-            FlashWriter compressor = null;
-            switch (compression)
+            if (compression == CompressionKind.LZMA)
             {
-                case CompressionKind.LZMA:
-                {
-                    compressor = new FlashWriter((int)FileLength);
-                    break;
-                }
-                case CompressionKind.ZLIB:
-                {
-                    compressor = ZLIB.WrapCompressor(output.BaseStream, true);
-                    break;
-                }
+                throw new NotSupportedException("LZMA compression is not supported.");
             }
-
+            int fileLength = 8;
+            FlashWriter bodyWriter = compression == CompressionKind.ZLIB ?
+                ZLib.WrapCompressor(output.BaseStream, true) : output;
+            
             /* Body Start */
-            Frame.WriteTo(compressor ?? output);
+            Frame.WriteTo(bodyWriter);
             fileLength += (Frame.Area.GetByteSize() + 4);
             for (int i = 0; i < Tags.Count; i++)
             {
                 TagItem tag = Tags[i];
                 callback?.Invoke(tag);
-                WriteTag(tag, compressor ?? output);
+                WriteTag(tag, bodyWriter);
 
                 fileLength += tag.Header.Length;
                 fileLength += (tag.Header.IsLongTag ? 6 : 2);
             }
-            if (compression == CompressionKind.LZMA)
-            {
-                byte[] uncompressedBody = ((MemoryStream)compressor.BaseStream).ToArray();
-                byte[] compressedBody = LZMA.Compress(uncompressedBody);
-                output.Write(compressedBody);
-            }
-            compressor?.Dispose();
+            bodyWriter?.Dispose();
             /* Body End */
 
             output.Position = 4;
@@ -184,10 +154,8 @@ namespace Flazzy
         }
         public void CopyTo(Stream output, CompressionKind compression, Action<TagItem> callback)
         {
-            using (var fOutput = new FlashWriter(output, true))
-            {
-                Assemble(fOutput, compression, callback);
-            }
+            using var fOutput = new FlashWriter(output, true);
+            Assemble(fOutput, compression, callback);
         }
 
         public byte[] ToArray()
@@ -196,11 +164,9 @@ namespace Flazzy
         }
         public byte[] ToArray(CompressionKind compression)
         {
-            using (var output = new MemoryStream((int)FileLength))
-            {
-                CopyTo(output, compression, null);
-                return output.ToArray();
-            }
+            using var output = new MemoryStream((int)FileLength);
+            CopyTo(output, compression, null);
+            return output.ToArray();
         }
 
         protected virtual void WriteTag(TagItem tag, FlashWriter output)
