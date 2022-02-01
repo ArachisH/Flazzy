@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Collections;
-using System.Collections.Generic;
 
 using Flazzy.IO;
 using Flazzy.ABC.AVM2.Instructions;
@@ -274,7 +271,12 @@ namespace Flazzy.ABC.AVM2
 
         public void Deobfuscate()
         {
-            var machine = new ASMachine(this, _body.LocalCount);
+            var machine = new ASMachine(_body.LocalCount + _body.Method.Parameters.Count + 1); // Scope + Parameters + Function Locals
+            for (int i = 0; i <= _body.Method.Parameters.Count; i++) // Add the instance scope, and the method parameters to the register.
+            {
+                machine.Registers.Add(i, null);
+            }
+
             var cleaned = new List<ASInstruction>(_instructions.Count);
             var valuePushers = new Stack<ASInstruction>(_body.MaxStack);
             var localReferences = new Dictionary<int, List<ASInstruction>>();
@@ -286,11 +288,24 @@ namespace Flazzy.ABC.AVM2
                 ASInstruction instruction = _instructions[i];
                 if (Jumper.IsValid(instruction.OP))
                 {
-                    i += GetFinalJumpCount(machine,
-                        (Jumper)instruction, cleaned, localReferences, valuePushers);
+                    i += GetFinalJumpCount(machine, (Jumper)instruction, cleaned, localReferences, valuePushers);
                 }
                 else
                 {
+                    if (Local.IsGetLocal(instruction.OP))
+                    {
+                        var local = (Local)instruction;
+                        if (!machine.Registers.ContainsKey(local.Register))
+                        {
+                            // Will this local be negated in the next instruction?
+                            bool isNegated = _instructions[i + 1].OP == OPCode.Not;
+                            instruction = isNegated ? new PushTrueIns() : new PushFalseIns();
+
+                            // Skip the next instruction since we have already accounted for the boolean negation.
+                            if (isNegated) i++;
+                        }
+                    }
+
                     instruction.Execute(machine);
                     #region Arithmetic Optimization
                     if (Computation.IsValid(instruction.OP))
@@ -360,6 +375,11 @@ namespace Flazzy.ABC.AVM2
                     for (int j = 0; j < popCount; j++)
                     {
                         ASInstruction pusher = valuePushers.Pop();
+                        if (pusher.OP == OPCode.NewFunction && instruction.OP == OPCode.Pop) // Function was not used, as it was immediately dropped.
+                        {
+                            cleaned.RemoveRange(i - 1, 2);
+                        }
+
                         references?.Add(pusher);
                         if (swaps != null)
                         {
@@ -411,15 +431,10 @@ namespace Flazzy.ABC.AVM2
             jumpExits = JumpExits.ToArray(); // Global property could have been updated.
             foreach (KeyValuePair<Jumper, ASInstruction> jumpExit in jumpExits)
             {
-                if (IndexOf(jumpExit.Key) >
-                    IndexOf(jumpExit.Value))
-                {
-                    // This is not a forward jump instruction, since the exit appears before the jump.
-                    continue;
-                }
+                // This is not a forward jump instruction, since the exit appears before the jump.
+                if (IndexOf(jumpExit.Key) > IndexOf(jumpExit.Value)) continue;
 
-                // True if it still has the jump instruction, but the instruction
-                // needed to determine the final instruction to jump is not present.
+                // True if it still has the jump instruction, but the instruction needed to determine the final instruction to jump is not present.
                 if (cleaned.Contains(jumpExit.Key) && !cleaned.Contains(jumpExit.Value))
                 {
                     // Start at the index of the instruction that should come after the final instruction to jump.
@@ -648,8 +663,7 @@ namespace Flazzy.ABC.AVM2
                     {
                         locals.Add((Local)pusher);
                     }
-                    else if (Primitive.IsValid(pusher.OP) ||
-                        pusher.OP == OPCode.Dup)
+                    else if (Primitive.IsValid(pusher.OP) || pusher.OP == OPCode.Dup)
                     {
                         magicCount++;
                     }
@@ -672,19 +686,18 @@ namespace Flazzy.ABC.AVM2
             }
 
             // Gather information about the jump instruction, and it's 'block' of instructions that are being jumped over(if 'isJumping = true').
-            ASInstruction exit = null;
             bool isBackwardsJump = false;
             IEnumerable<ASInstruction> block = null;
-            if (!JumpExits.TryGetValue(jumper, out exit))
+            if (!JumpExits.TryGetValue(jumper, out ASInstruction exit))
             {
                 // This jump instruction should not be 'cleaned', keep it.
                 cleaned.Add(jumper);
                 return 0;
             }
+
             if (IsBackwardsJump(jumper))
             {
                 isBackwardsJump = true;
-
                 block = cleaned
                     .Skip(cleaned.IndexOf(exit) + 1)
                     .TakeWhile(i => i != jumper);
@@ -693,7 +706,6 @@ namespace Flazzy.ABC.AVM2
             {
                 block = (jumper.Offset > 0 ? GetJumpBlock(jumper) : null);
             }
-
 
             if (isJumping == true && block != null)
             {
