@@ -1,5 +1,4 @@
-﻿
-using Flazzy.IO;
+﻿using Flazzy.IO;
 using Flazzy.Records;
 
 namespace Flazzy.Tags
