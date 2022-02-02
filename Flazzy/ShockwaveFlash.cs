@@ -2,6 +2,7 @@
 using Flazzy.Tags;
 using Flazzy.Records;
 using Flazzy.IO.Compression;
+using System.IO.Compression;
 
 namespace Flazzy
 {
@@ -45,7 +46,7 @@ namespace Flazzy
                 throw new NotSupportedException("LZMA compression is not supported.");
             }
 
-            _input = (Compression == CompressionKind.ZLIB) ?
+            _input = (Compression == CompressionKind.ZLib) ?
                 ZLib.WrapDecompressor(input.BaseStream) : input;
             Frame = new FrameRecord(_input);
         }
@@ -56,7 +57,7 @@ namespace Flazzy
             {
                 Frame = new FrameRecord();
                 Frame.Area = new RectangeRecord();
-                Compression = CompressionKind.ZLIB;
+                Compression = CompressionKind.ZLib;
             }
         }
 
@@ -116,22 +117,23 @@ namespace Flazzy
                 throw new NotSupportedException("LZMA compression is not supported.");
             }
             int fileLength = 8;
-            FlashWriter bodyWriter = compression == CompressionKind.ZLIB ?
-                ZLib.WrapCompressor(output.BaseStream, true) : output;
+
+            FlashWriter compressor = compression == CompressionKind.ZLib ? 
+                ZLib.WrapCompressor(output.BaseStream, true) : null;
             
             /* Body Start */
-            Frame.WriteTo(bodyWriter);
+            Frame.WriteTo(compressor ?? output);
             fileLength += (Frame.Area.GetByteSize() + 4);
             for (int i = 0; i < Tags.Count; i++)
             {
                 TagItem tag = Tags[i];
                 callback?.Invoke(tag);
-                WriteTag(tag, bodyWriter);
+                WriteTag(tag, compressor ?? output);
 
                 fileLength += tag.Header.Length;
                 fileLength += (tag.Header.IsLongTag ? 6 : 2);
             }
-            bodyWriter?.Dispose();
+            compressor?.Dispose();
             /* Body End */
 
             output.Position = 4;
