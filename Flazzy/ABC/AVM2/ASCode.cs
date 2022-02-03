@@ -291,17 +291,28 @@ namespace Flazzy.ABC.AVM2
                         continue;
                     }
 
+                    if (instruction.OP == OPCode.Not)
+                    {
+                        ASInstruction previousIns = cleaned[^1];
+                        if (previousIns.OP == OPCode.PushTrue || previousIns.OP == OPCode.PushFalse)
+                        {
+                            valuePushers.Pop();
+                            ASInstruction replacementIns = previousIns.OP == OPCode.PushTrue ? new PushFalseIns() : new PushTrueIns();
+
+                            valuePushers.Push(replacementIns);
+                            cleaned[^1] = replacementIns;
+
+                            machine.Values.Pop();
+                            replacementIns.Execute(machine);
+                            continue;
+                        }
+                    }
                     if (Local.IsGetLocal(instruction.OP))
                     {
                         var local = (Local)instruction;
                         if (!machine.Registers.ContainsKey(local.Register))
                         {
-                            // Will this local be negated in the next instruction?
-                            bool isNegated = _instructions[i + 1].OP == OPCode.Not;
-                            instruction = isNegated ? new PushTrueIns() : new PushFalseIns();
-
-                            // Skip the next instruction since we have already accounted for the boolean negation.
-                            if (isNegated) i++;
+                            instruction = new PushFalseIns();
                         }
                     }
 
@@ -712,7 +723,7 @@ namespace Flazzy.ABC.AVM2
             }
             else
             {
-                block = (jumper.Offset > 0 ? GetJumpBlock(jumper) : null);
+                block = jumper.Offset > 0 ? GetJumpBlock(jumper) : null;
             }
 
             if (isJumping == true && block != null)
