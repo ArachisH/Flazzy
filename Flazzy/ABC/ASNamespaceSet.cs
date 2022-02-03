@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC
 {
-    public class ASNamespaceSet : FlashItem, IEquatable<ASNamespaceSet>, IPoolConstant
+    public class ASNamespaceSet : IEquatable<ASNamespaceSet>, IPoolConstant
     {
         public ASConstantPool Pool { get; init; }
         public List<int> NamespaceIndices { get; }
@@ -23,14 +23,13 @@ namespace Flazzy.ABC
             Pool = pool;
             NamespaceIndices = new List<int>();
         }
-        public ASNamespaceSet(ASConstantPool pool, FlashReader input)
+        public ASNamespaceSet(ASConstantPool pool, ref FlashReader input)
             : this(pool)
         {
             NamespaceIndices.Capacity = input.ReadInt30();
             for (int i = 0; i < NamespaceIndices.Capacity; i++)
             {
-                int namespaceIndex = input.ReadInt30();
-                NamespaceIndices.Add(namespaceIndex);
+                NamespaceIndices.Add(input.ReadInt30());
             }
         }
 
@@ -68,15 +67,51 @@ namespace Flazzy.ABC
                 yield return Pool.Namespaces[NamespaceIndices[i]];
             }
         }
-        public override void WriteTo(FlashWriter output)
+
+        public int GetSize()
         {
-            output.WriteInt30(NamespaceIndices.Count);
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(NamespaceIndices.Count);
             for (int i = 0; i < NamespaceIndices.Count; i++)
             {
-                int namespaceIndex = NamespaceIndices[i];
-                output.WriteInt30(namespaceIndex);
+                size += FlashWriter.GetEncodedIntSize(NamespaceIndices.Count);
+            }
+            return size;
+        }
+        public void WriteTo(FlashWriter output)
+        {
+            output.WriteEncodedInt(NamespaceIndices.Count);
+            for (int i = 0; i < NamespaceIndices.Count; i++)
+            {
+                output.WriteEncodedInt(NamespaceIndices[i]);
             }
         }
 
+        public bool Equals(ASNamespaceSet other)
+        {
+            if (other == null) return false;
+            if (!ReferenceEquals(this, other))
+            {
+                if (NamespaceIndices.Count != other.NamespaceIndices.Count) return false;
+                for (int i = 0; i < NamespaceIndices.Count; i++)
+                {
+                    if (Pool.Namespaces[NamespaceIndices[i]] != other.Pool.Namespaces[NamespaceIndices[i]]) return false;
+                }
+            }
+            return true;
+        }
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ASNamespaceSet);
+        }
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            foreach (ASNamespace @namespace in GetNamespaces())
+            {
+                hash.Add(@namespace);
+            }
+            return hash.ToHashCode();
+        }
     }
 }

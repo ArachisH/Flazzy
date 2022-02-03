@@ -7,8 +7,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         public IfNotLessThanIns()
             : base(OPCode.IfNLt)
         { }
-        public IfNotLessThanIns(FlashReader input)
-            : base(OPCode.IfNLt, input)
+        public IfNotLessThanIns(ref FlashReader input)
+            : base(OPCode.IfNLt, ref input)
         { }
 
         public override bool? RunCondition(ASMachine machine)

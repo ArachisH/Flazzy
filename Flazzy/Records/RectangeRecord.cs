@@ -2,7 +2,7 @@
 
 namespace Flazzy.Records
 {
-    public class RectangeRecord : FlashItem
+    public class RectangeRecord : IFlashItem
     {
         public int X { get; set; }
         public int Y { get; set; }
@@ -10,45 +10,39 @@ namespace Flazzy.Records
         public int Width { get; set; }
         public int Height { get; set; }
 
-        public int TwipsWidth => (Width * 20);
-        public int TwipsHeight => (Height * 20);
+        public int TwipsWidth => Width * 20;
+        public int TwipsHeight => Height * 20;
 
         public RectangeRecord()
         { }
-        public RectangeRecord(FlashReader input)
+        public RectangeRecord(ref FlashReader input)
         {
-            int maxBitCount = input.ReadUB(5);
+            var bits = new BitReader();
+            int maxBitCount = bits.ReadUBits(ref input, 5);
 
-            X = input.ReadSB(maxBitCount);
-            Width = (input.ReadSB(maxBitCount) / 20);
+            X = bits.ReadSBits(ref input, maxBitCount);
+            Width = bits.ReadSBits(ref input, maxBitCount) / 20;
 
-            Y = input.ReadSB(maxBitCount);
-            Height = (input.ReadSB(maxBitCount) / 20);
+            Y = bits.ReadSBits(ref input, maxBitCount);
+            Height = bits.ReadSBits(ref input, maxBitCount) / 20;
         }
 
-        public int GetByteSize()
+        public int GetSize()
         {
-            using (var rectMem = new MemoryStream())
-            using (var rectFlash = new FlashWriter(rectMem))
-            {
-                WriteTo(rectFlash);
-
-                rectFlash.Flush(); // Align the bits
-                return (rectMem.ToArray().Length);
-            }
+            throw new NotImplementedException();
         }
-
-        public override void WriteTo(FlashWriter output)
+        public void WriteTo(FlashWriter output)
         {
-            int maxBits = 0;
-            long[] paddedValues = FlashTools.GetMaxPaddedBitsNeeded(
-                out maxBits, X, TwipsWidth, Y, TwipsHeight);
+            int[] paddedValues = FlashTools.GetMaxPaddedBitsNeeded(
+                out int maxBits, X, TwipsWidth, Y, TwipsHeight);
 
-            output.WriteBits(5, maxBits);
+            var bits = new BitWriter();
+            bits.WriteBits(output, 5, maxBits);
             for (int i = 0; i < paddedValues.Length; i++)
             {
-                output.WriteBits(maxBits, paddedValues[i]);
+                bits.WriteBits(output, maxBits, paddedValues[i]);
             }
+            //TODO: Align
         }
     }
 }

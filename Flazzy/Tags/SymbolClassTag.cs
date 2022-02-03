@@ -1,57 +1,50 @@
 ﻿using System.Text;
 
 using Flazzy.IO;
-using Flazzy.Records;
 
 namespace Flazzy.Tags
 {
-    public class SymbolClassTag : TagItem
+    public class SymbolClassTag : ITagItem
     {
-        public List<ushort> Ids { get; }
-        public List<string> Names { get; }
+        public TagKind Kind => TagKind.SymbolClass;
+
+        public Dictionary<ushort, string> Symbols { get; set; }
 
         public SymbolClassTag()
-            : base(TagKind.SymbolClass)
         {
-            Ids = new List<ushort>();
-            Names = new List<string>();
+            Symbols = new Dictionary<ushort, string>();
         }
-        public SymbolClassTag(HeaderRecord header, FlashReader input)
-            : base(header)
+        public SymbolClassTag(ref FlashReader input)
         {
             ushort symbolCount = input.ReadUInt16();
-
-            Ids = new List<ushort>(symbolCount);
-            Names = new List<string>(symbolCount);
+            Symbols = new Dictionary<ushort, string>(symbolCount);
 
             for (int i = 0; i < symbolCount; i++)
             {
-                Ids.Add(input.ReadUInt16());
-                Names.Add(input.ReadNullString());
+                Symbols[input.ReadUInt16()] = input.ReadNullString();
             }
         }
 
-        public override int GetBodySize()
+        public int GetBodySize()
         {
             int size = 0;
             size += sizeof(ushort);
-            size += (sizeof(ushort) * Ids.Count);
-            foreach (string name in Names)
+            size += sizeof(ushort) * Symbols.Count;
+            foreach (string name in Symbols.Values)
             {
-                size += (Encoding.UTF8.GetByteCount(name) + 1);
+                size += Encoding.UTF8.GetByteCount(name) + 1;
             }
             return size;
         }
 
-        protected override void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(FlashWriter output)
         {
-            int symbolCount = Math.Min(Ids.Count, Names.Count);
-            output.Write((ushort)symbolCount);
+            output.Write((ushort)Symbols.Count);
 
-            for (int i = 0; i < symbolCount; i++)
+            foreach ((ushort id, string name) in Symbols)
             {
-                output.Write(Ids[i]);
-                output.WriteNullString(Names[i]);
+                output.Write(id);
+                output.WriteNullString(name);
             }
         }
     }

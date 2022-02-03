@@ -14,7 +14,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             ScopeIndex = scopeIndex;
         }
-        public GetScopeObjectIns(FlashReader input)
+        public GetScopeObjectIns(ref FlashReader input)
             : this()
         {
             ScopeIndex = input.ReadByte();

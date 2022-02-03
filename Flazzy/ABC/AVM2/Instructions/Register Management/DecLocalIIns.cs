@@ -7,8 +7,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         public DecLocalIIns(int register)
             : base(OPCode.DecLocal_i, register)
         { }
-        public DecLocalIIns(FlashReader input)
-            : base(OPCode.DecLocal_i, input)
+        public DecLocalIIns(ref FlashReader input)
+            : base(OPCode.DecLocal_i, ref input)
         { }
 
         public override void Execute(ASMachine machine)

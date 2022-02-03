@@ -14,7 +14,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             ParamCount = paramCount;
         }
-        public ApplyTypeIns(FlashReader input)
+        public ApplyTypeIns(ref FlashReader input)
             : this()
         {
             ParamCount = input.ReadInt30();
@@ -22,7 +22,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(ParamCount);
+            output.WriteEncodedInt(ParamCount);
         }
     }
 }

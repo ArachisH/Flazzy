@@ -4,8 +4,10 @@ using System.Text;
 
 namespace Flazzy.ABC
 {
-    public class ASMethod : AS3Item
+    public class ASMethod : IAS3Item
     {
+        public ABCFile ABC { get; }
+
         public int NameIndex { get; set; }
         public string Name => ABC.Pool.Strings[NameIndex];
 
@@ -24,11 +26,11 @@ namespace Flazzy.ABC
         protected override string DebuggerDisplay => ToAS3();
 
         public ASMethod(ABCFile abc)
-            : base(abc)
         {
+            ABC = abc;
             Parameters = new List<ASParameter>();
         }
-        public ASMethod(ABCFile abc, FlashReader input)
+        public ASMethod(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             Parameters.Capacity = input.ReadInt30();
@@ -68,7 +70,7 @@ namespace Flazzy.ABC
             }
         }
 
-        public override string ToAS3()
+        public string ToAS3()
         {
             var builder = new StringBuilder();
 
@@ -132,10 +134,11 @@ namespace Flazzy.ABC
             return builder.ToString();
         }
 
-        public override void WriteTo(FlashWriter output)
+        public int GetSize() => throw new NotImplementedException();
+        public void WriteTo(FlashWriter output)
         {
-            output.WriteInt30(Parameters.Count);
-            output.WriteInt30(ReturnTypeIndex);
+            output.WriteEncodedInt(Parameters.Count);
+            output.WriteEncodedInt(ReturnTypeIndex);
 
             int optionalParamCount = 0;
             int optionalParamStartIndex = (Parameters.Count - 1);
@@ -146,7 +149,7 @@ namespace Flazzy.ABC
                 for (int i = 0; i < Parameters.Count; i++)
                 {
                     ASParameter parameter = Parameters[i];
-                    output.WriteInt30(parameter.TypeIndex);
+                    output.WriteEncodedInt(parameter.TypeIndex);
 
                     // This flag should only be present when all parameters are assigned a Name.
                     if (string.IsNullOrWhiteSpace(parameter.Name))
@@ -167,15 +170,15 @@ namespace Flazzy.ABC
                 }
             }
 
-            output.WriteInt30(NameIndex);
+            output.WriteEncodedInt(NameIndex);
             output.Write((byte)Flags);
             if (Flags.HasFlag(MethodFlags.HasOptional))
             {
-                output.WriteInt30(optionalParamCount);
+                output.WriteEncodedInt(optionalParamCount);
                 for (int i = optionalParamStartIndex; i < Parameters.Count; i++)
                 {
                     ASParameter parameter = Parameters[i];
-                    output.WriteInt30(parameter.ValueIndex);
+                    output.WriteEncodedInt(parameter.ValueIndex);
                     output.Write((byte)parameter.ValueKind);
                 }
             }
@@ -185,7 +188,7 @@ namespace Flazzy.ABC
                 for (int i = 0; i < Parameters.Count; i++)
                 {
                     ASParameter parameter = Parameters[i];
-                    output.WriteInt30(parameter.NameIndex);
+                    output.WriteEncodedInt(parameter.NameIndex);
                 }
             }
         }

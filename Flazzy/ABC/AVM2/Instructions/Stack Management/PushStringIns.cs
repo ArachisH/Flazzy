@@ -43,7 +43,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             ValueIndex = valueIndex;
         }
-        public PushStringIns(ABCFile abc, FlashReader input)
+        public PushStringIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             ValueIndex = input.ReadInt30();
@@ -51,7 +51,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(ValueIndex);
+            output.WriteEncodedInt(ValueIndex);
         }
     }
 }

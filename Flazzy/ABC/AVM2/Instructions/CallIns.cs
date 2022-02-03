@@ -14,7 +14,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             ArgCount = argCount;
         }
-        public CallIns(FlashReader input)
+        public CallIns(ref FlashReader input)
             : this()
         {
             ArgCount = input.ReadInt30();
@@ -41,7 +41,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(ArgCount);
+            output.WriteEncodedInt(ArgCount);
         }
     }
 }

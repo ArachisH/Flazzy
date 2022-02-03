@@ -10,7 +10,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public DxnsIns(ABCFile abc)
             : base(OPCode.Dxns, abc)
         { }
-        public DxnsIns(ABCFile abc, FlashReader input)
+        public DxnsIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             UriIndex = input.ReadInt30();

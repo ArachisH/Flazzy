@@ -7,8 +7,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         public IncLocalIns(int register)
             : base(OPCode.IncLocal, register)
         { }
-        public IncLocalIns(FlashReader input)
-            : base(OPCode.IncLocal, input)
+        public IncLocalIns(ref FlashReader input)
+            : base(OPCode.IncLocal, ref input)
         { }
 
         public override void Execute(ASMachine machine)

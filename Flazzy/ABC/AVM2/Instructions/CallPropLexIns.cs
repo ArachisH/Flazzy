@@ -12,7 +12,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public CallPropLexIns(ABCFile abc)
             : base(OPCode.CallPropLex, abc)
         { }
-        public CallPropLexIns(ABCFile abc, FlashReader input)
+        public CallPropLexIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             PropertyNameIndex = input.ReadInt30();
@@ -51,8 +51,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(PropertyNameIndex);
-            output.WriteInt30(ArgCount);
+            output.WriteEncodedInt(PropertyNameIndex);
+            output.WriteEncodedInt(ArgCount);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             ClassIndex = classIndex;
         }
-        public NewClassIns(ABCFile abc, FlashReader input)
+        public NewClassIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             ClassIndex = input.ReadInt30();
@@ -37,7 +37,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(ClassIndex);
+            output.WriteEncodedInt(ClassIndex);
         }
     }
 }

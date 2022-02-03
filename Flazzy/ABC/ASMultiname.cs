@@ -1,9 +1,13 @@
-﻿using Flazzy.IO;
+﻿using System.Collections.Generic;
+
+using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
-    public class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConstant, IQName, IRTQName, IMultiname, IMultinameL
+    public class ASMultiname : IEquatable<ASMultiname>, IPoolConstant, IQName, IRTQName, IMultiname, IMultinameL
     {
+        public ASConstantPool Pool { get; init; }
+
         public MultinameKind Kind { get; set; }
         public ASConstantPool Pool { get; init; }
 
@@ -70,7 +74,7 @@ namespace Flazzy.ABC
             Pool = pool;
             TypeIndices = new List<int>();
         }
-        public ASMultiname(ASConstantPool pool, FlashReader input)
+        public ASMultiname(ASConstantPool pool, ref FlashReader input)
             : this(pool)
         {
             Kind = (MultinameKind)input.ReadByte();
@@ -134,7 +138,57 @@ namespace Flazzy.ABC
                 yield return Pool.Multinames[TypeIndices[i]];
             }
         }
-        public override void WriteTo(FlashWriter output)
+
+        public int GetSize()
+        {
+            int size = 0;
+            size += sizeof(byte);
+            switch (Kind)
+            {
+                case MultinameKind.QName:
+                case MultinameKind.QNameA:
+                {
+                    size += FlashWriter.GetEncodedIntSize(NamespaceIndex);
+                    size += FlashWriter.GetEncodedIntSize(NameIndex);
+                    break;
+                }
+
+                case MultinameKind.RTQName:
+                case MultinameKind.RTQNameA:
+                {
+                    size += FlashWriter.GetEncodedIntSize(NameIndex);
+                    break;
+                }
+
+                case MultinameKind.Multiname:
+                case MultinameKind.MultinameA:
+                {
+                    size += FlashWriter.GetEncodedIntSize(NameIndex);
+                    size += FlashWriter.GetEncodedIntSize(NamespaceSetIndex);
+                    break;
+                }
+
+                case MultinameKind.MultinameL:
+                case MultinameKind.MultinameLA:
+                {
+                    size += FlashWriter.GetEncodedIntSize(NamespaceSetIndex);
+                    break;
+                }
+
+                case MultinameKind.TypeName:
+                {
+                    size += FlashWriter.GetEncodedIntSize(QNameIndex);
+                    size += FlashWriter.GetEncodedIntSize(TypeIndices.Count);
+                    for (int i = 0; i < TypeIndices.Count; i++)
+                    {
+                        size += FlashWriter.GetEncodedIntSize(TypeIndices[i]);
+                    }
+                    break;
+                }
+            }
+            return size;
+        }
+        public void WriteTo(FlashWriter output)
         {
             output.Write((byte)Kind);
             switch (Kind)
@@ -142,15 +196,15 @@ namespace Flazzy.ABC
                 case MultinameKind.QName:
                 case MultinameKind.QNameA:
                 {
-                    output.WriteInt30(NamespaceIndex);
-                    output.WriteInt30(NameIndex);
+                    output.WriteEncodedInt(NamespaceIndex);
+                    output.WriteEncodedInt(NameIndex);
                     break;
                 }
 
                 case MultinameKind.RTQName:
                 case MultinameKind.RTQNameA:
                 {
-                    output.WriteInt30(NameIndex);
+                    output.WriteEncodedInt(NameIndex);
                     break;
                 }
 
@@ -164,26 +218,26 @@ namespace Flazzy.ABC
                 case MultinameKind.Multiname:
                 case MultinameKind.MultinameA:
                 {
-                    output.WriteInt30(NameIndex);
-                    output.WriteInt30(NamespaceSetIndex);
+                    output.WriteEncodedInt(NameIndex);
+                    output.WriteEncodedInt(NamespaceSetIndex);
                     break;
                 }
 
                 case MultinameKind.MultinameL:
                 case MultinameKind.MultinameLA:
                 {
-                    output.WriteInt30(NamespaceSetIndex);
+                    output.WriteEncodedInt(NamespaceSetIndex);
                     break;
                 }
 
                 case MultinameKind.TypeName:
                 {
-                    output.WriteInt30(QNameIndex);
-                    output.WriteInt30(TypeIndices.Count);
+                    output.WriteEncodedInt(QNameIndex);
+                    output.WriteEncodedInt(TypeIndices.Count);
                     for (int i = 0; i < TypeIndices.Count; i++)
                     {
                         int typeIndex = TypeIndices[i];
-                        output.WriteInt30(typeIndex);
+                        output.WriteEncodedInt(typeIndex);
                     }
                     break;
                 }
@@ -229,6 +283,17 @@ namespace Flazzy.ABC
         public override bool Equals(object obj)
         {
             return Equals(obj as ASMultiname);
+        }
+
+        public override string ToString() => $"{Kind}: \"{Namespace.Name}.{Name}\"";
+        
+        public static bool operator ==(ASMultiname left, ASMultiname right)
+        {
+            return EqualityComparer<ASMultiname>.Default.Equals(left, right);
+        }
+        public static bool operator !=(ASMultiname left, ASMultiname right)
+        {
+            return !(left == right);
         }
     }
 }

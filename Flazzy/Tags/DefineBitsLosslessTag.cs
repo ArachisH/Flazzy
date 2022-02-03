@@ -1,12 +1,12 @@
 ﻿using Flazzy.IO;
-using Flazzy.Records;
 
 namespace Flazzy.Tags
 {
-    public class DefineBitsLosslessTag : TagItem
+    public class DefineBitsLosslessTag : ITagItem
     {
-        public ushort Id { get; set; }
+        public TagKind Kind { get; }
 
+        public ushort Id { get; set; }
         public ushort Width { get; set; }
         public ushort Height { get; set; }
         public byte ColorTableSize { get; }
@@ -16,12 +16,12 @@ namespace Flazzy.Tags
         public int Version => Kind == TagKind.DefineBitsLossless ? 1 : 2;
 
         public DefineBitsLosslessTag(byte version)
-            : base(version == 1 ? TagKind.DefineBitsLossless : TagKind.DefineBitsLossless2)
         {
+            Kind = version == 1 ? TagKind.DefineBitsLossless : TagKind.DefineBitsLossless2;
             CompressedData = Array.Empty<byte>();
         }
-        public DefineBitsLosslessTag(HeaderRecord header, FlashReader input)
-            : base(header)
+        public DefineBitsLosslessTag(ref FlashReader input, byte version)
+            : this(version)
         {
             Id = input.ReadUInt16();
             Format = input.ReadByte() switch
@@ -39,7 +39,8 @@ namespace Flazzy.Tags
             if (Format == BitmapFormat.ColorMap8)
                 ColorTableSize = input.ReadByte();
 
-            CompressedData = input.ReadBytes(header.Length - GetHeaderSize());
+            CompressedData = new byte[input.Length - GetHeaderSize()];
+            input.ReadBytes(CompressedData);
         }
 
         private int GetHeaderSize()
@@ -56,14 +57,14 @@ namespace Flazzy.Tags
             return size;
         }
 
-        public override int GetBodySize()
+        public int GetBodySize()
         {
             int size = 0;
             size += GetHeaderSize();
             size += CompressedData.Length;
             return size;
         }
-        protected override void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(FlashWriter output)
         {
             byte format = Format switch
             {

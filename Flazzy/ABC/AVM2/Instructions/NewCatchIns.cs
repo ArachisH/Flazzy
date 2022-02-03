@@ -9,7 +9,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public NewCatchIns()
             : base(OPCode.NewCatch)
         { }
-        public NewCatchIns(FlashReader input)
+        public NewCatchIns(ref FlashReader input)
             : this()
         {
             ExceptionIndex = input.ReadInt30();
@@ -31,7 +31,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(ExceptionIndex);
+            output.WriteEncodedInt(ExceptionIndex);
         }
     }
 }

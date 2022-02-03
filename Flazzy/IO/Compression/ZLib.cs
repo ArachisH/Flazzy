@@ -4,13 +4,15 @@ namespace Flazzy.IO.Compression
 {
     public static class ZLib
     {
-        public static FlashWriter WrapCompressor(Stream stream, bool leaveOpen)
+        public static unsafe int Decompress(ReadOnlySpan<byte> input, Span<byte> output)
         {
-            return new FlashWriter(new ZLibStream(stream, CompressionMode.Compress, leaveOpen));
-        }
-        public static FlashReader WrapDecompressor(Stream stream)
-        {
-            return new FlashReader(new ZLibStream(stream, CompressionMode.Decompress));
+            fixed (byte* pBuffer = &input[0])
+            {
+                using var stream = new UnmanagedMemoryStream(pBuffer, input.Length);
+                using var deflateStream = new ZLibStream(stream, CompressionMode.Decompress);
+
+                return deflateStream.Read(output);
+            }
         }
     }
 }

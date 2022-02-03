@@ -1,19 +1,16 @@
 ﻿using System.Drawing;
 
 using Flazzy.IO;
-using Flazzy.Records;
 
 namespace Flazzy.Tags
 {
-    public class SetBackgroundColorTag : TagItem
+    public class SetBackgroundColorTag : ITagItem
     {
+        public TagKind Kind => TagKind.SetBackgroundColor;
+
         public Color BackgroundColor { get; set; }
 
-        public SetBackgroundColorTag()
-            : base(TagKind.SetBackgroundColor)
-        { }
-        public SetBackgroundColorTag(HeaderRecord header, FlashReader input)
-            : base(header)
+        public SetBackgroundColorTag(ref FlashReader input)
         {
             byte r = input.ReadByte();
             byte g = input.ReadByte();
@@ -21,7 +18,7 @@ namespace Flazzy.Tags
             BackgroundColor = Color.FromArgb(r, g, b);
         }
 
-        public override int GetBodySize()
+        public int GetBodySize()
         {
             int size = 0;
             size += sizeof(byte);
@@ -30,7 +27,7 @@ namespace Flazzy.Tags
             return size;
         }
 
-        protected override void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(FlashWriter output)
         {
             output.Write(BackgroundColor.R);
             output.Write(BackgroundColor.G);

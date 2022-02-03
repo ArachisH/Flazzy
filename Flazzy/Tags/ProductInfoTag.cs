@@ -3,8 +3,10 @@ using Flazzy.Records;
 
 namespace Flazzy.Tags
 {
-    public class ProductInfoTag : TagItem
+    public class ProductInfoTag : ITagItem
     {
+        public TagKind Kind => TagKind.ProductInfo;
+
         public FlashEdition Edition { get; set; }
         public FlashProduct Product { get; set; }
 
@@ -17,12 +19,10 @@ namespace Flazzy.Tags
         public DateTime CompilationDate { get; set; }
 
         public ProductInfoTag()
-            :base(TagKind.ProductInfo)
         {
             CompilationDate = DateTime.Now;
         }
-        public ProductInfoTag(HeaderRecord header, FlashReader input)
-            : base(header)
+        public ProductInfoTag(ref FlashReader input)
         {
             Product = (FlashProduct)input.ReadUInt32();
             Edition = (FlashEdition)input.ReadUInt32();
@@ -33,11 +33,10 @@ namespace Flazzy.Tags
             BuildLow = input.ReadUInt32();
             BuildHigh = input.ReadUInt32();
 
-            CompilationDate = FlashTools.Epoch
-                .AddMilliseconds(input.ReadUInt64());
+            CompilationDate = DateTime.UnixEpoch.AddMilliseconds(input.ReadUInt64());
         }
 
-        public override int GetBodySize()
+        public int GetBodySize()
         {
             int size = 0;
             size += sizeof(uint);
@@ -50,7 +49,7 @@ namespace Flazzy.Tags
             return size;
         }
 
-        protected override void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(FlashWriter output)
         {
             output.Write((uint)Product);
             output.Write((uint)Edition);
@@ -59,7 +58,7 @@ namespace Flazzy.Tags
             output.Write(BuildLow);
             output.Write(BuildHigh);
 
-            TimeSpan sinceEpoch = (CompilationDate - FlashTools.Epoch);
+            TimeSpan sinceEpoch = CompilationDate - DateTime.UnixEpoch;
             output.Write((ulong)sinceEpoch.TotalMilliseconds);
         }
     }

@@ -14,7 +14,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             LineNumber = lineNumber;
         }
-        public DebugLineIns(FlashReader input)
+        public DebugLineIns(ref FlashReader input)
             : this()
         {
             LineNumber = input.ReadInt30();
@@ -22,7 +22,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(LineNumber);
+            output.WriteEncodedInt(LineNumber);
         }
     }
 }

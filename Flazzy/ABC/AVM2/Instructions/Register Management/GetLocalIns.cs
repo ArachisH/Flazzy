@@ -7,8 +7,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         public GetLocalIns(int register)
             : base(OPCode.GetLocal, register)
         { }
-        public GetLocalIns(FlashReader input)
-            : base(OPCode.GetLocal, input)
+        public GetLocalIns(ref FlashReader input)
+            : base(OPCode.GetLocal, ref input)
         { }
     }
 }

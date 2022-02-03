@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flazzy", "Flazzy\Flazzy.csproj", "{885A2556-82AC-4F56-9FA6-40236CE3766D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flazzy", "Flazzy\Flazzy.csproj", "{885A2556-82AC-4F56-9FA6-40236CE3766D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flazzy.Tests", "Flazzy.Tests\Flazzy.Tests.csproj", "{3B402FD6-A749-44C3-A01B-53CDF316A0C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{885A2556-82AC-4F56-9FA6-40236CE3766D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{885A2556-82AC-4F56-9FA6-40236CE3766D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{885A2556-82AC-4F56-9FA6-40236CE3766D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B402FD6-A749-44C3-A01B-53CDF316A0C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B402FD6-A749-44C3-A01B-53CDF316A0C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B402FD6-A749-44C3-A01B-53CDF316A0C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B402FD6-A749-44C3-A01B-53CDF316A0C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

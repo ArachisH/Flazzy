@@ -2,8 +2,10 @@
 
 namespace Flazzy.ABC
 {
-    public class ASException : AS3Item
+    public class ASException : IAS3Item
     {
+        public ABCFile ABC { get; }
+
         public int To { get; set; }
         public int From { get; set; }
         public int Target { get; set; }
@@ -15,10 +17,11 @@ namespace Flazzy.ABC
         public ASMultiname ExceptionType => ABC.Pool.Multinames[ExceptionTypeIndex];
 
         public ASException(ABCFile abc)
-            : base(abc)
-        { }
-        public ASException(ABCFile abc, FlashReader input)
-            : base(abc)
+        {
+            ABC = abc;
+        }
+        public ASException(ABCFile abc, ref FlashReader input)
+            : this(abc)
         {
             From = input.ReadInt30();
             To = input.ReadInt30();
@@ -27,13 +30,22 @@ namespace Flazzy.ABC
             VariableNameIndex = input.ReadInt30();
         }
         
-        public override void WriteTo(FlashWriter output)
+        public int GetSize()
         {
-            output.WriteInt30(From);
-            output.WriteInt30(To);
-            output.WriteInt30(Target);
-            output.WriteInt30(ExceptionTypeIndex);
-            output.WriteInt30(VariableNameIndex);
+            throw new NotImplementedException();
+        }
+        public void WriteTo(FlashWriter output)
+        {
+            output.WriteEncodedInt(From);
+            output.WriteEncodedInt(To);
+            output.WriteEncodedInt(Target);
+            output.WriteEncodedInt(ExceptionTypeIndex);
+            output.WriteEncodedInt(VariableNameIndex);
+        }
+
+        public string ToAS3()
+        {
+            throw new NotImplementedException();
         }
     }
 }

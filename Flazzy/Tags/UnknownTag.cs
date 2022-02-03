@@ -1,29 +1,31 @@
 ﻿using Flazzy.IO;
-using Flazzy.Records;
 
 namespace Flazzy.Tags
 {
-    public class UnknownTag : TagItem
+    public class UnknownTag : ITagItem
     {
+        public TagKind Kind { get; }
+
         public byte[] Data { get; set; }
 
         public UnknownTag(TagKind kind)
-            : base(kind)
         {
-            Data = new byte[0];
+            Kind = kind;
+            Data = Array.Empty<byte>();
         }
-        public UnknownTag(HeaderRecord header, FlashReader input)
-            : base(header)
+        public UnknownTag(ref FlashReader input, TagKind kind)
+            : this(kind)
         {
-            Data = input.ReadBytes(header.Length);
+            Data = new byte[input.Length];
+            input.ReadBytes(Data);
         }
 
-        public override int GetBodySize()
+        public int GetBodySize()
         {
             return Data.Length;
         }
 
-        protected override void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(FlashWriter output)
         {
             output.Write(Data);
         }

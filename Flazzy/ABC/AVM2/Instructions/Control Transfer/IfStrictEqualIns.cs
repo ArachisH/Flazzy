@@ -7,8 +7,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         public IfStrictEqualIns()
             : base(OPCode.IfStrictEq)
         { }
-        public IfStrictEqualIns(FlashReader input)
-            : base(OPCode.IfStrictEq, input)
+        public IfStrictEqualIns(ref FlashReader input)
+            : base(OPCode.IfStrictEq, ref input)
         { }
 
         public override bool? RunCondition(ASMachine machine)

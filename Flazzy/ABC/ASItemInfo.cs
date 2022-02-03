@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC
 {
-    public class ASItemInfo : FlashItem
+    public class ASItemInfo : IFlashItem
     {
         private readonly ABCFile _abc;
 
@@ -16,17 +16,21 @@ namespace Flazzy.ABC
         {
             _abc = abc;
         }
-        public ASItemInfo(ABCFile abc, FlashReader input)
+        public ASItemInfo(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             KeyIndex = input.ReadInt30();
             ValueIndex = input.ReadInt30();
         }
 
-        public override void WriteTo(FlashWriter output)
+        public int GetSize()
         {
-            output.WriteInt30(KeyIndex);
-            output.WriteInt30(ValueIndex);
+            throw new NotImplementedException();
+        }
+        public void WriteTo(FlashWriter output)
+        {
+            output.WriteEncodedInt(KeyIndex);
+            output.WriteEncodedInt(ValueIndex);
         }
     }
 }

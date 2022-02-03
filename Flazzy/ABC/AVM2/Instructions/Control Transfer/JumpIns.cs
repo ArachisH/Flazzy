@@ -7,8 +7,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         public JumpIns()
             : base(OPCode.Jump)
         { }
-        public JumpIns(FlashReader input)
-            : base(OPCode.Jump, input)
+        public JumpIns(ref FlashReader input)
+            : base(OPCode.Jump, ref input)
         { }
 
         public override bool? RunCondition(ASMachine machine)

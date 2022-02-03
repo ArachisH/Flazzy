@@ -5,12 +5,10 @@ namespace Flazzy.ABC
     /// <summary>
     /// Represents a block of array-based entries that reflect the constants used by all the methods.
     /// </summary>
-    public class ASConstantPool : FlashItem
+    public class ASConstantPool : IFlashItem
     {
         private readonly Dictionary<ASMultiname, int> _multinamesIndicesCache;
         private readonly Dictionary<string, List<ASMultiname>> _multinamesByNameCache;
-
-        private readonly FlashReader _input;
 
         public ABCFile ABC { get; }
 
@@ -40,18 +38,16 @@ namespace Flazzy.ABC
         {
             ABC = abc;
         }
-        public ASConstantPool(ABCFile abc, FlashReader input)
+        public ASConstantPool(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            _input = input;
-
-            PopulateList(Integers, input.ReadInt30, 0);
-            PopulateList<uint>(UIntegers, input.ReadUInt30, 0);
-            PopulateList(Doubles, input.ReadDouble, double.NaN);
-            PopulateList(Strings, input.ReadString, null);
-            PopulateList(Namespaces, ReadNamespace, null);
-            PopulateList(NamespaceSets, ReadNamespaceSet, null);
-            PopulateList(Multinames, ReadMultiname, null);
+            //PopulateList(Integers, input.ReadInt30, 0);
+            //PopulateList<uint>(UIntegers, input.ReadUInt30, 0);
+            //PopulateList(Doubles, input.ReadDouble, double.NaN);
+            //PopulateList(Strings, input.ReadString, null);
+            //PopulateList(Namespaces, ReadNamespace, null);
+            //PopulateList(NamespaceSets, ReadNamespaceSet, null);
+            //PopulateList(Multinames, ReadMultiname, null);
 
             _multinamesByNameCache.TrimExcess();
             _multinamesIndicesCache.TrimExcess();
@@ -59,44 +55,36 @@ namespace Flazzy.ABC
 
         public object GetConstant(ConstantKind type, int index)
         {
-            switch (type)
+            return type switch
             {
-                case ConstantKind.True: return true;
-                case ConstantKind.False: return false;
+                ConstantKind.True => true,
+                ConstantKind.False => false,
 
-                case ConstantKind.Null:
-                case ConstantKind.Undefined: return null;
-
-                case ConstantKind.String: return Strings[index];
-                case ConstantKind.Double: return Doubles[index];
-                case ConstantKind.Integer: return Integers[index];
-                case ConstantKind.UInteger: return UIntegers[index];
-
-                case ConstantKind.Namespace: return Namespaces[index];
-
-                default: return null;
-            }
+                ConstantKind.String => Strings[index],
+                ConstantKind.Double => Doubles[index],
+                ConstantKind.Integer => Integers[index],
+                ConstantKind.UInteger => UIntegers[index],
+                ConstantKind.Namespace => Namespaces[index],
+                
+                ConstantKind.Null or ConstantKind.Undefined or _ => null,
+            };
         }
 
         public int AddConstant(object value, bool recycle = true)
         {
-            switch (Type.GetTypeCode(value.GetType()))
+            return value switch
             {
-                case TypeCode.Int32: return AddConstant(Integers, (int)value, recycle);
-                case TypeCode.UInt32: return AddConstant(UIntegers, (uint)value, recycle);
-                case TypeCode.Double: return AddConstant(Doubles, (double)value, recycle);
-                case TypeCode.String: return AddConstant(Strings, (string)value, recycle);
-                default:
-                {
-                    return value switch
-                    {
-                        ASMultiname multiname => AddConstant(Multinames, multiname, recycle),
-                        ASNamespace @namespace => AddConstant(Namespaces, @namespace, recycle),
-                        ASNamespaceSet namespaceSet => AddConstant(NamespaceSets, namespaceSet, recycle),
-                        _ => throw new ArgumentException("The provided value does not belone anywhere in the constant pool.", nameof(value)),
-                    };
-                }
-            }
+                int @int => AddConstant(Integers, @int, recycle),
+                uint @uint => AddConstant(UIntegers, @uint, recycle),
+                double @double => AddConstant(Doubles, @double, recycle),
+                string @string => AddConstant(Strings, @string, recycle),
+
+                ASMultiname multiname => AddConstant(Multinames, multiname, recycle),
+                ASNamespace @namespace => AddConstant(Namespaces, @namespace, recycle),
+                ASNamespaceSet namespaceSet => AddConstant(NamespaceSets, namespaceSet, recycle),
+
+                _ => throw new ArgumentException("The provided value does not belone anywhere in the constant pool.", nameof(value)),
+            };
         }
         protected virtual int AddConstant<T>(List<T> constants, T value, bool recycle)
         {
@@ -130,9 +118,9 @@ namespace Flazzy.ABC
             return _multinamesByNameCache.GetValueOrDefault(name) ?? Enumerable.Empty<ASMultiname>();
         }
 
-        private ASMultiname ReadMultiname()
+        private ASMultiname ReadMultiname(ref FlashReader input)
         {
-            ASMultiname multiname = new(this, _input);
+            ASMultiname multiname = new(this, ref input);
             if (!string.IsNullOrWhiteSpace(multiname.Name))
             {
                 if (!_multinamesByNameCache.TryGetValue(multiname.Name, out List<ASMultiname> multinames))
@@ -145,52 +133,61 @@ namespace Flazzy.ABC
             _multinamesIndicesCache.Add(multiname, Multinames.Count);
             return multiname;
         }
-        private ASNamespace ReadNamespace()
+        private ASNamespace ReadNamespace(ref FlashReader input)
         {
-            return new ASNamespace(this, _input);
+            return new ASNamespace(this, ref input);
         }
-        private ASNamespaceSet ReadNamespaceSet()
+        private ASNamespaceSet ReadNamespaceSet(ref FlashReader input)
         {
-            return new ASNamespaceSet(this, _input);
-        }
-
-        private void PopulateList<T>(List<T> list, Func<T> reader, T defaultValue)
-        {
-            list.Capacity = _input.ReadInt30();
-            if (list.Equals(Multinames))
-            {
-                _multinamesByNameCache.EnsureCapacity(list.Capacity);
-                _multinamesIndicesCache.EnsureCapacity(list.Capacity);
-            }
-            if (list.Capacity > 0)
-            {
-                list.Add(defaultValue);
-                for (int i = 1; i < list.Capacity; i++)
-                {
-                    T value = reader();
-                    list.Add(value);
-                }
-            }
+            return new ASNamespaceSet(this, ref input);
         }
 
-        public override void WriteTo(FlashWriter output)
+        //private void ReadList<T>(ref FlashReader input, List<T> list)
+        //{
+        //    list.Capacity = input.ReadInt30();
+        //}
+        //
+        //private void PopulateList<T>(List<T> list, Func<T> reader, T defaultValue)
+        //{
+        //    list.Capacity = _input.ReadInt30();
+        //    if (list.Equals(Multinames))
+        //    {
+        //        _multinamesByNameCache.EnsureCapacity(list.Capacity);
+        //        _multinamesIndicesCache.EnsureCapacity(list.Capacity);
+        //    }
+        //    if (list.Capacity > 0)
+        //    {
+        //        list.Add(defaultValue);
+        //        for (int i = 1; i < list.Capacity; i++)
+        //        {
+        //            T value = reader();
+        //            list.Add(value);
+        //        }
+        //    }
+        //}
+
+        public void WriteTo(FlashWriter output)
         {
-            WriteTo(output, output.WriteInt30, Integers);
-            WriteTo(output, output.WriteUInt30, UIntegers);
-            WriteTo(output, output.Write, Doubles);
-            WriteTo(output, output.Write, Strings);
-            WriteTo(output, output.WriteItem, Namespaces);
-            WriteTo(output, output.WriteItem, NamespaceSets);
-            WriteTo(output, output.WriteItem, Multinames);
+            //WriteTo(output, output.WriteInt30, Integers);
+            //WriteTo(output, output.WriteUInt30, UIntegers);
+            //WriteTo(output, output.Write, Doubles);
+            //WriteTo(output, output.Write, Strings);
+            //WriteTo(output, output.WriteItem, Namespaces);
+            //WriteTo(output, output.WriteItem, NamespaceSets);
+            //WriteTo(output, output.WriteItem, Multinames);
         }
-        private void WriteTo<T>(FlashWriter output, Action<T> writer, List<T> constants)
+        private static void WriteTo<T>(FlashWriter output, Action<T> writer, List<T> constants)
         {
-            output.WriteInt30(constants.Count);
+            output.WriteEncodedInt(constants.Count);
             for (int i = 1; i < constants.Count; i++)
             {
-                T value = constants[i];
-                writer(value);
+                writer(constants[i]);
             }
+        }
+
+        public int GetSize()
+        {
+            throw new NotImplementedException();
         }
     }
 }

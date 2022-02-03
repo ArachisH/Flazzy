@@ -2,7 +2,7 @@
 
 namespace Flazzy.Records
 {
-    public class FrameRecord : FlashItem
+    public class FrameRecord : IFlashItem
     {
         public ushort Rate { get; set; }
         public ushort Count { get; set; }
@@ -12,14 +12,22 @@ namespace Flazzy.Records
         {
             Area = new RectangeRecord();
         }
-        public FrameRecord(FlashReader input)
+        public FrameRecord(ref FlashReader input)
         {
-            Area = new RectangeRecord(input);
+            Area = new RectangeRecord(ref input);
             Rate = (ushort)(input.ReadUInt16() >> 8);
             Count = input.ReadUInt16();
         }
 
-        public override void WriteTo(FlashWriter output)
+        public int GetSize()
+        {
+            int size = 0;
+            size += Area.GetSize();
+            size += sizeof(ushort);
+            size += sizeof(ushort);
+            return size;
+        }
+        public void WriteTo(FlashWriter output)
         {
             Area.WriteTo(output);
             output.Write((ushort)(Rate << 8));

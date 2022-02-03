@@ -3,14 +3,14 @@
     [Flags]
     public enum MethodFlags
     {
-        None = 0,
-        NeedArguments = 1,
-        NeedActivation = 2,
-        NeedRest = 4,
-        HasOptional = 8,
-        IgnoreRest = 16,
-        Explicit = 32,
-        SetDxns = 64,
-        HasParamNames = 128
+        None           = 0,
+        NeedArguments  = 1 << 0,
+        NeedActivation = 1 << 1,
+        NeedRest       = 1 << 2,
+        HasOptional    = 1 << 3,
+        IgnoreRest     = 1 << 4,
+        Explicit       = 1 << 5,
+        SetDxns        = 1 << 6,
+        HasParamNames  = 1 << 7
     }
 }

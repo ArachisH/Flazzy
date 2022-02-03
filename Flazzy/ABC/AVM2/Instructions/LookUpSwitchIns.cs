@@ -12,7 +12,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             CaseOffsets = new List<uint>();
         }
-        public LookUpSwitchIns(FlashReader input)
+        public LookUpSwitchIns(ref FlashReader input)
             : this()
         {
             DefaultOffset = input.ReadUInt24();
@@ -31,10 +31,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             CaseOffsets.Add(DefaultOffset);
         }
 
-        public override int GetPopCount()
-        {
-            return 1;
-        }
+        public override int GetPopCount() => 1;
         public override void Execute(ASMachine machine)
         {
             machine.Values.Pop();
@@ -43,7 +40,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         protected override void WriteValuesTo(FlashWriter output)
         {
             output.WriteUInt24(DefaultOffset);
-            output.WriteInt30(CaseOffsets.Count - 1);
+            output.WriteEncodedInt(CaseOffsets.Count - 1);
             for (int i = 0; i < CaseOffsets.Count; i++)
             {
                 uint offset = CaseOffsets[i];

@@ -1,10 +1,14 @@
 ﻿using System.Text;
+
+
 using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
-    public class ASTrait : AS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait, IFunctionTrait
+    public class ASTrait : IAS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait, IFunctionTrait
     {
+        public ABCFile ABC { get; }
+
         public int QNameIndex { get; set; }
         public ASMultiname QName => ABC.Pool.Multinames[QNameIndex];
 
@@ -70,21 +74,19 @@ namespace Flazzy.ABC
         public TraitKind Kind { get; set; }
         public TraitAttributes Attributes { get; set; }
 
-        protected override string DebuggerDisplay => (Kind + ": " + QName.Name);
-
         public ASTrait(ABCFile abc)
-            : base(abc)
         {
+            ABC = abc;
             MetadataIndices = new List<int>();
         }
-        public ASTrait(ABCFile abc, FlashReader input)
+        public ASTrait(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             QNameIndex = input.ReadInt30();
 
-            byte bitContainer = input.ReadByte();
-            Kind = (TraitKind)(bitContainer & 0x0F);
-            Attributes = (TraitAttributes)(bitContainer >> 4);
+            byte flags = input.ReadByte();
+            Kind = (TraitKind)(flags & 0x0F);
+            Attributes = (TraitAttributes)(flags >> 4);
 
             Id = input.ReadInt30();
             switch (Kind)
@@ -197,21 +199,24 @@ namespace Flazzy.ABC
             return string.Empty;
         }
 
-        public override void WriteTo(FlashWriter output)
+        public int GetSize()
         {
-            var bitContainer = (byte)(
-                ((byte)Attributes << 4) + (byte)Kind);
+            throw new NotImplementedException();
+        }
+        public void WriteTo(FlashWriter output)
+        {
+            byte flags = (byte)(((byte)Attributes << 4) & (byte)Kind);
 
-            output.WriteInt30(QNameIndex);
-            output.Write(bitContainer);
-            output.WriteInt30(Id);
+            output.WriteEncodedInt(QNameIndex);
+            output.Write(flags);
+            output.WriteEncodedInt(Id);
             switch (Kind)
             {
                 case TraitKind.Slot:
                 case TraitKind.Constant:
                 {
-                    output.WriteInt30(TypeIndex);
-                    output.WriteInt30(ValueIndex);
+                    output.WriteEncodedInt(TypeIndex);
+                    output.WriteEncodedInt(ValueIndex);
                     if (ValueIndex != 0)
                     {
                         output.Write((byte)ValueKind);
@@ -223,30 +228,30 @@ namespace Flazzy.ABC
                 case TraitKind.Getter:
                 case TraitKind.Setter:
                 {
-                    output.WriteInt30(MethodIndex);
+                    output.WriteEncodedInt(MethodIndex);
                     break;
                 }
 
                 case TraitKind.Class:
                 {
-                    output.WriteInt30(ClassIndex);
+                    output.WriteEncodedInt(ClassIndex);
                     break;
                 }
 
                 case TraitKind.Function:
                 {
-                    output.WriteInt30(FunctionIndex);
+                    output.WriteEncodedInt(FunctionIndex);
                     break;
                 }
             }
 
             if (Attributes.HasFlag(TraitAttributes.Metadata))
             {
-                output.WriteInt30(MetadataIndices.Count);
+                output.WriteEncodedInt(MetadataIndices.Count);
                 for (int i = 0; i < MetadataIndices.Count; i++)
                 {
                     int metadatumIndex = MetadataIndices[i];
-                    output.WriteInt30(metadatumIndex);
+                    output.WriteEncodedInt(metadatumIndex);
                 }
             }
         }

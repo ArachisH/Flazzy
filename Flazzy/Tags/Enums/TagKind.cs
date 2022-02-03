@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.Tags
 {
-    public enum TagKind
+    public enum TagKind : byte
     {
         End = 0,
         ShowFrame = 1,

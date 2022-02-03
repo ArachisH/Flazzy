@@ -10,7 +10,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public FindPropStrictIns(ABCFile abc)
             : base(OPCode.FindPropStrict, abc)
         { }
-        public FindPropStrictIns(ABCFile abc, FlashReader input)
+        public FindPropStrictIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             PropertyNameIndex = input.ReadInt30();
@@ -37,7 +37,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(PropertyNameIndex);
+            output.WriteEncodedInt(PropertyNameIndex);
         }
     }
 }

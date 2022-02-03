@@ -1,12 +1,15 @@
-﻿using Flazzy.IO;
+﻿using System;
+
+using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
     /// <summary>
     /// Represents a namespace in the bytecode.
     /// </summary>
-    public class ASNamespace : FlashItem, IEquatable<ASNamespace>, IPoolConstant
+    public class ASNamespace : IEquatable<ASNamespace>, IPoolConstant
     {
+        public ASConstantPool Pool { get; init; }
         /// <summary>
         /// Gets or sets the index of the string in <see cref="ASConstantPool.Strings"/> representing the namespace name.
         /// </summary>
@@ -39,11 +42,11 @@ namespace Flazzy.ABC
         {
             Pool = pool;
         }
-        public ASNamespace(ASConstantPool pool, FlashReader input)
+        public ASNamespace(ASConstantPool pool, ref FlashReader input)
             : this(pool)
         {
             Kind = (NamespaceKind)input.ReadByte();
-            if (!Enum.IsDefined(typeof(NamespaceKind), Kind))
+            if (!Enum.IsDefined(Kind))
             {
                 throw new InvalidCastException($"Invalid namespace kind for value {Kind:0x00}.");
             }
@@ -56,7 +59,8 @@ namespace Flazzy.ABC
             NamespaceKind.Private => "private",
             NamespaceKind.Explicit => "explicit",
             NamespaceKind.StaticProtected or NamespaceKind.Protected => "protected",
-            _ => string.Empty,
+
+            _ => string.Empty
         };
         public override void WriteTo(FlashWriter output)
         {

@@ -1,41 +1,40 @@
 ﻿using System.Text;
 
 using Flazzy.IO;
-using Flazzy.Records;
 
 namespace Flazzy.Tags
 {
-    public class DoABCTag : TagItem
+    public class DoABCTag : ITagItem
     {
+        public TagKind Kind => TagKind.DoABC;
+
         public uint Flags { get; set; }
         public string Name { get; set; }
         public byte[] ABCData { get; set; }
 
         public DoABCTag()
-            : base(TagKind.DoABC)
         {
-            ABCData = new byte[0];
+            ABCData = Array.Empty<byte>();
         }
-        public DoABCTag(HeaderRecord header, FlashReader input)
-            : base(header)
+        public DoABCTag(ref FlashReader input)
         {
             Flags = input.ReadUInt32();
             Name = input.ReadNullString();
 
-            int partialLength = (Encoding.UTF8.GetByteCount(Name) + 5);
-            ABCData = input.ReadBytes(header.Length - partialLength);
+            ABCData = new byte[input.Length - input.Position];
+            input.ReadBytes(ABCData);
         }
 
-        public override int GetBodySize()
+        public int GetBodySize()
         {
             int size = 0;
             size += sizeof(uint);
-            size += (Encoding.UTF8.GetByteCount(Name) + 1);
+            size += Encoding.UTF8.GetByteCount(Name) + 1;
             size += ABCData.Length;
             return size;
         }
 
-        protected override void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(FlashWriter output)
         {
             output.Write(Flags);
             output.WriteNullString(Name);

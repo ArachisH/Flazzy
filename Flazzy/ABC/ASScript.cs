@@ -12,17 +12,22 @@ namespace Flazzy.ABC
         public ASScript(ABCFile abc)
             : base(abc)
         { }
-        public ASScript(ABCFile abc, FlashReader input)
+        public ASScript(ABCFile abc, ref FlashReader input)
             : base(abc)
         {
             InitializerIndex = input.ReadInt30();
-            PopulateTraits(input);
+            PopulateTraits(ref input);
         }
 
-        public override void WriteTo(FlashWriter output)
+        public void WriteTo(FlashWriter output)
         {
-            output.WriteInt30(InitializerIndex);
+            output.WriteEncodedInt(InitializerIndex);
             base.WriteTo(output);
+        }
+
+        public override string ToAS3()
+        {
+            throw new NotImplementedException();
         }
     }
 }

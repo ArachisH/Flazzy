@@ -1,19 +1,7 @@
-﻿using Flazzy.Records;
-
-namespace Flazzy.Tags
+﻿namespace Flazzy.Tags
 {
-    public class EndTag : TagItem
+    public class EndTag : ITagItem
     {
-        public EndTag()
-            : base(TagKind.End)
-        { }
-        public EndTag(HeaderRecord header)
-            : base(header)
-        { }
-
-        public override int GetBodySize()
-        {
-            return 0;
-        }
+        public TagKind Kind => TagKind.End;
     }
 }

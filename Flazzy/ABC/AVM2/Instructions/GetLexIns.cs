@@ -10,7 +10,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public GetLexIns(ABCFile abc)
             : base(OPCode.GetLex, abc)
         { }
-        public GetLexIns(ABCFile abc, FlashReader input)
+        public GetLexIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             TypeNameIndex = input.ReadInt30();
@@ -32,7 +32,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(TypeNameIndex);
+            output.WriteEncodedInt(TypeNameIndex);
         }
     }
 }

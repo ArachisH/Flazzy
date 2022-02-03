@@ -14,7 +14,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             Register = register;
         }
-        public Local(OPCode op, FlashReader input)
+        public Local(OPCode op, ref FlashReader input)
             : this(op)
         {
             Register = input.ReadInt30();
@@ -56,7 +56,7 @@ namespace Flazzy.ABC.AVM2.Instructions
                 case OPCode.GetLocal_3: return;
 
                 default:
-                output.WriteInt30(Register);
+                output.WriteEncodedInt(Register);
                 break;
             }
         }

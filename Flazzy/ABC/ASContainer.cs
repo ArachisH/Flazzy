@@ -2,36 +2,29 @@
 
 namespace Flazzy.ABC
 {
-    public abstract class ASContainer : AS3Item
+    public abstract class ASContainer : IAS3Item
     {
+        public ABCFile ABC { get; }
         public List<ASTrait> Traits { get; }
 
         public virtual bool IsStatic { get; }
         public abstract ASMultiname QName { get; }
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                int methodCount = Traits.Count(
-                    t => t.Kind == TraitKind.Method ||
-                         t.Kind == TraitKind.Getter ||
-                         t.Kind == TraitKind.Setter);
-
-                int slotCount = Traits.Count(t => t.Kind == TraitKind.Slot);
-                int constantCount = Traits.Count(t => t.Kind == TraitKind.Constant);
-
-                return $"{QName}, Traits: {Traits.Count}";
-            }
-        }
-
+        
         public ASContainer(ABCFile abc)
-            : base(abc)
         {
+            ABC = abc;
             Traits = new List<ASTrait>();
         }
 
         public ASTrait AddMethod(ASMethod method, string qualifiedName)
         {
+            var qname = new ASMultiname(ABC.Pool)
+            {
+                NameIndex = ABC.Pool.AddConstant(qualifiedName),
+                Kind = MultinameKind.QName,
+                NamespaceIndex = 1 // Public
+            };
+
             int methodIndex = ABC.AddMethod(method);
             int qNameIndex = AddPublicQualifiedName(qualifiedName);
 
@@ -41,9 +34,9 @@ namespace Flazzy.ABC
                 QNameIndex = qNameIndex,
                 MethodIndex = methodIndex
             };
+
             method.Trait = trait;
             method.Container = this;
-
             Traits.Add(trait);
             return trait;
         }
@@ -98,10 +91,7 @@ namespace Flazzy.ABC
         public ASMethod GetMethod(string qualifiedName, string returnTypeName, int paramCount) => GetMethods(qualifiedName, returnTypeName, paramCount).FirstOrDefault();
         public ASMethod GetMethod(string qualifiedName, string returnTypeName, string[] paramTypeNames) => GetMethods(qualifiedName, returnTypeName, paramTypeNames).FirstOrDefault();
 
-        public IEnumerable<ASTrait> GetGetters()
-        {
-            return GetTraits(TraitKind.Getter);
-        }
+        public IEnumerable<ASTrait> GetGetters() => GetTraits(TraitKind.Getter);
         public IEnumerable<ASTrait> GetGetters(string returnTypeName)
         {
             return GetGetters()
@@ -119,9 +109,9 @@ namespace Flazzy.ABC
                 .Where(sct => (sct.Type?.Name ?? "*") == returnTypeName);
         }
 
-        public ASTrait GetSlot(string qualifiedName)
-        {
             return GetTraits(TraitKind.Slot).FirstOrDefault(st => st.QName.Name == qualifiedName);
+        {
+            return GetTraits(TraitKind.Slot).Single(st => st.QName.Name == qualifiedName);
         }
         public ASTrait GetGetter(string qualifiedName)
         {
@@ -150,17 +140,19 @@ namespace Flazzy.ABC
             return ABC.Pool.AddConstant(qName);
         }
 
-        protected void PopulateTraits(FlashReader input)
+        protected void PopulateTraits(ref FlashReader input)
         {
             Traits.Capacity = input.ReadInt30();
             for (int i = 0; i < Traits.Capacity; i++)
             {
-                var trait = new ASTrait(ABC, input);
-                trait.IsStatic = IsStatic;
+                var trait = new ASTrait(ABC, ref input)
+                {
+                    IsStatic = IsStatic
+                };
 
-                if (trait.Kind == TraitKind.Method ||
-                    trait.Kind == TraitKind.Getter ||
-                    trait.Kind == TraitKind.Setter)
+                if (trait.Kind is TraitKind.Method 
+                    or TraitKind.Getter 
+                    or TraitKind.Setter)
                 {
                     trait.Method.Container = this;
                 }
@@ -168,14 +160,24 @@ namespace Flazzy.ABC
                 Traits.Add(trait);
             }
         }
-        public override void WriteTo(FlashWriter output)
+
+        public virtual int GetSize()
         {
-            output.WriteInt30(Traits.Count);
-            for (int i = 0; i < Traits.Count; i++)
+            int size = 0;
+
+            throw new NotImplementedException();
+        }
+        public virtual void WriteTo(FlashWriter output)
+        {
+            output.WriteEncodedInt(Traits.Count);
+            foreach (var trait in Traits)
             {
-                ASTrait trait = Traits[i];
                 trait.WriteTo(output);
             }
         }
+
+        public abstract string ToAS3();
+
+        public override string ToString() => $"{QName}, Traits: {Traits.Count}";        
     }
 }

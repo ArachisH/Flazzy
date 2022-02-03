@@ -1,21 +1,32 @@
-﻿namespace Flazzy
+﻿using Flazzy.IO;
+using Flazzy.Tags;
+using System.Runtime.InteropServices;
+
+namespace Flazzy
 {
     internal static class FlashTools
     {
-        public static DateTime Epoch { get; }
-
-        static FlashTools()
+        public static ImageFormat GetImageFormat(ReadOnlySpan<byte> data)
         {
-            Epoch = new DateTime(1970, 1, 1);
+            if (MemoryMarshal.Read<int>(data) == -654321153 || MemoryMarshal.Read<short>(data) == -9985)
+                return ImageFormat.JPEG;
+            
+            if (MemoryMarshal.Read<int>(data) == 944130375 && MemoryMarshal.Read<short>(data) == 24889) 
+                return ImageFormat.GIF98a;
+            
+            if (MemoryMarshal.Read<long>(data) == 727905341920923785)
+                return ImageFormat.PNG;
+            
+            throw new ArgumentException("Provided data contains an unknown image format.");
         }
 
-        public static long[] GetMaxPaddedBitsNeeded(out int maxBits, params long[] values)
+        public static int[] GetMaxPaddedBitsNeeded(out int maxBits, params int[] values)
         {
             maxBits = 0;
-            var fixedValues = new long[values.Length];
+            var fixedValues = new int[values.Length];
             for (int i = 0; i < values.Length; i++)
             {
-                long value = values[i];
+                int value = values[i];
                 if (value > 0x3FFFFFFF)
                 {
                     value = 0x3FFFFFFF;
@@ -26,26 +37,13 @@
                 }
 
                 fixedValues[i] = value;
-                int neededBits = GetNeededBits(value);
+                int neededBits = BitWriter.CountSBits(value);
                 if (neededBits > maxBits)
                 {
                     maxBits = neededBits;
                 }
             }
             return fixedValues;
-        }
-
-        private static int GetNeededBits(long value)
-        {
-            int counter = 32;
-            uint mask = 0x80000000;
-            value = (value < 0 ? -value : value);
-            while (((value & mask) == 0) && (counter > 0))
-            {
-                mask >>= 1;
-                counter -= 1;
-            }
-            return (counter + 1);
         }
     }
 }

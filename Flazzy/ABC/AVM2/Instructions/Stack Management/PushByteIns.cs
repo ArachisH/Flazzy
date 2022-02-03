@@ -23,7 +23,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             Value = value;
         }
-        public PushByteIns(FlashReader input)
+        public PushByteIns(ref FlashReader input)
             : this()
         {
             Value = input.ReadByte();

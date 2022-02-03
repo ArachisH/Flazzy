@@ -6,22 +6,22 @@
         /// <summary>
         /// Represents no flags for this class.
         /// </summary>
-        None = 0x00,
+        None = 0,
         /// <summary>
         /// Represents a sealed class where properties can't be dynamically added to instances of the class.
         /// </summary>
-        Sealed = 0x01,
+        Sealed = 1 << 0,
         /// <summary>
         /// Represents a class that can't be used as a base class for any other class.
         /// </summary>
-        Final = 0x02,
+        Final = 1 << 1,
         /// <summary>
         /// Represents a class that is of interface type
         /// </summary>
-        Interface = 0x04,
+        Interface = 1 << 2,
         /// <summary>
         /// Represents a class that uses its' protected namespace meaning the property <see cref="ASInstance.ProtectedNamespace"/> is present.
         /// </summary>
-        ProtectedNamespace = 0x08
+        ProtectedNamespace = 1 << 3
     }
 }

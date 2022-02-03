@@ -19,8 +19,6 @@ namespace Flazzy.ABC
         public int ProtectedNamespaceIndex { get; set; }
         public ASNamespace ProtectedNamespace => ABC.Pool.Namespaces[ProtectedNamespaceIndex];
 
-        protected override string DebuggerDisplay => ToAS3();
-
         public List<int> InterfaceIndices { get; }
 
         public ASInstance(ABCFile abc)
@@ -28,7 +26,7 @@ namespace Flazzy.ABC
         {
             InterfaceIndices = new List<int>();
         }
-        public ASInstance(ABCFile abc, FlashReader input)
+        public ASInstance(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             QNameIndex = input.ReadInt30();
@@ -51,7 +49,7 @@ namespace Flazzy.ABC
             Constructor.IsConstructor = true;
             Constructor.Container = this;
 
-            PopulateTraits(input);
+            PopulateTraits(ref input);
         }
 
         public IEnumerable<ASMultiname> GetInterfaces()
@@ -116,23 +114,23 @@ namespace Flazzy.ABC
         }
         public override void WriteTo(FlashWriter output)
         {
-            output.WriteInt30(QNameIndex);
-            output.WriteInt30(SuperIndex);
+            output.WriteEncodedInt(QNameIndex);
+            output.WriteEncodedInt(SuperIndex);
             output.Write((byte)Flags);
 
             if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
             {
-                output.WriteInt30(ProtectedNamespaceIndex);
+                output.WriteEncodedInt(ProtectedNamespaceIndex);
             }
 
-            output.WriteInt30(InterfaceIndices.Count);
+            output.WriteEncodedInt(InterfaceIndices.Count);
             for (int i = 0; i < InterfaceIndices.Count; i++)
             {
                 int interfaceIndex = InterfaceIndices[i];
-                output.WriteInt30(interfaceIndex);
+                output.WriteEncodedInt(interfaceIndex);
             }
 
-            output.WriteInt30(ConstructorIndex);
+            output.WriteEncodedInt(ConstructorIndex);
             base.WriteTo(output);
         }
     }

@@ -1,19 +1,7 @@
-﻿using Flazzy.Records;
-
-namespace Flazzy.Tags
+﻿namespace Flazzy.Tags
 {
-    public class ShowFrameTag : TagItem
+    public class ShowFrameTag : ITagItem
     {
-        public ShowFrameTag()
-            : base(TagKind.ShowFrame)
-        { }
-        public ShowFrameTag(HeaderRecord header)
-            : base(header)
-        { }
-
-        public override int GetBodySize()
-        {
-            return 0;
-        }
+        public TagKind Kind => TagKind.ShowFrame;
     }
 }

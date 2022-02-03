@@ -2,9 +2,8 @@
 
 namespace Flazzy.ABC
 {
-    public class ABCFile : FlashItem, IDisposable
+    public class ABCFile : IFlashItem, IDisposable
     {
-        private readonly FlashReader _input;
         private readonly Dictionary<ASMultiname, List<ASClass>> _classByQNameCache;
         private readonly Dictionary<string, ASInstance> _instanceByConstructorCache;
 
@@ -18,8 +17,6 @@ namespace Flazzy.ABC
         public ASConstantPool Pool { get; }
         public Version Version { get; set; }
 
-        protected override string DebuggerDisplay => "Version: " + Version;
-
         public ABCFile()
         {
             _classByQNameCache = new Dictionary<ASMultiname, List<ASClass>>();
@@ -32,28 +29,23 @@ namespace Flazzy.ABC
             Scripts = new List<ASScript>();
             MethodBodies = new List<ASMethodBody>();
         }
-        public ABCFile(byte[] data)
-            : this(new FlashReader(data))
-        { }
-        public ABCFile(FlashReader input)
+        public ABCFile(ref FlashReader input)
             : this()
         {
-            _input = input;
-
             ushort minor = input.ReadUInt16();
             ushort major = input.ReadUInt16();
             Version = new Version(major, minor);
-            Pool = new ASConstantPool(this, input);
+            Pool = new ASConstantPool(this, ref input);
 
-            PopulateList(Methods, ReadMethod);
-            PopulateList(Metadata, ReadMetadata);
-            PopulateList(Instances, ReadInstance);
+            //PopulateList(Methods, ReadMethod);
+            //PopulateList(Metadata, ReadMetadata);
+            //PopulateList(Instances, ReadInstance);
             _classByQNameCache.EnsureCapacity(Instances.Count);
             _instanceByConstructorCache.EnsureCapacity(Instances.Count);
 
-            PopulateList(Classes, ReadClass, Instances.Count);
-            PopulateList(Scripts, ReadScript);
-            PopulateList(MethodBodies, ReadMethodBody);
+            //PopulateList(Classes, ReadClass, Instances.Count);
+            //PopulateList(Scripts, ReadScript);
+            //PopulateList(MethodBodies, ReadMethodBody);
 
             _classByQNameCache.TrimExcess();
             _instanceByConstructorCache.TrimExcess();
@@ -147,20 +139,20 @@ namespace Flazzy.ABC
 
         public ASInstance GetInstanceByConstructor(string constructorName) => _instanceByConstructorCache.GetValueOrDefault(constructorName);
 
-        private ASMethod ReadMethod(int index) => new(this, _input);
-        private ASMetadata ReadMetadata(int index) => new(this, _input);
-        private ASInstance ReadInstance(int index) => new(this, _input);
-        private ASClass ReadClass(int index)
-        {
-            var @class = new ASClass(this, _input)
-            {
-                InstanceIndex = index
-            };
-            CacheByNaming(@class);
-            return @class;
-        }
-        private ASScript ReadScript(int index) => new(this, _input);
-        private ASMethodBody ReadMethodBody(int index) => new(this, _input);
+        //private ASMethod ReadMethod(int index) => new(this, _input);
+        //private ASMetadata ReadMetadata(int index) => new(this, _input);
+        //private ASInstance ReadInstance(int index) => new(this, _input);
+        //private ASClass ReadClass(int index)
+        //{
+        //    var @class = new ASClass(this, _input)
+        //    {
+        //        InstanceIndex = index
+        //    };
+        //    CacheByNaming(@class);
+        //    return @class;
+        //}
+        //private ASScript ReadScript(int index) => new(this, _input);
+        //private ASMethodBody ReadMethodBody(int index) => new(this, _input);
 
         private ASMultiname GetMultiname(string qualifiedName)
         {
@@ -170,17 +162,21 @@ namespace Flazzy.ABC
             }
             return null;
         }
-        private void PopulateList<T>(List<T> list, Func<int, T> reader, int count = -1)
-        {
-            list.Capacity = count < 0 ? _input.ReadInt30() : count;
-            for (int i = 0; i < list.Capacity; i++)
-            {
-                T value = reader(i);
-                list.Add(value);
-            }
-        }
+        //private void PopulateList<T>(List<T> list, Func<int, T> reader, int count = -1)
+        //{
+        //    list.Capacity = count < 0 ? _input.ReadInt30() : count;
+        //    for (int i = 0; i < list.Capacity; i++)
+        //    {
+        //        T value = reader(i);
+        //        list.Add(value);
+        //    }
+        //}
 
-        public override void WriteTo(FlashWriter output)
+        public int GetSize()
+        {
+            throw new NotImplementedException();
+        }
+        public void WriteTo(FlashWriter output)
         {
             output.Write((ushort)Version.Minor);
             output.Write((ushort)Version.Major);
@@ -195,15 +191,14 @@ namespace Flazzy.ABC
             WriteTo(output, MethodBodies);
         }
         private void WriteTo<T>(FlashWriter output, List<T> list, bool writeCount = true)
-            where T : FlashItem
+            where T : IFlashItem
         {
             if (writeCount)
             {
-                output.WriteInt30(list.Count);
+                output.WriteEncodedInt(list.Count);
             }
-            for (int i = 0; i < list.Count; i++)
+            foreach (IFlashItem item in list)
             {
-                FlashItem item = list[i];
                 item.WriteTo(output);
             }
         }
@@ -216,7 +211,6 @@ namespace Flazzy.ABC
         {
             if (disposing)
             {
-                _input.Dispose();
                 _classByQNameCache.Clear();
                 _instanceByConstructorCache.Clear();
 
@@ -236,5 +230,7 @@ namespace Flazzy.ABC
                 Pool.Multinames.Clear();
             }
         }
+
+        public override string ToString() => "Version: " + Version;
     }
 }

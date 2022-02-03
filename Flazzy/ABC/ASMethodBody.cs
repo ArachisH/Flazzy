@@ -17,14 +17,13 @@ namespace Flazzy.ABC
         public List<ASException> Exceptions { get; }
 
         public override ASMultiname QName => Method.Trait?.QName;
-        protected override string DebuggerDisplay => $"LocalCount: {LocalCount:n0}, MaxStack: {MaxStack:n0}";
 
         public ASMethodBody(ABCFile abc)
             : base(abc)
         {
             Exceptions = new List<ASException>();
         }
-        public ASMethodBody(ABCFile abc, FlashReader input)
+        public ASMethodBody(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             MethodIndex = input.ReadInt30();
@@ -35,41 +34,49 @@ namespace Flazzy.ABC
             InitialScopeDepth = input.ReadInt30();
             MaxScopeDepth = input.ReadInt30();
 
-            int codeLength = input.ReadInt30();
-            Code = input.ReadBytes(codeLength);
+            Code = new byte[input.ReadInt30()];
+            input.ReadBytes(Code);
 
             Exceptions.Capacity = input.ReadInt30();
             for (int i = 0; i < Exceptions.Capacity; i++)
             {
-                var exception = new ASException(abc, input);
+                var exception = new ASException(abc, ref input);
                 Exceptions.Add(exception);
             }
-            PopulateTraits(input);
+            PopulateTraits(ref input);
         }
 
         public ASCode ParseCode()
         {
             return new ASCode(ABC, this);
         }
-        
+
+        public override int GetSize() => throw new NotImplementedException();
         public override void WriteTo(FlashWriter output)
         {
-            output.WriteInt30(MethodIndex);
-            output.WriteInt30(MaxStack);
-            output.WriteInt30(LocalCount);
-            output.WriteInt30(InitialScopeDepth);
-            output.WriteInt30(MaxScopeDepth);
+            output.WriteEncodedInt(MethodIndex);
+            output.WriteEncodedInt(MaxStack);
+            output.WriteEncodedInt(LocalCount);
+            output.WriteEncodedInt(InitialScopeDepth);
+            output.WriteEncodedInt(MaxScopeDepth);
 
-            output.WriteInt30(Code.Length);
+            output.WriteEncodedInt(Code.Length);
             output.Write(Code);
 
-            output.WriteInt30(Exceptions.Count);
+            output.WriteEncodedInt(Exceptions.Count);
             for (int i = 0; i < Exceptions.Count; i++)
             {
                 ASException exception = Exceptions[i];
                 exception.WriteTo(output);
             }
             base.WriteTo(output);
+        }
+
+        public override string ToString() => $"LocalCount: {LocalCount:n0}, MaxStack: {MaxStack:n0}";
+
+        public override string ToAS3()
+        {
+            throw new NotImplementedException();
         }
     }
 }

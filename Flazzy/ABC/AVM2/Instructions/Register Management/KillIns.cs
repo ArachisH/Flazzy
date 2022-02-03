@@ -7,8 +7,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         public KillIns(int register)
             : base(OPCode.Kill, register)
         { }
-        public KillIns(FlashReader input)
-            : base(OPCode.Kill, input)
+        public KillIns(ref FlashReader input)
+            : base(OPCode.Kill, ref input)
         { }
 
         public override void Execute(ASMachine machine)

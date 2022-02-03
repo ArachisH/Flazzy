@@ -10,7 +10,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public InitPropertyIns(ABCFile abc)
             : base(OPCode.InitProperty, abc)
         { }
-        public InitPropertyIns(ABCFile abc, FlashReader input)
+        public InitPropertyIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             PropertyNameIndex = input.ReadInt30();
@@ -34,7 +34,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(PropertyNameIndex);
+            output.WriteEncodedInt(PropertyNameIndex);
         }
     }
 }

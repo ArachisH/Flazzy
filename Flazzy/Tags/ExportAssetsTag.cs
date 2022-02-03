@@ -1,56 +1,48 @@
 ﻿using System.Text;
 
 using Flazzy.IO;
-using Flazzy.Records;
 
 namespace Flazzy.Tags
 {
-    public class ExportAssetsTag : TagItem
+    public class ExportAssetsTag : ITagItem
     {
-        public List<ushort> Ids { get; }
-        public List<string> Names { get; }
+        public TagKind Kind => TagKind.ExportAssets;
+
+        public Dictionary<ushort, string> Exports { get; set; }
 
         public ExportAssetsTag()
-            : base(TagKind.ExportAssets)
         {
-            Ids = new List<ushort>();
-            Names = new List<string>();
+            Exports = new Dictionary<ushort, string>();
         }
-        public ExportAssetsTag(HeaderRecord header, FlashReader input)
-            : base(header)
+        public ExportAssetsTag(ref FlashReader input)
         {
             ushort assetCount = input.ReadUInt16();
 
-            Ids = new List<ushort>(assetCount);
-            Names = new List<string>(assetCount);
+            Exports = new Dictionary<ushort, string>(assetCount);
             for (int i = 0; i < assetCount; i++)
             {
-                Ids.Add(input.ReadUInt16());
-                Names.Add(input.ReadNullString());
+                Exports.Add(input.ReadUInt16(), input.ReadNullString());
             }
         }
 
-        public override int GetBodySize()
+        public int GetBodySize()
         {
             int size = 0;
             size += sizeof(ushort);
-            size += (sizeof(ushort) * Ids.Count);
-            foreach (string name in Names)
+            size += sizeof(ushort) * Exports.Count;
+            foreach (string name in Exports.Values)
             {
-                size += (Encoding.UTF8.GetByteCount(name) + 1);
+                size += Encoding.UTF8.GetByteCount(name) + 1;
             }
             return size;
         }
-
-        protected override void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(FlashWriter output)
         {
-            int assetCount = Math.Min(Ids.Count, Names.Count);
-            output.Write((ushort)assetCount);
-
-            for (int i = 0; i < assetCount; i++)
+            output.Write((ushort)Exports.Count);
+            foreach ((ushort id, string name) in Exports)
             {
-                output.Write(Ids[i]);
-                output.WriteNullString(Names[i]);
+                output.Write(id);
+                output.WriteNullString(name);
             }
         }
     }

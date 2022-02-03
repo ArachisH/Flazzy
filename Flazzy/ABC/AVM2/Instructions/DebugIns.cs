@@ -14,7 +14,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public DebugIns(ABCFile abc)
             : base(OPCode.Debug, abc)
         { }
-        public DebugIns(ABCFile abc, FlashReader input)
+        public DebugIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             DebugType = input.ReadByte();
@@ -33,9 +33,9 @@ namespace Flazzy.ABC.AVM2.Instructions
         protected override void WriteValuesTo(FlashWriter output)
         {
             output.Write(DebugType);
-            output.WriteInt30(NameIndex);
+            output.WriteEncodedInt(NameIndex);
             output.Write(RegisterIndex);
-            output.WriteInt30(Extra);
+            output.WriteEncodedInt(Extra);
         }
     }
 }

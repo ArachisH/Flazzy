@@ -10,7 +10,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public CallMethodIns(ABCFile abc)
             : base(OPCode.CallMethod, abc)
         { }
-        public CallMethodIns(ABCFile abc, FlashReader input)
+        public CallMethodIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
             MethodIndex = input.ReadInt30();
@@ -48,8 +48,8 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override void WriteValuesTo(FlashWriter output)
         {
-            output.WriteInt30(MethodIndex);
-            output.WriteInt30(ArgCount);
+            output.WriteEncodedInt(MethodIndex);
+            output.WriteEncodedInt(ArgCount);
         }
     }
 }
