@@ -30,24 +30,34 @@ namespace Flazzy.ABC
             Traits = new List<ASTrait>();
         }
 
-        public void AddMethod(ASMethod method, string qualifiedName)
+        public ASTrait AddMethod(ASMethod method, string qualifiedName)
         {
-            var qname = new ASMultiname(ABC.Pool);
-            qname.NameIndex = ABC.Pool.AddConstant(qualifiedName);
-            qname.Kind = MultinameKind.QName;
-            qname.NamespaceIndex = 1; // Public
-
             int methodIndex = ABC.AddMethod(method);
-            int qnameIndex = ABC.Pool.AddConstant(qname);
+            int qNameIndex = ABC.Pool.AddConstant(AddPublicQualifiedName(qualifiedName));
 
-            var trait = new ASTrait(ABC);
-            trait.Kind = TraitKind.Method;
-            trait.QNameIndex = qnameIndex;
-            trait.MethodIndex = methodIndex;
-
+            var trait = new ASTrait(ABC)
+            {
+                Kind = TraitKind.Method,
+                QNameIndex = qNameIndex,
+                MethodIndex = methodIndex
+            };
             method.Trait = trait;
             method.Container = this;
+
             Traits.Add(trait);
+            return trait;
+        }
+        public ASTrait AddSlot(string qualifiedName, string typeQualifiedName)
+        {
+            var trait = new ASTrait(ABC)
+            {
+                Kind = TraitKind.Slot,
+                QNameIndex = AddPublicQualifiedName(qualifiedName),
+                TypeIndex = ABC.Pool.GetMultinameIndex(typeQualifiedName)
+            };
+
+            Traits.Add(trait);
+            return trait;
         }
 
         public IEnumerable<ASMethod> GetMethods()
@@ -98,12 +108,6 @@ namespace Flazzy.ABC
                 .Where(g => g.Type.Name == returnTypeName);
         }
 
-        public ASTrait GetGetter(string qualifiedName)
-        {
-            return GetGetters()
-                .FirstOrDefault(g => g.QName.Name == qualifiedName);
-        }
-
         public IEnumerable<ASTrait> GetSlotTraits(string returnTypeName)
         {
             return GetTraits(TraitKind.Slot)
@@ -119,6 +123,10 @@ namespace Flazzy.ABC
         {
             return GetTraits(TraitKind.Slot).Single(st => st.QName.Name == qualifiedName);
         }
+        public ASTrait GetGetter(string qualifiedName)
+        {
+            return GetGetters().FirstOrDefault(g => g.QName.Name == qualifiedName);
+        }
         public ASTrait GetConstant(string qualifiedName)
         {
             return GetTraits(TraitKind.Constant).Single(ct => ct.QName.Name == qualifiedName);
@@ -129,6 +137,17 @@ namespace Flazzy.ABC
             return (kinds?.Length ?? 0) == 0 ?
                 Enumerable.Empty<ASTrait>() :
                 Traits.Where(t => kinds.Contains(t.Kind));
+        }
+
+        private int AddPublicQualifiedName(string qualifiedName)
+        {
+            var qName = new ASMultiname(ABC.Pool)
+            {
+                NameIndex = ABC.Pool.AddConstant(qualifiedName),
+                Kind = MultinameKind.QName,
+                NamespaceIndex = 1 // Public
+            };
+            return ABC.Pool.AddConstant(qName);
         }
 
         protected void PopulateTraits(FlashReader input)
