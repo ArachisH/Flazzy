@@ -121,7 +121,7 @@ namespace Flazzy.ABC
 
         public ASTrait GetSlot(string qualifiedName)
         {
-            return GetTraits(TraitKind.Slot).Single(st => st.QName.Name == qualifiedName);
+            return GetTraits(TraitKind.Slot).FirstOrDefault(st => st.QName.Name == qualifiedName);
         }
         public ASTrait GetGetter(string qualifiedName)
         {
@@ -129,7 +129,7 @@ namespace Flazzy.ABC
         }
         public ASTrait GetConstant(string qualifiedName)
         {
-            return GetTraits(TraitKind.Constant).Single(ct => ct.QName.Name == qualifiedName);
+            return GetTraits(TraitKind.Constant).FirstOrDefault(ct => ct.QName.Name == qualifiedName);
         }
 
         public IEnumerable<ASTrait> GetTraits(params TraitKind[] kinds)
