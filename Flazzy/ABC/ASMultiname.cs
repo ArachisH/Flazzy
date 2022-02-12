@@ -1,83 +1,45 @@
-﻿using System.Collections.Generic;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
-    public class ASMultiname : ConstantItem, IQName, IRTQName, IMultiname, IMultinameL
+    public class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConstant, IQName, IRTQName, IMultiname, IMultinameL
     {
         public MultinameKind Kind { get; set; }
+        public ASConstantPool Pool { get; init; }
 
-        public bool IsRuntime
+        public bool IsRuntime => Kind switch
         {
-            get
-            {
-                switch (Kind)
-                {
-                    case MultinameKind.RTQName:
-                    case MultinameKind.RTQNameA:
-
-                    case MultinameKind.MultinameL:
-                    case MultinameKind.MultinameLA:
-                    return true;
-
-                    default: return false;
-                }
-            }
-        }
-        public bool IsAttribute
+            MultinameKind.RTQName or
+            MultinameKind.RTQNameA or
+            MultinameKind.MultinameL or
+            MultinameKind.MultinameLA => true,
+            _ => false,
+        };
+        public bool IsAttribute => Kind switch
         {
-            get
-            {
-                switch (Kind)
-                {
-                    case MultinameKind.QNameA:
-
-                    case MultinameKind.RTQNameA:
-                    case MultinameKind.RTQNameLA:
-
-                    case MultinameKind.MultinameA:
-                    case MultinameKind.MultinameLA:
-                    return true;
-
-                    default: return false;
-                }
-            }
-        }
-        public bool IsNameNeeded
+            MultinameKind.QNameA or
+            MultinameKind.RTQNameA or
+            MultinameKind.RTQNameLA or
+            MultinameKind.MultinameA or
+            MultinameKind.MultinameLA => true,
+            _ => false,
+        };
+        public bool IsNameNeeded => Kind switch
         {
-            get
-            {
-                switch (Kind)
-                {
-                    case MultinameKind.RTQNameL:
-                    case MultinameKind.RTQNameLA:
-
-                    case MultinameKind.MultinameL:
-                    case MultinameKind.MultinameLA:
-                    return true;
-
-                    default: return false;
-                }
-            }
-        }
-        public bool IsNamespaceNeeded
+            MultinameKind.RTQNameL or
+            MultinameKind.RTQNameLA or
+            MultinameKind.MultinameL or
+            MultinameKind.MultinameLA => true,
+            _ => false,
+        };
+        public bool IsNamespaceNeeded => Kind switch
         {
-            get
-            {
-                switch (Kind)
-                {
-                    case MultinameKind.RTQName:
-                    case MultinameKind.RTQNameA:
-
-                    case MultinameKind.RTQNameL:
-                    case MultinameKind.RTQNameLA:
-                    return true;
-
-                    default: return false;
-                }
-            }
-        }
+            MultinameKind.RTQName or
+            MultinameKind.RTQNameA or
+            MultinameKind.RTQNameL or
+            MultinameKind.RTQNameLA => true,
+            _ => false,
+        };
 
         public int NameIndex { get; set; }
         public string Name => Pool.Strings[NameIndex];
@@ -92,11 +54,20 @@ namespace Flazzy.ABC
         public ASNamespaceSet NamespaceSet => Pool.NamespaceSets[NamespaceSetIndex];
 
         public List<int> TypeIndices { get; }
-        protected override string DebuggerDisplay => $"{Kind}: \"{Name}\"";
+        protected override string DebuggerDisplay => $"{Kind}: \"{Namespace.Name}.{Name}\"";
+
+        public static bool operator ==(ASMultiname left, ASMultiname right)
+        {
+            return EqualityComparer<ASMultiname>.Default.Equals(left, right);
+        }
+        public static bool operator !=(ASMultiname left, ASMultiname right)
+        {
+            return !(left == right);
+        }
 
         public ASMultiname(ASConstantPool pool)
-            : base(pool)
         {
+            Pool = pool;
             TypeIndices = new List<int>();
         }
         public ASMultiname(ASConstantPool pool, FlashReader input)
@@ -160,12 +131,9 @@ namespace Flazzy.ABC
         {
             for (int i = 0; i < TypeIndices.Count; i++)
             {
-                int typeIndex = TypeIndices[i];
-                ASMultiname type = Pool.Multinames[typeIndex];
-                yield return type;
+                yield return Pool.Multinames[TypeIndices[i]];
             }
         }
-
         public override void WriteTo(FlashWriter output)
         {
             output.Write((byte)Kind);
@@ -220,6 +188,47 @@ namespace Flazzy.ABC
                     break;
                 }
             }
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(Kind);
+            hash.Add(IsRuntime);
+            hash.Add(IsAttribute);
+            hash.Add(IsNameNeeded);
+            hash.Add(IsNamespaceNeeded);
+            hash.Add(Name);
+            hash.Add(QName);
+            hash.Add(Namespace);
+            hash.Add(NamespaceSet);
+            return hash.ToHashCode();
+        }
+        public bool Equals(ASMultiname other)
+        {
+            if (other == null) return false;
+            if (!ReferenceEquals(this, other) && Pool == other.Pool) return false;
+
+            // Since both of these names exists within the same pool of constants, then there is no need to do a 'deep' compare.
+            if (Pool != other.Pool)
+            {
+                // This condition is useful in cases where two name objects exists within different constant pool instances, yet refer to the same 'name'.
+                if (Kind != other.Kind) return false;
+                if (IsRuntime != other.IsRuntime) return false;
+                if (IsAttribute != other.IsAttribute) return false;
+                if (IsNameNeeded != other.IsNameNeeded) return false;
+                if (IsNamespaceNeeded != other.IsNamespaceNeeded) return false;
+                if (Name != other.Name) return false;
+                if (QName != other.QName) return false;
+                if (Namespace != other.Namespace) return false;
+                if (NamespaceSet != other.NamespaceSet) return false;
+            }
+
+            return true;
+        }
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ASMultiname);
         }
     }
 }
