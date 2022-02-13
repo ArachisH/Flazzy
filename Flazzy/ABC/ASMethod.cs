@@ -1,7 +1,6 @@
-﻿using System.Linq;
-using System.Collections.Generic;
+﻿using Flazzy.IO;
 
-using Flazzy.IO;
+using System.Text;
 
 namespace Flazzy.ABC
 {
@@ -20,19 +19,9 @@ namespace Flazzy.ABC
         public ASMethodBody Body { get; internal set; }
         public bool IsConstructor { get; internal set; }
         public ASContainer Container { get; internal set; }
+        public bool IsAnonymous => Trait == null && !IsConstructor;
 
-        protected override string DebuggerDisplay
-        {
-            get
-            {
-                string display = ToAS3();
-                if (IsConstructor)
-                {
-                    display += (".ctor");
-                }
-                return display;
-            }
-        }
+        protected override string DebuggerDisplay => ToAS3();
 
         public ASMethod(ABCFile abc)
             : base(abc)
@@ -47,7 +36,7 @@ namespace Flazzy.ABC
 
             for (int i = 0; i < Parameters.Capacity; i++)
             {
-                var parameter = new ASParameter(abc.Pool, this);
+                var parameter = new ASParameter(this);
                 parameter.TypeIndex = input.ReadInt30();
                 Parameters.Add(parameter);
             }
@@ -58,7 +47,7 @@ namespace Flazzy.ABC
             if (Flags.HasFlag(MethodFlags.HasOptional))
             {
                 int optionalParamCount = input.ReadInt30();
-                for (int i = (Parameters.Count - optionalParamCount);
+                for (int i = Parameters.Count - optionalParamCount;
                     optionalParamCount > 0;
                     i++, optionalParamCount--)
                 {
@@ -81,42 +70,50 @@ namespace Flazzy.ABC
 
         public override string ToAS3()
         {
-            return ToAS3(false);
-        }
-        public string ToAS3(bool excludeModifiers)
-        {
-            string prefix = (Trait?.QName ?? Container?.QName)
-                ?.Namespace.GetAS3Modifiers();
+            var builder = new StringBuilder();
 
-            if (!string.IsNullOrWhiteSpace(prefix))
+            ASMultiname qName = Trait?.QName ?? Container?.QName;
+            if (qName != null)
             {
+                builder.Append(qName.Namespace.GetAS3Modifiers());
+                if (builder.Length > 0)
+                {
+                    builder.Append(' ');
+                }
                 if (!IsConstructor && Trait.IsStatic)
                 {
-                    prefix += " static";
+                    builder.Append("static ");
                 }
-                prefix += " function ";
-                prefix += (Trait?.QName ?? Container.QName).Name; ;
+                builder.Append("function ");
+                builder.Append(qName.Name);
+            }
+            else if (IsAnonymous) builder.Append("function");
+
+            builder.Append('('); // Parameters Start
+            if (Parameters.Count > 0)
+            {
+                for (int i = 0; i < Parameters.Count; i++)
+                {
+                    Parameters[i].Append(builder, i + 1);
+                    builder.Append(", ");
+                }
+                builder.Length -= 2;
             }
 
-            if (excludeModifiers)
-            {
-                prefix = string.Empty;
-            }
-            
-            IEnumerable<string> rawParams = Parameters.Select(p => p.ToString());
             if (Flags.HasFlag(MethodFlags.NeedRest))
             {
-                rawParams = rawParams.Concat(
-                    new[] { ("... param" + (Parameters.Count + 1)) });
+                builder.Append("... param");
+                builder.Append(Parameters.Count + 1);
             }
+            builder.Append(')'); // Parameters End
 
-            string suffix = $"({string.Join(", ", rawParams)})";
             if (ReturnType != null)
             {
-                suffix += (":" + ReturnType.Name);
+                builder.Append(':');
+                builder.Append(ReturnType.Name);
             }
 
-            return $"{prefix}{suffix}";
+            return builder.ToString();
         }
 
         public override void WriteTo(FlashWriter output)
@@ -137,14 +134,17 @@ namespace Flazzy.ABC
 
                     // This flag should only be present when all parameters are assigned a Name.
                     if (string.IsNullOrWhiteSpace(parameter.Name))
+                    {
                         Flags &= ~MethodFlags.HasParamNames;
+                    }
 
                     // Just one optional parameter is enough to attain this flag.
                     if (parameter.IsOptional)
                     {
                         if (i < optionalParamStartIndex)
+                        {
                             optionalParamStartIndex = i;
-
+                        }
                         optionalParamCount++;
                         Flags |= MethodFlags.HasOptional;
                     }
