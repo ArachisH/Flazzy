@@ -17,7 +17,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public Local(OPCode op, ref FlashReader input)
             : this(op)
         {
-            Register = input.ReadInt30();
+            Register = input.ReadEncodedInt();
         }
 
         public override int GetPopCount()
@@ -41,7 +41,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             }
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             switch (OP)
             {

@@ -85,12 +85,12 @@ namespace Flazzy
         //    output.Write(Version);
         //    output.Write(uint.MinValue);
         //
-        //    Frame.WriteTo(output);
+        //    Frame.WriteTo(ref output);
         //    int fileLength = Frame.Area.GetSize() + 4;
         //    foreach (var tag in Tags)
         //    {
         //        callback?.Invoke(tag);
-        //        tag.WriteTo(output);
+        //        tag.WriteTo(ref output);
         //
         //        //fileLength += tag.Header.Length;
         //        //fileLength += (tag.Header.IsLongTag ? 6 : 2);
@@ -130,7 +130,7 @@ namespace Flazzy
         //    CopyTo(output, compression, null);
         //    return output.ToArray();
         //}
-        
+
         public void Dispose()
         {
             Dispose(true);

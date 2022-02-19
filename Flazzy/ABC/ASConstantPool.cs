@@ -1,4 +1,6 @@
-﻿using Flazzy.IO;
+﻿using System.Text;
+
+using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
@@ -41,13 +43,52 @@ namespace Flazzy.ABC
         public ASConstantPool(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            //PopulateList(Integers, input.ReadInt30, 0);
-            //PopulateList<uint>(UIntegers, input.ReadUInt30, 0);
-            //PopulateList(Doubles, input.ReadDouble, double.NaN);
-            //PopulateList(Strings, input.ReadString, null);
-            //PopulateList(Namespaces, ReadNamespace, null);
-            //PopulateList(NamespaceSets, ReadNamespaceSet, null);
-            //PopulateList(Multinames, ReadMultiname, null);
+            Integers.Capacity = input.ReadEncodedInt();
+            if (Integers.Capacity > 0) Integers.Add(0);
+            for (int i = 1; i < Integers.Capacity; i++)
+            {
+                Integers.Add(input.ReadEncodedInt());
+            }
+
+            UIntegers.Capacity = input.ReadEncodedInt();
+            if (UIntegers.Capacity > 0) UIntegers.Add(0);
+            for (int i = 1; i < UIntegers.Capacity; i++)
+            {
+                UIntegers.Add(input.ReadEncodedUInt());
+            }
+
+            // TODO: MemoryMarshal?
+            Doubles.Capacity = input.ReadEncodedInt();
+            if (Doubles.Capacity > 0) Doubles.Add(double.NaN);
+            for (int i = 1; i < Doubles.Capacity; i++)
+            {
+                Doubles.Add(input.ReadDouble());
+            }
+
+            Strings.Capacity = input.ReadEncodedInt();
+            if (Strings.Capacity > 0) Strings.Add(default);
+            for (int i = 1; i < Strings.Capacity; i++)
+            {
+                Strings.Add(input.ReadNullString());
+            }
+
+            Namespaces.Capacity = input.ReadEncodedInt();
+            for (int i = 1; i < Namespaces.Capacity; i++)
+            {
+                Namespaces.Add(new ASNamespace(this, ref input));
+            }
+
+            NamespaceSets.Capacity = input.ReadEncodedInt();
+            for (int i = 1; i < NamespaceSets.Capacity; i++)
+            {
+                NamespaceSets.Add(new ASNamespaceSet(this, ref input));
+            }
+
+            Multinames.Capacity = input.ReadEncodedInt();
+            for (int i = 1; i < Multinames.Capacity; i++)
+            {
+                Multinames.Add(ReadMultiname(ref input));
+            }
 
             _multinamesByNameCache.TrimExcess();
             _multinamesIndicesCache.TrimExcess();
@@ -88,11 +129,11 @@ namespace Flazzy.ABC
         }
         protected virtual int AddConstant<T>(List<T> constants, T value, bool recycle)
         {
-            int index = (recycle ? constants.IndexOf(value, 1) : -1);
+            int index = recycle ? constants.IndexOf(value, 1) : -1;
             if (index == -1)
             {
                 constants.Add(value);
-                index = (constants.Count - 1);
+                index = constants.Count - 1;
             }
             return index;
         }
@@ -133,61 +174,102 @@ namespace Flazzy.ABC
             _multinamesIndicesCache.Add(multiname, Multinames.Count);
             return multiname;
         }
-        private ASNamespace ReadNamespace(ref FlashReader input)
+
+        public int GetSize()
         {
-            return new ASNamespace(this, ref input);
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(Integers.Count);
+            for (int i = 1; i < Integers.Count; i++)
+            {
+                size += FlashWriter.GetEncodedIntSize(Integers[i]);
+            }
+
+            size += FlashWriter.GetEncodedIntSize(UIntegers.Count);
+            for (int i = 1; i < UIntegers.Count; i++)
+            {
+                size += FlashWriter.GetEncodedUIntSize(UIntegers[i]);
+            }
+
+            size += FlashWriter.GetEncodedIntSize(Doubles.Count);
+            size += Doubles.Count * sizeof(double);
+
+            size += FlashWriter.GetEncodedIntSize(Strings.Count);
+            for (int i = 1; i < Strings.Count; i++)
+            {
+                int length = Encoding.UTF8.GetByteCount(Strings[i]);
+                size += FlashWriter.GetEncodedIntSize(length);
+                size += length;
+            }
+
+            size += FlashWriter.GetEncodedIntSize(Namespaces.Count);
+            for (int i = 1; i < Namespaces.Count; i++)
+            {
+                size += Namespaces[i].GetSize();
+            }
+            
+            size += FlashWriter.GetEncodedIntSize(NamespaceSets.Count);
+            for (int i = 1; i < NamespaceSets.Count; i++)
+            {
+                size += NamespaceSets[i].GetSize();
+            }
+
+            size += FlashWriter.GetEncodedIntSize(Multinames.Count);
+            for (int i = 1; i < Multinames.Count; i++)
+            {
+                size += Multinames[i].GetSize();
+            }
+            return size;
         }
-        private ASNamespaceSet ReadNamespaceSet(ref FlashReader input)
+        public void WriteTo(ref FlashWriter output)
         {
-            return new ASNamespaceSet(this, ref input);
+            output.WriteEncodedInt(Integers.Count);
+            for (int i = 1; i < Integers.Count; i++)
+            {
+                output.WriteEncodedInt(Integers[i]);
+            }
+
+            output.WriteEncodedInt(UIntegers.Count);
+            for (int i = 1; i < UIntegers.Count; i++)
+            {
+                output.WriteEncodedUInt(UIntegers[i]);
+            }
+
+            output.WriteEncodedInt(Doubles.Count);
+            for (int i = 1; i < Doubles.Count; i++)
+            {
+                output.Write(Doubles[i]);
+            }
+
+            output.WriteEncodedInt(Doubles.Count);
+            for (int i = 1; i < Doubles.Count; i++)
+            {
+                output.Write(Doubles[i]);
+            }
+
+            output.WriteEncodedInt(Doubles.Count);
+            for (int i = 1; i < Doubles.Count; i++)
+            {
+                output.Write(Doubles[i]);
+            }
+
+            output.WriteEncodedInt(Strings.Count);
+            for (int i = 1; i < Strings.Count; i++)
+            {
+                output.WriteString(Strings[i]);
+            }
+
+            WriteItems(ref output, Namespaces);
+            WriteItems(ref output, NamespaceSets);
+            WriteItems(ref output, Multinames);
         }
 
-        //private void ReadList<T>(ref FlashReader input, List<T> list)
-        //{
-        //    list.Capacity = input.ReadInt30();
-        //}
-        //
-        //private void PopulateList<T>(List<T> list, Func<T> reader, T defaultValue)
-        //{
-        //    list.Capacity = _input.ReadInt30();
-        //    if (list.Equals(Multinames))
-        //    {
-        //        _multinamesByNameCache.EnsureCapacity(list.Capacity);
-        //        _multinamesIndicesCache.EnsureCapacity(list.Capacity);
-        //    }
-        //    if (list.Capacity > 0)
-        //    {
-        //        list.Add(defaultValue);
-        //        for (int i = 1; i < list.Capacity; i++)
-        //        {
-        //            T value = reader();
-        //            list.Add(value);
-        //        }
-        //    }
-        //}
-
-        public void WriteTo(FlashWriter output)
-        {
-            //WriteTo(output, output.WriteInt30, Integers);
-            //WriteTo(output, output.WriteUInt30, UIntegers);
-            //WriteTo(output, output.Write, Doubles);
-            //WriteTo(output, output.Write, Strings);
-            //WriteTo(output, output.WriteItem, Namespaces);
-            //WriteTo(output, output.WriteItem, NamespaceSets);
-            //WriteTo(output, output.WriteItem, Multinames);
-        }
-        private static void WriteTo<T>(FlashWriter output, Action<T> writer, List<T> constants)
+        private static void WriteItems<T>(ref FlashWriter output, List<T> constants) where T : IFlashItem
         {
             output.WriteEncodedInt(constants.Count);
             for (int i = 1; i < constants.Count; i++)
             {
-                writer(constants[i]);
+                constants[i].WriteTo(ref output);
             }
-        }
-
-        public int GetSize()
-        {
-            throw new NotImplementedException();
         }
     }
 }

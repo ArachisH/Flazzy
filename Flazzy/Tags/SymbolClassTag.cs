@@ -17,8 +17,8 @@ namespace Flazzy.Tags
         public SymbolClassTag(ref FlashReader input)
         {
             ushort symbolCount = input.ReadUInt16();
-            Symbols = new Dictionary<ushort, string>(symbolCount);
 
+            Symbols = new Dictionary<ushort, string>(symbolCount);
             for (int i = 0; i < symbolCount; i++)
             {
                 Symbols[input.ReadUInt16()] = input.ReadNullString();
@@ -37,7 +37,7 @@ namespace Flazzy.Tags
             return size;
         }
 
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.Write((ushort)Symbols.Count);
 

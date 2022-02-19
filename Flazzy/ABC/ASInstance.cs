@@ -29,23 +29,22 @@ namespace Flazzy.ABC
         public ASInstance(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            QNameIndex = input.ReadInt30();
-            SuperIndex = input.ReadInt30();
+            QNameIndex = input.ReadEncodedInt();
+            SuperIndex = input.ReadEncodedInt();
             Flags = (ClassFlags)input.ReadByte();
 
             if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
             {
-                ProtectedNamespaceIndex = input.ReadInt30();
+                ProtectedNamespaceIndex = input.ReadEncodedInt();
             }
 
-            InterfaceIndices.Capacity = input.ReadInt30();
+            InterfaceIndices.Capacity = input.ReadEncodedInt();
             for (int i = 0; i < InterfaceIndices.Capacity; i++)
             {
-                int interfaceIndex = input.ReadInt30();
-                InterfaceIndices.Add(interfaceIndex);
+                InterfaceIndices.Add(input.ReadEncodedInt());
             }
 
-            ConstructorIndex = input.ReadInt30();
+            ConstructorIndex = input.ReadEncodedInt();
             Constructor.IsConstructor = true;
             Constructor.Container = this;
 
@@ -56,9 +55,7 @@ namespace Flazzy.ABC
         {
             for (int i = 0; i < InterfaceIndices.Count; i++)
             {
-                int interfaceIndex = InterfaceIndices[i];
-                ASMultiname @interface = ABC.Pool.Multinames[interfaceIndex];
-                yield return @interface;
+                yield return ABC.Pool.Multinames[InterfaceIndices[i]];
             }
         }
         public bool ContainsInterface(string qualifiedName)
@@ -112,7 +109,29 @@ namespace Flazzy.ABC
 
             return as3;
         }
-        public override void WriteTo(FlashWriter output)
+
+        public override int GetSize()
+        {
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(QNameIndex);
+            size += FlashWriter.GetEncodedIntSize(SuperIndex);
+            size += sizeof(byte);
+
+            if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
+            {
+                size += FlashWriter.GetEncodedIntSize(ProtectedNamespaceIndex);
+            }
+
+            size += FlashWriter.GetEncodedIntSize(InterfaceIndices.Count);
+            for (int i = 0; i < InterfaceIndices.Count; i++)
+            {
+                size += FlashWriter.GetEncodedIntSize(InterfaceIndices[i]);
+            }
+
+            size += FlashWriter.GetEncodedIntSize(ConstructorIndex);
+            return size + base.GetSize();
+        }
+        public override void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(QNameIndex);
             output.WriteEncodedInt(SuperIndex);
@@ -126,12 +145,11 @@ namespace Flazzy.ABC
             output.WriteEncodedInt(InterfaceIndices.Count);
             for (int i = 0; i < InterfaceIndices.Count; i++)
             {
-                int interfaceIndex = InterfaceIndices[i];
-                output.WriteEncodedInt(interfaceIndex);
+                output.WriteEncodedInt(InterfaceIndices[i]);
             }
 
             output.WriteEncodedInt(ConstructorIndex);
-            base.WriteTo(output);
+            base.WriteTo(ref output);
         }
     }
 }

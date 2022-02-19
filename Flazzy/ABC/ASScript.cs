@@ -15,14 +15,18 @@ namespace Flazzy.ABC
         public ASScript(ABCFile abc, ref FlashReader input)
             : base(abc)
         {
-            InitializerIndex = input.ReadInt30();
+            InitializerIndex = input.ReadEncodedInt();
             PopulateTraits(ref input);
         }
 
-        public void WriteTo(FlashWriter output)
+        public override int GetSize()
+        {
+            return FlashWriter.GetEncodedIntSize(InitializerIndex) + base.GetSize();
+        }
+        public override void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(InitializerIndex);
-            base.WriteTo(output);
+            base.WriteTo(ref output);
         }
 
         public override string ToAS3()

@@ -15,6 +15,6 @@ namespace Flazzy.Tags
         }
 
         public int GetBodySize() => sizeof(int);
-        public void WriteBodyTo(FlashWriter output) => output.Write((int)Attributes);
+        public void WriteBodyTo(ref FlashWriter output) => output.Write((int)Attributes);
     }
 }

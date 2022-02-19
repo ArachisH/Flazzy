@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Flazzy.Tests
 {
-    public class FlashWriterTests
+    public class WriteTests
     {
         [Theory]
         [InlineData(0, new byte[] { 0x00 })]

@@ -15,8 +15,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         public CallPropLexIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            PropertyNameIndex = input.ReadInt30();
-            ArgCount = input.ReadInt30();
+            PropertyNameIndex = input.ReadEncodedInt();
+            ArgCount = input.ReadEncodedInt();
         }
         public CallPropLexIns(ABCFile abc, int propertyNameIndex)
             : this(abc)
@@ -30,14 +30,9 @@ namespace Flazzy.ABC.AVM2.Instructions
             ArgCount = argCount;
         }
 
-        public override int GetPopCount()
-        {
-            return (ArgCount + ResolveMultinamePops(PropertyName) + 1);
-        }
-        public override int GetPushCount()
-        {
-            return 1;
-        }
+        public override int GetPopCount()  => ArgCount + ResolveMultinamePops(PropertyName) + 1;
+        public override int GetPushCount() => 1;
+
         public override void Execute(ASMachine machine)
         {
             for (int i = 0; i < ArgCount; i++)
@@ -49,7 +44,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             machine.Values.Push(null);
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(PropertyNameIndex);
             output.WriteEncodedInt(ArgCount);

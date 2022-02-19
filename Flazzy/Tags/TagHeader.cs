@@ -44,7 +44,7 @@ namespace Flazzy.Tags
         }
 
         public int GetSize() => IsLongTag ? 6 : 2;
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             uint header = (uint)Kind << 6;
             

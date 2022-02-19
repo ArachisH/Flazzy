@@ -49,7 +49,7 @@ namespace Flazzy.Tags
             return size;
         }
 
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.Write((uint)Product);
             output.Write((uint)Edition);

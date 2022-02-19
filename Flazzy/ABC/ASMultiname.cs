@@ -83,15 +83,15 @@ namespace Flazzy.ABC
                 case MultinameKind.QName:
                 case MultinameKind.QNameA:
                 {
-                    NamespaceIndex = input.ReadInt30();
-                    NameIndex = input.ReadInt30();
+                    NamespaceIndex = input.ReadEncodedInt();
+                    NameIndex = input.ReadEncodedInt();
                     break;
                 }
 
                 case MultinameKind.RTQName:
                 case MultinameKind.RTQNameA:
                 {
-                    NameIndex = input.ReadInt30();
+                    NameIndex = input.ReadEncodedInt();
                     break;
                 }
 
@@ -105,26 +105,25 @@ namespace Flazzy.ABC
                 case MultinameKind.Multiname:
                 case MultinameKind.MultinameA:
                 {
-                    NameIndex = input.ReadInt30();
-                    NamespaceSetIndex = input.ReadInt30();
+                    NameIndex = input.ReadEncodedInt();
+                    NamespaceSetIndex = input.ReadEncodedInt();
                     break;
                 }
 
                 case MultinameKind.MultinameL:
                 case MultinameKind.MultinameLA:
                 {
-                    NamespaceSetIndex = input.ReadInt30();
+                    NamespaceSetIndex = input.ReadEncodedInt();
                     break;
                 }
 
                 case MultinameKind.TypeName:
                 {
-                    QNameIndex = input.ReadInt30();
-                    TypeIndices.Capacity = input.ReadInt30();
+                    QNameIndex = input.ReadEncodedInt();
+                    TypeIndices.Capacity = input.ReadEncodedInt();
                     for (int i = 0; i < TypeIndices.Capacity; i++)
                     {
-                        int typeIndex = input.ReadInt30();
-                        TypeIndices.Add(typeIndex);
+                        TypeIndices.Add(input.ReadEncodedInt());
                     }
                     break;
                 }
@@ -188,7 +187,7 @@ namespace Flazzy.ABC
             }
             return size;
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             output.Write((byte)Kind);
             switch (Kind)
@@ -236,8 +235,7 @@ namespace Flazzy.ABC
                     output.WriteEncodedInt(TypeIndices.Count);
                     for (int i = 0; i < TypeIndices.Count; i++)
                     {
-                        int typeIndex = TypeIndices[i];
-                        output.WriteEncodedInt(typeIndex);
+                        output.WriteEncodedInt(TypeIndices[i]);
                     }
                     break;
                 }

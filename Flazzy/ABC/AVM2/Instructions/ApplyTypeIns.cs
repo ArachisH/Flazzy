@@ -17,10 +17,10 @@ namespace Flazzy.ABC.AVM2.Instructions
         public ApplyTypeIns(ref FlashReader input)
             : this()
         {
-            ParamCount = input.ReadInt30();
+            ParamCount = input.ReadEncodedInt();
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(ParamCount);
         }

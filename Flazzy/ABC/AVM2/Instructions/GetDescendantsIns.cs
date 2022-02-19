@@ -13,7 +13,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public GetDescendantsIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            DescendantIndex = input.ReadInt30();
+            DescendantIndex = input.ReadEncodedInt();
         }
         public GetDescendantsIns(ABCFile abc, int descendantIndex)
             : this(abc)
@@ -36,7 +36,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             machine.Values.Push(null);
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(DescendantIndex);
         }

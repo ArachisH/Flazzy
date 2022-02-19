@@ -13,8 +13,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         public HasNext2Ins(ref FlashReader input)
             : this()
         {
-            ObjectIndex = input.ReadInt30();
-            RegisterIndex = input.ReadInt30();
+            ObjectIndex = input.ReadEncodedInt();
+            RegisterIndex = input.ReadEncodedInt();
         }
         public HasNext2Ins(int objectIndex, int registerIndex)
             : this()
@@ -32,7 +32,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             machine.Values.Push(null);
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(ObjectIndex);
             output.WriteEncodedInt(RegisterIndex);

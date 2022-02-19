@@ -23,18 +23,24 @@ namespace Flazzy.ABC
         public ASException(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            From = input.ReadInt30();
-            To = input.ReadInt30();
-            Target = input.ReadInt30();
-            ExceptionTypeIndex = input.ReadInt30();
-            VariableNameIndex = input.ReadInt30();
+            From = input.ReadEncodedInt();
+            To = input.ReadEncodedInt();
+            Target = input.ReadEncodedInt();
+            ExceptionTypeIndex = input.ReadEncodedInt();
+            VariableNameIndex = input.ReadEncodedInt();
         }
         
         public int GetSize()
         {
-            throw new NotImplementedException();
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(From);
+            size += FlashWriter.GetEncodedIntSize(To);
+            size += FlashWriter.GetEncodedIntSize(Target);
+            size += FlashWriter.GetEncodedIntSize(ExceptionTypeIndex);
+            size += FlashWriter.GetEncodedIntSize(VariableNameIndex);
+            return size;
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(From);
             output.WriteEncodedInt(To);

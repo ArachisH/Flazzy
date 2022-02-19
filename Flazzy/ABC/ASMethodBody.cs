@@ -26,22 +26,21 @@ namespace Flazzy.ABC
         public ASMethodBody(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            MethodIndex = input.ReadInt30();
+            MethodIndex = input.ReadEncodedInt();
             Method.Body = this;
 
-            MaxStack = input.ReadInt30();
-            LocalCount = input.ReadInt30();
-            InitialScopeDepth = input.ReadInt30();
-            MaxScopeDepth = input.ReadInt30();
+            MaxStack = input.ReadEncodedInt();
+            LocalCount = input.ReadEncodedInt();
+            InitialScopeDepth = input.ReadEncodedInt();
+            MaxScopeDepth = input.ReadEncodedInt();
 
-            Code = new byte[input.ReadInt30()];
+            Code = new byte[input.ReadEncodedInt()];
             input.ReadBytes(Code);
 
-            Exceptions.Capacity = input.ReadInt30();
+            Exceptions.Capacity = input.ReadEncodedInt();
             for (int i = 0; i < Exceptions.Capacity; i++)
             {
-                var exception = new ASException(abc, ref input);
-                Exceptions.Add(exception);
+                Exceptions.Add(new ASException(abc, ref input));
             }
             PopulateTraits(ref input);
         }
@@ -51,8 +50,28 @@ namespace Flazzy.ABC
             return new ASCode(ABC, this);
         }
 
-        public override int GetSize() => throw new NotImplementedException();
-        public override void WriteTo(FlashWriter output)
+        public override int GetSize()
+        {
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(MethodIndex);
+            size += FlashWriter.GetEncodedIntSize(MaxStack);
+            size += FlashWriter.GetEncodedIntSize(LocalCount);
+            size += FlashWriter.GetEncodedIntSize(InitialScopeDepth);
+            size += FlashWriter.GetEncodedIntSize(MaxScopeDepth);
+
+            size += FlashWriter.GetEncodedIntSize(Code.Length);
+            size += Code.Length;
+
+            size += FlashWriter.GetEncodedIntSize(Exceptions.Count);
+            for (int i = 0; i < Exceptions.Count; i++)
+            {
+                size += Exceptions[i].GetSize();
+            }
+
+            size += base.GetSize();
+            return size;
+        }
+        public override void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(MethodIndex);
             output.WriteEncodedInt(MaxStack);
@@ -66,10 +85,9 @@ namespace Flazzy.ABC
             output.WriteEncodedInt(Exceptions.Count);
             for (int i = 0; i < Exceptions.Count; i++)
             {
-                ASException exception = Exceptions[i];
-                exception.WriteTo(output);
+                Exceptions[i].WriteTo(ref output);
             }
-            base.WriteTo(output);
+            base.WriteTo(ref output);
         }
 
         public override string ToString() => $"LocalCount: {LocalCount:n0}, MaxStack: {MaxStack:n0}";

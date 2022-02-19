@@ -27,9 +27,9 @@ namespace Flazzy.Records
             size += sizeof(ushort);
             return size;
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
-            Area.WriteTo(output);
+            Area.WriteTo(ref output);
             output.Write((ushort)(Rate << 8));
             output.Write(Count);
         }

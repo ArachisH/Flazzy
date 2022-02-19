@@ -29,7 +29,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             Value = input.ReadByte();
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.Write(Value);
         }

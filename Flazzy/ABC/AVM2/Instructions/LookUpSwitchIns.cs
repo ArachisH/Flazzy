@@ -16,7 +16,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             : this()
         {
             DefaultOffset = input.ReadUInt24();
-            CaseOffsets.Capacity = (input.ReadInt30() + 1);
+            CaseOffsets.Capacity = input.ReadEncodedInt() + 1;
             for (int i = 0; i < CaseOffsets.Capacity; i++)
             {
                 CaseOffsets.Add(input.ReadUInt24());
@@ -37,14 +37,21 @@ namespace Flazzy.ABC.AVM2.Instructions
             machine.Values.Pop();
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override int GetBodySize()
+        {
+            int size = 0;
+            size += 3;
+            size += FlashWriter.GetEncodedIntSize(CaseOffsets.Count - 1);
+            size += CaseOffsets.Count * 3;
+            return size;
+        }
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteUInt24(DefaultOffset);
             output.WriteEncodedInt(CaseOffsets.Count - 1);
             for (int i = 0; i < CaseOffsets.Count; i++)
             {
-                uint offset = CaseOffsets[i];
-                output.WriteUInt24(offset);
+                output.WriteUInt24(CaseOffsets[i]);
             }
         }
     }

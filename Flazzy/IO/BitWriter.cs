@@ -1,31 +1,40 @@
 ﻿namespace Flazzy.IO
 {
-    // TODO: Align
     public ref struct BitWriter
     {
         private int _bitPosition;
-        private byte _currentBit;
+        private byte _bits;
 
         public BitWriter()
         {
             _bitPosition = 0;
-            _currentBit = 0;
+            _bits = 0;
         }
 
-        public void WriteBits(FlashWriter output, int maxBits, int value)
+        public void WriteBits(ref FlashWriter output, int maxBits, int value)
         {
             for (int i = 0; i < maxBits; i++)
             {
                 int bit = (value >> (maxBits - 1 - i)) & 1;
 
-                _currentBit += (byte)(bit * (1 << (7 - _bitPosition)));
+                _bits += (byte)(bit * (1 << (7 - _bitPosition)));
                 if (++_bitPosition == 8)
                 {
-                    output.Write(_currentBit);
+                    output.Write(_bits);
 
                     _bitPosition = 0;
-                    _currentBit = 0;
+                    _bits = 0;
                 }
+            }
+        }
+        public void Flush(ref FlashWriter output)
+        {
+            if (_bitPosition > 0)
+            {
+                output.Write(_bits);
+
+                _bitPosition = 0;
+                _bits = 0;
             }
         }
 

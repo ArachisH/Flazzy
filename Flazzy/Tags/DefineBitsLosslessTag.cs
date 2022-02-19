@@ -39,11 +39,11 @@ namespace Flazzy.Tags
             if (Format == BitmapFormat.ColorMap8)
                 ColorTableSize = input.ReadByte();
 
-            CompressedData = new byte[input.Length - GetHeaderSize()];
+            CompressedData = new byte[input.Length - input.Position];
             input.ReadBytes(CompressedData);
         }
 
-        private int GetHeaderSize()
+        public int GetBodySize()
         {
             int size = 0;
             size += sizeof(ushort);
@@ -54,17 +54,10 @@ namespace Flazzy.Tags
             {
                 size += sizeof(byte);
             }
-            return size;
-        }
-
-        public int GetBodySize()
-        {
-            int size = 0;
-            size += GetHeaderSize();
             size += CompressedData.Length;
             return size;
         }
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             byte format = Format switch
             {

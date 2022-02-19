@@ -29,20 +29,21 @@ namespace Flazzy.Records
 
         public int GetSize()
         {
-            throw new NotImplementedException();
+            int size = 0;
+            size += 0;
+            return size;
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
-            int[] paddedValues = FlashTools.GetMaxPaddedBitsNeeded(
-                out int maxBits, X, TwipsWidth, Y, TwipsHeight);
+            int maxBits = FlashTools.GetMaxPaddedBitsNeeded(stackalloc int[] { X, TwipsWidth, Y, TwipsHeight });
 
             var bits = new BitWriter();
-            bits.WriteBits(output, 5, maxBits);
-            for (int i = 0; i < paddedValues.Length; i++)
-            {
-                bits.WriteBits(output, maxBits, paddedValues[i]);
-            }
-            //TODO: Align
+            bits.WriteBits(ref output, 5, maxBits);
+            bits.WriteBits(ref output, maxBits, X);
+            bits.WriteBits(ref output, maxBits, TwipsWidth);
+            bits.WriteBits(ref output, maxBits, Y);
+            bits.WriteBits(ref output, maxBits, TwipsHeight);
+            bits.Flush(ref output);
         }
     }
 }

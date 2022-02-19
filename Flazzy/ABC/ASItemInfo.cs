@@ -19,15 +19,18 @@ namespace Flazzy.ABC
         public ASItemInfo(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            KeyIndex = input.ReadInt30();
-            ValueIndex = input.ReadInt30();
+            KeyIndex = input.ReadEncodedInt();
+            ValueIndex = input.ReadEncodedInt();
         }
 
         public int GetSize()
         {
-            throw new NotImplementedException();
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(KeyIndex);
+            size += FlashWriter.GetEncodedIntSize(ValueIndex);
+            return size;
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(KeyIndex);
             output.WriteEncodedInt(ValueIndex);

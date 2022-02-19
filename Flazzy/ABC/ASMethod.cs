@@ -33,29 +33,29 @@ namespace Flazzy.ABC
         public ASMethod(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            Parameters.Capacity = input.ReadInt30();
-            ReturnTypeIndex = input.ReadInt30();
+            Parameters.Capacity = input.ReadEncodedInt();
+            ReturnTypeIndex = input.ReadEncodedInt();
 
             for (int i = 0; i < Parameters.Capacity; i++)
             {
                 var parameter = new ASParameter(this);
-                parameter.TypeIndex = input.ReadInt30();
+                parameter.TypeIndex = input.ReadEncodedInt();
                 Parameters.Add(parameter);
             }
 
-            NameIndex = input.ReadInt30();
+            NameIndex = input.ReadEncodedInt();
             Flags = (MethodFlags)input.ReadByte();
 
             if (Flags.HasFlag(MethodFlags.HasOptional))
             {
-                int optionalParamCount = input.ReadInt30();
+                int optionalParamCount = input.ReadEncodedInt();
                 for (int i = Parameters.Count - optionalParamCount;
                     optionalParamCount > 0;
                     i++, optionalParamCount--)
                 {
                     ASParameter parameter = Parameters[i];
                     parameter.IsOptional = true;
-                    parameter.ValueIndex = input.ReadInt30();
+                    parameter.ValueIndex = input.ReadEncodedInt();
                     parameter.ValueKind = (ConstantKind)input.ReadByte();
                 }
             }
@@ -65,7 +65,7 @@ namespace Flazzy.ABC
                 for (int i = 0; i < Parameters.Count; i++)
                 {
                     ASParameter parameter = Parameters[i];
-                    parameter.NameIndex = input.ReadInt30();
+                    parameter.NameIndex = input.ReadEncodedInt();
                 }
             }
         }
@@ -134,14 +134,20 @@ namespace Flazzy.ABC
             return builder.ToString();
         }
 
-        public int GetSize() => throw new NotImplementedException();
-        public void WriteTo(FlashWriter output)
+        public int GetSize()
+        {
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(Parameters.Count);
+            size += FlashWriter.GetEncodedIntSize(ReturnTypeIndex);
+            return size;
+        }
+        public void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(Parameters.Count);
             output.WriteEncodedInt(ReturnTypeIndex);
 
             int optionalParamCount = 0;
-            int optionalParamStartIndex = (Parameters.Count - 1);
+            int optionalParamStartIndex = Parameters.Count - 1;
             if (Parameters.Count > 0)
             {
                 // This flag will be removed if at least a single parameter has no name assigned.
@@ -187,8 +193,7 @@ namespace Flazzy.ABC
             {
                 for (int i = 0; i < Parameters.Count; i++)
                 {
-                    ASParameter parameter = Parameters[i];
-                    output.WriteEncodedInt(parameter.NameIndex);
+                    output.WriteEncodedInt(Parameters[i].NameIndex);
                 }
             }
         }

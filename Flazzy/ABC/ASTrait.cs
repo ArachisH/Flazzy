@@ -82,20 +82,20 @@ namespace Flazzy.ABC
         public ASTrait(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            QNameIndex = input.ReadInt30();
+            QNameIndex = input.ReadEncodedInt();
 
             byte flags = input.ReadByte();
             Kind = (TraitKind)(flags & 0x0F);
             Attributes = (TraitAttributes)(flags >> 4);
 
-            Id = input.ReadInt30();
+            Id = input.ReadEncodedInt();
             switch (Kind)
             {
                 case TraitKind.Slot:
                 case TraitKind.Constant:
                 {
-                    TypeIndex = input.ReadInt30();
-                    ValueIndex = input.ReadInt30();
+                    TypeIndex = input.ReadEncodedInt();
+                    ValueIndex = input.ReadEncodedInt();
                     if (ValueIndex != 0)
                     {
                         ValueKind = (ConstantKind)input.ReadByte();
@@ -107,31 +107,30 @@ namespace Flazzy.ABC
                 case TraitKind.Getter:
                 case TraitKind.Setter:
                 {
-                    MethodIndex = input.ReadInt30();
+                    MethodIndex = input.ReadEncodedInt();
                     Method.Trait = this;
                     break;
                 }
 
                 case TraitKind.Class:
                 {
-                    ClassIndex = input.ReadInt30();
+                    ClassIndex = input.ReadEncodedInt();
                     break;
                 }
 
                 case TraitKind.Function:
                 {
-                    FunctionIndex = input.ReadInt30();
+                    FunctionIndex = input.ReadEncodedInt();
                     break;
                 }
             }
 
             if (Attributes.HasFlag(TraitAttributes.Metadata))
             {
-                MetadataIndices.Capacity = input.ReadInt30();
+                MetadataIndices.Capacity = input.ReadEncodedInt();
                 for (int i = 0; i < MetadataIndices.Capacity; i++)
                 {
-                    int metadatumIndex = input.ReadInt30();
-                    MetadataIndices.Add(metadatumIndex);
+                    MetadataIndices.Add(input.ReadEncodedInt());
                 }
             }
         }
@@ -140,9 +139,7 @@ namespace Flazzy.ABC
         {
             for (int i = 0; i < MetadataIndices.Count; i++)
             {
-                int metadatumIndex = MetadataIndices[i];
-                ASMetadata metadatum = ABC.Metadata[metadatumIndex];
-                yield return metadatum;
+                yield return ABC.Metadata[MetadataIndices[i]];
             }
         }
 
@@ -201,9 +198,56 @@ namespace Flazzy.ABC
 
         public int GetSize()
         {
-            throw new NotImplementedException();
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(QNameIndex);
+            size += sizeof(byte);
+            size += FlashWriter.GetEncodedIntSize(Id);
+            switch (Kind)
+            {
+                case TraitKind.Slot:
+                case TraitKind.Constant:
+                {
+                    size += FlashWriter.GetEncodedIntSize(TypeIndex);
+                    size += FlashWriter.GetEncodedIntSize(ValueIndex);
+                    if (ValueIndex != 0)
+                    {
+                        size += sizeof(byte);
+                    }
+                    break;
+                }
+
+                case TraitKind.Method:
+                case TraitKind.Getter:
+                case TraitKind.Setter:
+                {
+                    size += FlashWriter.GetEncodedIntSize(MethodIndex);
+                    break;
+                }
+
+                case TraitKind.Class:
+                {
+                    size += FlashWriter.GetEncodedIntSize(ClassIndex);
+                    break;
+                }
+
+                case TraitKind.Function:
+                {
+                    size += FlashWriter.GetEncodedIntSize(FunctionIndex);
+                    break;
+                }
+            }
+
+            if (Attributes.HasFlag(TraitAttributes.Metadata))
+            {
+                size += FlashWriter.GetEncodedIntSize(MetadataIndices.Count);
+                for (int i = 0; i < MetadataIndices.Count; i++)
+                {
+                    size += FlashWriter.GetEncodedIntSize(MetadataIndices[i]);
+                }
+            }
+            return size;
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             byte flags = (byte)(((byte)Attributes << 4) & (byte)Kind);
 
@@ -250,8 +294,7 @@ namespace Flazzy.ABC
                 output.WriteEncodedInt(MetadataIndices.Count);
                 for (int i = 0; i < MetadataIndices.Count; i++)
                 {
-                    int metadatumIndex = MetadataIndices[i];
-                    output.WriteEncodedInt(metadatumIndex);
+                    output.WriteEncodedInt(MetadataIndices[i]);
                 }
             }
         }

@@ -20,26 +20,32 @@ namespace Flazzy.ABC
         public ASMetadata(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            NameIndex = input.ReadInt30();
-            Items.Capacity = input.ReadInt30();
+            NameIndex = input.ReadEncodedInt();
+            Items.Capacity = input.ReadEncodedInt();
             for (int i = 0; i < Items.Capacity; i++)
             {
-                var itemInfo = new ASItemInfo(abc, ref input);
-                Items.Add(itemInfo);
+                Items.Add(new ASItemInfo(abc, ref input));
             }
         }
 
         public int GetSize()
         {
-            throw new NotImplementedException();
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(NameIndex);
+            size += FlashWriter.GetEncodedIntSize(Items.Count);
+            for (int i = 0; i < Items.Count; i++)
+            {
+                size += Items[i].GetSize();
+            }
+            return size;
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(NameIndex);
             output.WriteEncodedInt(Items.Count);
             foreach (var item in Items)
             {
-                item.WriteTo(output);
+                item.WriteTo(ref output);
             }
         }
     }

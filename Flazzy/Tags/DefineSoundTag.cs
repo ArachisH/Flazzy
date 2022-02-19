@@ -38,7 +38,7 @@ namespace Flazzy.Tags
 
             SoundSampleCount = input.ReadUInt32();
 
-            SoundData = new byte[input.Length - 7];
+            SoundData = new byte[input.Length - input.Position];
             input.ReadBytes(SoundData);
         }
 
@@ -52,13 +52,13 @@ namespace Flazzy.Tags
             return size;
         }
 
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.Write(Id);
 
             var bits = new BitWriter();
-            bits.WriteBits(output, 4, Format);
-            bits.WriteBits(output, 2, Rate switch
+            bits.WriteBits(ref output, 4, Format);
+            bits.WriteBits(ref output, 2, Rate switch
             {
                 5512 => 0,
                 11025 => 1,
@@ -67,9 +67,9 @@ namespace Flazzy.Tags
 
                 _ => throw new InvalidDataException("Invalid sample rate value.")
             });
-            bits.WriteBits(output, 1, Size);
-            bits.WriteBits(output, 1, SoundType);
-            //TODO: Flush?
+            bits.WriteBits(ref output, 1, Size);
+            bits.WriteBits(ref output, 1, SoundType);
+            bits.Flush(ref output);
             
             output.Write(SoundSampleCount);
             output.Write(SoundData);

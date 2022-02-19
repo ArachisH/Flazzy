@@ -17,10 +17,10 @@ namespace Flazzy.ABC.AVM2.Instructions
         public DebugLineIns(ref FlashReader input)
             : this()
         {
-            LineNumber = input.ReadInt30();
+            LineNumber = input.ReadEncodedInt();
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(LineNumber);
         }

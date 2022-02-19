@@ -31,7 +31,7 @@ namespace Flazzy.Tags
             return size;
         }
 
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.Write(Id);
             output.Write(0); // Reserved | Must equal '0'.

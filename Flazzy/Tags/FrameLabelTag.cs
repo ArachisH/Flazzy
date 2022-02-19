@@ -18,7 +18,7 @@ namespace Flazzy.Tags
         }
 
         public int GetBodySize() => Encoding.UTF8.GetByteCount(Name) + 1;
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.WriteNullString(Name);
         }

@@ -655,7 +655,7 @@ namespace Flazzy.ABC.AVM2
             long currentPosition = output.Position;
             output.Position = (int)position;
 
-            instruction.WriteTo(output);
+            instruction.WriteTo(ref output);
             output.Position = (int)currentPosition;
         }
         private bool IsRelyingOnLocals(ASInstruction instruction, Dictionary<ASInstruction, List<Local>> conversions) => conversions.GetValueOrDefault(instruction) != null;
@@ -803,7 +803,7 @@ namespace Flazzy.ABC.AVM2
         {
             throw new NotImplementedException();
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             var marks = new Dictionary<ASInstruction, long>();
             var sharedExits = new Dictionary<ASInstruction, List<ASInstruction>>();
@@ -812,7 +812,7 @@ namespace Flazzy.ABC.AVM2
             {
                 long previousPosition = output.Position;
                 marks.Add(instruction, previousPosition);
-                instruction.WriteTo(output);
+                instruction.WriteTo(ref output);
 
                 if (sharedExits.TryGetValue(instruction, out List<ASInstruction> jumpers))
                 {

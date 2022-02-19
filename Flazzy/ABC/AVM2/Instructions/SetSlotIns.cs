@@ -17,7 +17,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public SetSlotIns(ref FlashReader input)
             : this()
         {
-            SlotIndex = input.ReadInt30();
+            SlotIndex = input.ReadEncodedInt();
         }
 
         public override int GetPopCount()
@@ -30,7 +30,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             object obj = machine.Values.Pop();
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(SlotIndex);
         }

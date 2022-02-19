@@ -27,7 +27,7 @@ namespace Flazzy.Tags
             return size;
         }
 
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.Write(BackgroundColor.R);
             output.Write(BackgroundColor.G);

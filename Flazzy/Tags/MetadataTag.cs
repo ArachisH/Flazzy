@@ -17,8 +17,8 @@ namespace Flazzy.Tags
             Metadata = input.ReadNullString();
         }
 
-        public int GetBodySize() => (Encoding.UTF8.GetByteCount(Metadata) + 1);
-        public void WriteBodyTo(FlashWriter output)
+        public int GetBodySize() => Encoding.UTF8.GetByteCount(Metadata) + 1;
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.WriteNullString(Metadata);
         }

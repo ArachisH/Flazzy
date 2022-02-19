@@ -25,7 +25,7 @@ namespace Flazzy.Tags
             return Data.Length;
         }
 
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.Write(Data);
         }

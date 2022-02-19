@@ -13,7 +13,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public DebugFileIns(ABCFile abc, ref FlashReader input)
             : this(abc)
         {
-            FileNameIndex = input.ReadInt30();
+            FileNameIndex = input.ReadEncodedInt();
         }
         public DebugFileIns(ABCFile abc, int fileNameIndex)
             : this(abc)
@@ -21,7 +21,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             FileNameIndex = fileNameIndex;
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(FileNameIndex);
         }

@@ -36,13 +36,13 @@ namespace Flazzy.Tags
                 TagKind.SetBackgroundColor => new SetBackgroundColorTag(ref tagInput),
                 TagKind.ShowFrame => new ShowFrameTag(),
                 TagKind.SymbolClass => new SymbolClassTag(ref tagInput),
-
                 TagKind.End => new EndTag(),
-                _ => new UnknownTag(ref input, header.Kind),
+
+                _ => new UnknownTag(ref input, header.Kind)
             };
         }
 
         int GetBodySize() => 0;
-        void WriteBodyTo(FlashWriter output) { }
+        void WriteBodyTo(ref FlashWriter output) { }
     }
 }

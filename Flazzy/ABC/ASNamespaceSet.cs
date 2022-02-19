@@ -26,10 +26,10 @@ namespace Flazzy.ABC
         public ASNamespaceSet(ASConstantPool pool, ref FlashReader input)
             : this(pool)
         {
-            NamespaceIndices.Capacity = input.ReadInt30();
+            NamespaceIndices.Capacity = input.ReadEncodedInt();
             for (int i = 0; i < NamespaceIndices.Capacity; i++)
             {
-                NamespaceIndices.Add(input.ReadInt30());
+                NamespaceIndices.Add(input.ReadEncodedInt());
             }
         }
 
@@ -78,7 +78,7 @@ namespace Flazzy.ABC
             }
             return size;
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(NamespaceIndices.Count);
             for (int i = 0; i < NamespaceIndices.Count; i++)

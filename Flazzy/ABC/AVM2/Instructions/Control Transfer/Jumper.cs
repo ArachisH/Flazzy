@@ -29,10 +29,8 @@ namespace Flazzy.ABC.AVM2.Instructions
             
             _ => 2,
         };
-        public override int GetPushCount()
-        {
-            return 0;
-        }
+        public override int GetPushCount() => 0;
+
         public override void Execute(ASMachine machine)
         {
             int popCount = GetPopCount();
@@ -43,7 +41,8 @@ namespace Flazzy.ABC.AVM2.Instructions
         }
         public abstract bool? RunCondition(ASMachine machine);
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override int GetBodySize() => 3;
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteUInt24(Offset);
         }

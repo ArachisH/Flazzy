@@ -37,15 +37,49 @@ namespace Flazzy.ABC
             Version = new Version(major, minor);
             Pool = new ASConstantPool(this, ref input);
 
-            //PopulateList(Methods, ReadMethod);
-            //PopulateList(Metadata, ReadMetadata);
-            //PopulateList(Instances, ReadInstance);
+            Methods.Capacity = input.ReadEncodedInt();
+            for (int i = 0; i < Methods.Capacity; i++)
+            {
+                Methods.Add(new ASMethod(this, ref input));
+            }
+
+            Metadata.Capacity = input.ReadEncodedInt();
+            for (int i = 0; i < Metadata.Capacity; i++)
+            {
+                Metadata.Add(new ASMetadata(this, ref input));
+            }
+            
+            Instances.Capacity = input.ReadEncodedInt();
+            for (int i = 0; i < Instances.Capacity; i++)
+            {
+                Instances.Add(new ASInstance(this, ref input));
+            }
+
             _classByQNameCache.EnsureCapacity(Instances.Count);
             _instanceByConstructorCache.EnsureCapacity(Instances.Count);
 
-            //PopulateList(Classes, ReadClass, Instances.Count);
-            //PopulateList(Scripts, ReadScript);
-            //PopulateList(MethodBodies, ReadMethodBody);
+            Classes.Capacity = input.ReadEncodedInt();
+            for (int i = 0; i < Classes.Capacity; i++)
+            {
+                var @class = new ASClass(this, ref input)
+                { 
+                    InstanceIndex = i
+                };
+                CacheByNaming(@class);
+                Classes.Add(@class);
+            }
+
+            Scripts.Capacity = input.ReadEncodedInt();
+            for (int i = 0; i < Scripts.Capacity; i++)
+            {
+                Scripts.Add(new ASScript(this, ref input));
+            }
+            
+            MethodBodies.Capacity = input.ReadEncodedInt();
+            for (int i = 0; i < MethodBodies.Capacity; i++)
+            {
+                MethodBodies.Add(new ASMethodBody(this, ref input));
+            }
 
             _classByQNameCache.TrimExcess();
             _instanceByConstructorCache.TrimExcess();
@@ -67,7 +101,8 @@ namespace Flazzy.ABC
             if (!string.IsNullOrWhiteSpace(@class.Instance.Constructor.Name))
             {
                 string prefix = null;
-                if (!string.IsNullOrWhiteSpace(@class.QName.Namespace.Name) && !@class.QName.Namespace.Name.StartsWith("_-"))
+                if (!string.IsNullOrWhiteSpace(@class.QName.Namespace.Name) && 
+                    !@class.QName.Namespace.Name.StartsWith("_-", StringComparison.OrdinalIgnoreCase))
                 {
                     prefix = @class.QName.Namespace.Name + ".";
                 }
@@ -112,7 +147,7 @@ namespace Flazzy.ABC
             int index = recycle ? valueList.IndexOf(value) : -1;
             if (index == -1)
             {
-                index = (valueList.Count);
+                index = valueList.Count;
                 valueList.Add(value);
             }
             return index;
@@ -139,21 +174,6 @@ namespace Flazzy.ABC
 
         public ASInstance GetInstanceByConstructor(string constructorName) => _instanceByConstructorCache.GetValueOrDefault(constructorName);
 
-        //private ASMethod ReadMethod(int index) => new(this, _input);
-        //private ASMetadata ReadMetadata(int index) => new(this, _input);
-        //private ASInstance ReadInstance(int index) => new(this, _input);
-        //private ASClass ReadClass(int index)
-        //{
-        //    var @class = new ASClass(this, _input)
-        //    {
-        //        InstanceIndex = index
-        //    };
-        //    CacheByNaming(@class);
-        //    return @class;
-        //}
-        //private ASScript ReadScript(int index) => new(this, _input);
-        //private ASMethodBody ReadMethodBody(int index) => new(this, _input);
-
         private ASMultiname GetMultiname(string qualifiedName)
         {
             foreach (ASMultiname multiname in Pool.GetMultinames(qualifiedName))
@@ -162,45 +182,62 @@ namespace Flazzy.ABC
             }
             return null;
         }
-        //private void PopulateList<T>(List<T> list, Func<int, T> reader, int count = -1)
-        //{
-        //    list.Capacity = count < 0 ? _input.ReadInt30() : count;
-        //    for (int i = 0; i < list.Capacity; i++)
-        //    {
-        //        T value = reader(i);
-        //        list.Add(value);
-        //    }
-        //}
 
         public int GetSize()
         {
-            throw new NotImplementedException();
+            int size = 0;
+            size += sizeof(ushort);
+            size += sizeof(ushort);
+            size += Pool.GetSize();
+
+            size += FlashWriter.GetEncodedIntSize(Methods.Count);
+            for (int i = 0; i < Methods.Count; i++)
+            {
+                size += Methods[i].GetSize();
+            }
+
+            size += FlashWriter.GetEncodedIntSize(Metadata.Count);
+            for (int i = 0; i < Metadata.Count; i++)
+            {
+                size += Metadata[i].GetSize();
+            }
+
+            size += FlashWriter.GetEncodedIntSize(Instances.Count);
+            for (int i = 0; i < Instances.Count; i++)
+            {
+                size += Instances[i].GetSize();
+            }
+            for (int i = 0; i < Classes.Count; i++)
+            {
+                size += Classes[i].GetSize();
+            }
+
+            size += FlashWriter.GetEncodedIntSize(Scripts.Count);
+            for (int i = 0; i < Scripts.Count; i++)
+            {
+                size += Scripts[i].GetSize();
+            }
+
+            size += FlashWriter.GetEncodedIntSize(MethodBodies.Count);
+            for (int i = 0; i < MethodBodies.Count; i++)
+            {
+                size += MethodBodies[i].GetSize();
+            }
+            return size;
         }
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             output.Write((ushort)Version.Minor);
             output.Write((ushort)Version.Major);
 
-            Pool.WriteTo(output);
+            Pool.WriteTo(ref output);
 
-            WriteTo(output, Methods);
-            WriteTo(output, Metadata);
-            WriteTo(output, Instances);
-            WriteTo(output, Classes, false);
-            WriteTo(output, Scripts);
-            WriteTo(output, MethodBodies);
-        }
-        private void WriteTo<T>(FlashWriter output, List<T> list, bool writeCount = true)
-            where T : IFlashItem
-        {
-            if (writeCount)
-            {
-                output.WriteEncodedInt(list.Count);
-            }
-            foreach (IFlashItem item in list)
-            {
-                item.WriteTo(output);
-            }
+            WriteTo(ref output, Methods);
+            WriteTo(ref output, Metadata);
+            WriteTo(ref output, Instances);
+            WriteTo(ref output, Classes, false);
+            WriteTo(ref output, Scripts);
+            WriteTo(ref output, MethodBodies);
         }
 
         public void Dispose()
@@ -232,5 +269,18 @@ namespace Flazzy.ABC
         }
 
         public override string ToString() => "Version: " + Version;
+
+        private static void WriteTo<T>(ref FlashWriter output, List<T> list, bool writeCount = true)
+            where T : IFlashItem
+        {
+            if (writeCount)
+            {
+                output.WriteEncodedInt(list.Count);
+            }
+            for (int i = 0; i < list.Count; i++)
+            {
+                list[i].WriteTo(ref output);
+            }
+        }
     }
 }

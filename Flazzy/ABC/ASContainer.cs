@@ -142,7 +142,7 @@ namespace Flazzy.ABC
 
         protected void PopulateTraits(ref FlashReader input)
         {
-            Traits.Capacity = input.ReadInt30();
+            Traits.Capacity = input.ReadEncodedInt();
             for (int i = 0; i < Traits.Capacity; i++)
             {
                 var trait = new ASTrait(ABC, ref input)
@@ -164,15 +164,19 @@ namespace Flazzy.ABC
         public virtual int GetSize()
         {
             int size = 0;
-
-            throw new NotImplementedException();
+            size += FlashWriter.GetEncodedIntSize(Traits.Count);
+            for (int i = 0; i < Traits.Count; i++)
+            {
+                size += Traits[i].GetSize();
+            }
+            return size;
         }
-        public virtual void WriteTo(FlashWriter output)
+        public virtual void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(Traits.Count);
-            foreach (var trait in Traits)
+            for (int i = 0; i < Traits.Count; i++)
             {
-                trait.WriteTo(output);
+                Traits[i].WriteTo(ref output);
             }
         }
 

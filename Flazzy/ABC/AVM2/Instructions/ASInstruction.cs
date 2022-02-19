@@ -20,12 +20,12 @@ namespace Flazzy.ABC.AVM2.Instructions
         protected virtual int GetBodySize() => 0;
         public int GetSize() => sizeof(OPCode) + GetBodySize();
 
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             output.Write((byte)OP);
-            WriteValuesTo(output);
+            WriteValuesTo(ref output);
         }
-        protected virtual void WriteValuesTo(FlashWriter output)
+        protected virtual void WriteValuesTo(ref FlashWriter output)
         { }
 
         public virtual int GetPopCount() => 0;

@@ -17,7 +17,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public NewArrayIns(ref FlashReader input)
             : this()
         {
-            ArgCount = input.ReadInt30();
+            ArgCount = input.ReadEncodedInt();
         }
 
         public override int GetPopCount()
@@ -38,7 +38,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             machine.Values.Push(newarray);
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(ArgCount);
         }

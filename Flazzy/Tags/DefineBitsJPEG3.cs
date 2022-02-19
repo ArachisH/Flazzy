@@ -45,7 +45,7 @@ namespace Flazzy.Tags
             size += AlphaData.Length;
             return size;
         }
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.Write(Id);
             output.Write((uint)Data.Length);

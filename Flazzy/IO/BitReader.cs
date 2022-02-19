@@ -1,6 +1,5 @@
 ﻿namespace Flazzy.IO
 {
-    // TODO: Align
     public ref struct BitReader
     {
         private int _bitPosition;

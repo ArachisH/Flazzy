@@ -19,17 +19,17 @@ namespace Flazzy.ABC
         public ASClass(ABCFile abc, ref FlashReader input)
             : base(abc)
         {
-            ConstructorIndex = input.ReadInt30();
+            ConstructorIndex = input.ReadEncodedInt();
             Constructor.IsConstructor = true;
             Constructor.Container = this;
 
             PopulateTraits(ref input);
         }
 
-        public void WriteTo(FlashWriter output)
+        public void WriteTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(ConstructorIndex);
-            base.WriteTo(output);
+            base.WriteTo(ref output);
         }
 
         public override string ToAS3() => Instance.ToAS3();

@@ -26,10 +26,10 @@ namespace Flazzy.ABC.AVM2.Instructions
         public PushShortIns(ref FlashReader input)
             : this()
         {
-            Value = input.ReadInt30();
+            Value = input.ReadEncodedInt();
         }
 
-        protected override void WriteValuesTo(FlashWriter output)
+        protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(Value);
         }

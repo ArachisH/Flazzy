@@ -16,7 +16,6 @@ namespace Flazzy.IO
         public FlashReader(ReadOnlySpan<byte> data)
         {
             _data = data;
-
             Position = 0;
         }
 
@@ -63,25 +62,25 @@ namespace Flazzy.IO
             return value;
         }
 
-        public int ReadInt30()
+        public int ReadEncodedInt()
         {
-            int result = ReadByte();
+            int result = UnsafeReadByte();
             if ((result & 0x00000080) == 0) return result;
 
-            result = (result & 0x0000007f) | (ReadByte()) << 7;
+            result = (result & 0x0000007f) | (UnsafeReadByte()) << 7;
             if ((result & 0x00004000) == 0) return result;
 
-            result = (result & 0x00003fff) | (ReadByte()) << 14;
+            result = (result & 0x00003fff) | (UnsafeReadByte()) << 14;
             if ((result & 0x00200000) == 0) return result;
 
-            result = (result & 0x001fffff) | (ReadByte()) << 21;
+            result = (result & 0x001fffff) | (UnsafeReadByte()) << 21;
             if ((result & 0x10000000) == 0) return result;
 
-            return (result & 0x0fffffff) | (ReadByte()) << 28;
+            return (result & 0x0fffffff) | (UnsafeReadByte()) << 28;
         }
-        public uint ReadUInt30()
+        public uint ReadEncodedUInt()
         {
-            return (uint)ReadInt30();
+            return (uint)ReadEncodedInt(); //TODO: isn't this cast backwards
         }
 
         public int ReadInt32()
@@ -103,13 +102,6 @@ namespace Flazzy.IO
             Position += sizeof(ulong);
             return value;
         }
-
-        public float ReadSingle()
-        {
-            float value = MemoryMarshal.Read<float>(_data.Slice(Position));
-            Position += sizeof(float);
-            return value;
-        }
         public double ReadDouble()
         {
             double value = MemoryMarshal.Read<double>(_data.Slice(Position));
@@ -117,6 +109,11 @@ namespace Flazzy.IO
             return value;
         }
 
+        public string ReadString()
+        {
+            int length = ReadEncodedInt();
+            return Encoding.UTF8.GetString(ReadBytes(length));
+        }
         public string ReadString(int length)
         {
             return Encoding.UTF8.GetString(ReadBytes(length));

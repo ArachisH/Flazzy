@@ -10,13 +10,12 @@ namespace Flazzy.ABC
     public class ASNamespace : IEquatable<ASNamespace>, IPoolConstant
     {
         public ASConstantPool Pool { get; init; }
+
         /// <summary>
         /// Gets or sets the index of the string in <see cref="ASConstantPool.Strings"/> representing the namespace name.
         /// </summary>
         public int NameIndex { get; set; }
-
-        public ASConstantPool Pool { get; init; }
-
+        
         /// <summary>
         /// Gets the name of the namespace.
         /// </summary>
@@ -50,7 +49,7 @@ namespace Flazzy.ABC
             {
                 throw new InvalidCastException($"Invalid namespace kind for value {Kind:0x00}.");
             }
-            NameIndex = input.ReadInt30();
+            NameIndex = input.ReadEncodedInt();
         }
 
         public string GetAS3Modifiers() => Kind switch
@@ -62,10 +61,19 @@ namespace Flazzy.ABC
 
             _ => string.Empty
         };
-        public override void WriteTo(FlashWriter output)
+
+        public int GetSize()
+        {
+            int size = 0;
+            size += sizeof(byte);
+            size += FlashWriter.GetEncodedIntSize(NameIndex);
+            return size;
+        }
+        publi
+        public void WriteTo(FlashWriter output)
         {
             output.Write((byte)Kind);
-            output.WriteInt30(NameIndex);
+            output.WriteEncodedInt(NameIndex);
         }
 
         public override int GetHashCode()

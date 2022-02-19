@@ -36,7 +36,7 @@ namespace Flazzy.Tags
             }
             return size;
         }
-        public void WriteBodyTo(FlashWriter output)
+        public void WriteBodyTo(ref FlashWriter output)
         {
             output.Write((ushort)Exports.Count);
             foreach ((ushort id, string name) in Exports)
