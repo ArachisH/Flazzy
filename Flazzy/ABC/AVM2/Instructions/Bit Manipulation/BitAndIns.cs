@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class BitAndIns : ASInstruction
+    public sealed class BitAndIns : ASInstruction
     {
         public BitAndIns()
             : base(OPCode.BitAnd)

@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class ThrowIns : ASInstruction
+    public sealed class ThrowIns : ASInstruction
     {
         public ThrowIns()
             : base(OPCode.Throw)

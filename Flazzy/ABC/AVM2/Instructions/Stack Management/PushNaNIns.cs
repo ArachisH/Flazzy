@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class PushNaNIns : Primitive
+    public sealed class PushNaNIns : Primitive
     {
         public override object Value
         {

@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class IfFalseIns : Jumper
+    public sealed class IfFalseIns : Jumper
     {
         public IfFalseIns()
             : base(OPCode.IfFalse)

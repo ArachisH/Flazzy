@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class SubtractIIns : Computation
+    public sealed class SubtractIIns : Computation
     {
         public SubtractIIns()
             : base(OPCode.Subtract_i)

@@ -43,7 +43,21 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         protected override int GetBodySize()
         {
-            return base.GetBodySize();
+            return OP switch
+            {
+                OPCode.Kill or 
+                
+                OPCode.SetLocal or 
+                OPCode.GetLocal or 
+                
+                OPCode.IncLocal or 
+                OPCode.IncLocal_i or 
+
+                OPCode.DecLocal or 
+                OPCode.DecLocal_i => FlashWriter.GetEncodedIntSize(Register),
+
+                _ => 0
+            };
         }
         protected override void WriteValuesTo(ref FlashWriter output)
         {

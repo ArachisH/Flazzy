@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class DebugIns : ASInstruction
+    public sealed class DebugIns : ASInstruction
     {
         public int NameIndex { get; set; }
         public string Name => ABC.Pool.Strings[NameIndex];

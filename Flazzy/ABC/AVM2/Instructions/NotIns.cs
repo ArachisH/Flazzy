@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class NotIns : ASInstruction
+    public sealed class NotIns : ASInstruction
     {
         public NotIns()
             : base(OPCode.Not)

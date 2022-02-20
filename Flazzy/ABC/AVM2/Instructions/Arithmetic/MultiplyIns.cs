@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class MultiplyIns : Computation
+    public sealed class MultiplyIns : Computation
     {
         public MultiplyIns()
             : base(OPCode.Multiply)

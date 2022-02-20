@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class GetGlobalScopeIns : ASInstruction
+    public sealed class GetGlobalScopeIns : ASInstruction
     {
         public GetGlobalScopeIns()
             : base(OPCode.GetGlobalScope)

@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class CallSuperIns : ASInstruction
+    public sealed class CallSuperIns : ASInstruction
     {
         public int MethodNameIndex { get; set; }
         public ASMultiname MethodName => ABC.Pool.Multinames[MethodNameIndex];

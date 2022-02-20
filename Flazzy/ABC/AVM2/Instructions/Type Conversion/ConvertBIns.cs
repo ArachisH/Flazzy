@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class ConvertBIns : ASInstruction
+    public sealed class ConvertBIns : ASInstruction
     {
         public ConvertBIns()
             : base(OPCode.Convert_b)

@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class DecrementIIns : ASInstruction
+    public sealed class DecrementIIns : ASInstruction
     {
         public DecrementIIns()
             : base(OPCode.Decrement_i)

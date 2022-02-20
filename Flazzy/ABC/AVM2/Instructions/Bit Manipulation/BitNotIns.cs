@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class BitNotIns : ASInstruction
+    public sealed class BitNotIns : ASInstruction
     {
         public BitNotIns()
             : base(OPCode.BitNot)

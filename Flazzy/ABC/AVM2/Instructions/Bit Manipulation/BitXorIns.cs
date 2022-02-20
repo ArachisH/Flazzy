@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class BitXorIns : ASInstruction
+    public sealed class BitXorIns : ASInstruction
     {
         public BitXorIns()
             : base(OPCode.BitXor)

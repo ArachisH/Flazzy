@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class ReturnValueIns : ASInstruction
+    public sealed class ReturnValueIns : ASInstruction
     {
         public ReturnValueIns()
             : base(OPCode.ReturnValue)

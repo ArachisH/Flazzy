@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class PushUndefinedIns : ASInstruction
+    public sealed class PushUndefinedIns : ASInstruction
     {
         public PushUndefinedIns()
             : base(OPCode.PushUndefined)

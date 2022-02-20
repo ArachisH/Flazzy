@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class KillIns : Local
+    public sealed class KillIns : Local
     {
         public KillIns(int register)
             : base(OPCode.Kill, register)

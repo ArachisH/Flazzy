@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class GetLexIns : ASInstruction
+    public sealed class GetLexIns : ASInstruction
     {
         public int TypeNameIndex { get; set; }
         public ASMultiname TypeName => ABC.Pool.Multinames[TypeNameIndex];

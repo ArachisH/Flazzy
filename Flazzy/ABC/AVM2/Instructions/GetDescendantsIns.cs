@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class GetDescendantsIns : ASInstruction
+    public sealed class GetDescendantsIns : ASInstruction
     {
         public int DescendantIndex { get; set; }
         public ASMultiname Descendant => ABC.Pool.Multinames[DescendantIndex];

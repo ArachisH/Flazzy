@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class ApplyTypeIns : ASInstruction
+    public sealed class ApplyTypeIns : ASInstruction
     {
         public int ParamCount { get; set; }
 

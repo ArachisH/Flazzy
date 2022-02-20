@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class NegateIIns : ASInstruction
+    public sealed class NegateIIns : ASInstruction
     {
         public NegateIIns()
             : base(OPCode.Negate_i)

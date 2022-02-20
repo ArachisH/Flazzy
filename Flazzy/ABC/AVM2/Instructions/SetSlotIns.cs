@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class SetSlotIns : ASInstruction
+    public sealed class SetSlotIns : ASInstruction
     {
         public int SlotIndex { get; set; }
 

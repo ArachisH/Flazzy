@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class EscXElemIns : ASInstruction
+    public sealed class EscXElemIns : ASInstruction
     {
         public EscXElemIns()
             : base(OPCode.Esc_XElem)

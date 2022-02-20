@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class CoerceSIns : ASInstruction
+    public sealed class CoerceSIns : ASInstruction
     {
         public CoerceSIns()
             : base(OPCode.Coerce_s)

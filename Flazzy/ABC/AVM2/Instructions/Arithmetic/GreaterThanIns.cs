@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class GreaterThanIns : Computation
+    public sealed class GreaterThanIns : Computation
     {
         public GreaterThanIns()
             : base(OPCode.GreaterThan)

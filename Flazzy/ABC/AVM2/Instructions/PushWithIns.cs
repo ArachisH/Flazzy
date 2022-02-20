@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class PushWithIns : ASInstruction
+    public sealed class PushWithIns : ASInstruction
     {
         public PushWithIns()
             : base(OPCode.PushWith)

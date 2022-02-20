@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class IfGreaterEqualIns : Jumper
+    public sealed class IfGreaterEqualIns : Jumper
     {
         public IfGreaterEqualIns()
             : base(OPCode.IfGe)

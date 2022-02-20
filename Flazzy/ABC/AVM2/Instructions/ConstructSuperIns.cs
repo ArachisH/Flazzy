@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions
 {
-    public class ConstructSuperIns : ASInstruction
+    public sealed class ConstructSuperIns : ASInstruction
     {
         public int ArgCount { get; set; }
 
