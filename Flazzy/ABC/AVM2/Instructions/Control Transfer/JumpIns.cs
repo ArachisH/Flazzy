@@ -11,9 +11,6 @@ namespace Flazzy.ABC.AVM2.Instructions
             : base(OPCode.Jump, ref input)
         { }
 
-        public override bool? RunCondition(ASMachine machine)
-        {
-            return true;
-        }
+        public override bool? RunCondition(ASMachine machine) => true;
     }
 }

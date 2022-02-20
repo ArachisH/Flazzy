@@ -17,7 +17,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             dynamic left = machine.Values.Pop();
             if (left == null || right == null) return null;
 
-            return (left != right);
+            return left != right;
         }
     }
 }

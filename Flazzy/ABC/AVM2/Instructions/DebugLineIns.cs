@@ -20,6 +20,10 @@ namespace Flazzy.ABC.AVM2.Instructions
             LineNumber = input.ReadEncodedInt();
         }
 
+        protected override int GetBodySize()
+        {
+            return FlashWriter.GetEncodedIntSize(LineNumber);
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(LineNumber);

@@ -16,7 +16,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             object value = machine.Registers[Register];
             if (value != null)
             {
-                value = (Convert.ToInt32(value) - 1);
+                value = Convert.ToInt32(value) - 1;
             }
             machine.Registers[Register] = value;
         }

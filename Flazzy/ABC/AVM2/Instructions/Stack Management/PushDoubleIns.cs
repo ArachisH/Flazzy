@@ -44,6 +44,10 @@ namespace Flazzy.ABC.AVM2.Instructions
             ValueIndex = input.ReadEncodedInt();
         }
 
+        protected override int GetBodySize()
+        {
+            return FlashWriter.GetEncodedIntSize(ValueIndex);
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(ValueIndex);

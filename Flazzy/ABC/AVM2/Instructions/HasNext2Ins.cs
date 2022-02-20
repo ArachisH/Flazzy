@@ -23,15 +23,19 @@ namespace Flazzy.ABC.AVM2.Instructions
             RegisterIndex = registerIndex;
         }
 
-        public override int GetPushCount()
-        {
-            return 1;
-        }
+        public override int GetPushCount() => 1;
         public override void Execute(ASMachine machine)
         {
             machine.Values.Push(null);
         }
 
+        protected override int GetBodySize()
+        {
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(ObjectIndex);
+            size += FlashWriter.GetEncodedIntSize(RegisterIndex);
+            return size;
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(ObjectIndex);

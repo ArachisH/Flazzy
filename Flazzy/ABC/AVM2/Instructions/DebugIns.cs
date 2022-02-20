@@ -30,6 +30,15 @@ namespace Flazzy.ABC.AVM2.Instructions
             RegisterIndex = registerIndex;
         }
 
+        protected override int GetBodySize()
+        {
+            int size = 0;
+            size += sizeof(byte);
+            size += FlashWriter.GetEncodedIntSize(NameIndex);
+            size += sizeof(byte);
+            size += FlashWriter.GetEncodedIntSize(Extra);
+            return size;
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.Write(DebugType);

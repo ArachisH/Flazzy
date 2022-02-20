@@ -79,27 +79,28 @@ namespace Flazzy
         //{
         //    Assemble(output, compression, null);
         //}
-        //public virtual void Assemble(FlashWriter output, CompressionKind compression, Action<ITagItem> callback)
-        //{
-        //    output.Write(((char)compression) + "WS", true);
-        //    output.Write(Version);
-        //    output.Write(uint.MinValue);
-        //
-        //    Frame.WriteTo(ref output);
-        //    int fileLength = Frame.Area.GetSize() + 4;
-        //    foreach (var tag in Tags)
-        //    {
-        //        callback?.Invoke(tag);
-        //        tag.WriteTo(ref output);
-        //
-        //        //fileLength += tag.Header.Length;
-        //        //fileLength += (tag.Header.IsLongTag ? 6 : 2);
-        //    }
-        //
-        //    //output.Position = 4;
-        //    //output.Write((uint)fileLength);
-        //    //output.Position = output.Length;
-        //}
+        public virtual void Assemble(ref FlashWriter output, CompressionKind compression, Action<ITagItem> callback)
+        {
+            // TODO: output.WriteUInt24(((char)compression) + "WS", true);
+            output.Write(Version);
+            // Reserve int here
+            ref int fileLength = ref output.ReserveInt();
+        
+            Frame.WriteTo(ref output);
+            fileLength = Frame.Area.GetSize() + 4;
+            foreach (var tag in Tags)
+            {
+                callback?.Invoke(tag);
+                tag.WriteBodyTo(ref output);
+
+                //fileLength += tag.GetSize();
+                //fileLength += tag.Header.IsLongTag ? 6 : 2;
+            }
+        
+            //output.Position = 4;
+            //output.Write((uint)fileLength);
+            //output.Position = output.Length;
+        }
 
         //public void CopyTo(Stream output)
         //{

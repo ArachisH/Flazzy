@@ -23,9 +23,7 @@ namespace Flazzy.ABC.AVM2.Instructions
         public override int GetPopCount() => OP switch
         {
             OPCode.Jump => 0,
-
-            OPCode.IfTrue or
-            OPCode.IfFalse => 1,
+            OPCode.IfTrue or OPCode.IfFalse => 1,
             
             _ => 2,
         };

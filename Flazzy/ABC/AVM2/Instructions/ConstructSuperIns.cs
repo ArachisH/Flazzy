@@ -20,10 +20,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             ArgCount = input.ReadEncodedInt();
         }
 
-        public override int GetPopCount()
-        {
-            return (ArgCount + 1);
-        }
+        public override int GetPopCount() => ArgCount + 1;
         public override void Execute(ASMachine machine)
         {
             for (int i = 0; i < ArgCount; i++)
@@ -33,6 +30,10 @@ namespace Flazzy.ABC.AVM2.Instructions
             object obj = machine.Values.Pop();
         }
 
+        protected override int GetBodySize()
+        {
+            return FlashWriter.GetEncodedIntSize(ArgCount);
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(ArgCount);

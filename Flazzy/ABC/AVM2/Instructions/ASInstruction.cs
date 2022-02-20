@@ -17,21 +17,21 @@ namespace Flazzy.ABC.AVM2.Instructions
             ABC = abc;
         }
 
-        protected virtual int GetBodySize() => 0;
-        public int GetSize() => sizeof(OPCode) + GetBodySize();
+        public virtual int GetPopCount() => 0;
+        public virtual int GetPushCount() => 0;
+        public virtual void Execute(ASMachine machine)
+        { }
 
+        protected virtual int GetBodySize() => 0;
+        protected virtual void WriteValuesTo(ref FlashWriter output)
+        { }
+
+        public int GetSize() => sizeof(OPCode) + GetBodySize();
         public void WriteTo(ref FlashWriter output)
         {
             output.Write((byte)OP);
             WriteValuesTo(ref output);
         }
-        protected virtual void WriteValuesTo(ref FlashWriter output)
-        { }
-
-        public virtual int GetPopCount() => 0;
-        public virtual int GetPushCount() => 0;
-        public virtual void Execute(ASMachine machine)
-        { }
 
         protected int ResolveMultinamePops(ASMultiname multiname)
         {

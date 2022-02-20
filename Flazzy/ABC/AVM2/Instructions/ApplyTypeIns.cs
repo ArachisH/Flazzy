@@ -20,6 +20,10 @@ namespace Flazzy.ABC.AVM2.Instructions
             ParamCount = input.ReadEncodedInt();
         }
 
+        protected override int GetBodySize()
+        {
+            return FlashWriter.GetEncodedIntSize(ParamCount);
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(ParamCount);

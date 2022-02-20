@@ -15,5 +15,14 @@ namespace Flazzy.ABC.AVM2.Instructions
         {
             UriIndex = input.ReadEncodedInt();
         }
+
+        protected override int GetBodySize()
+        {
+            return FlashWriter.GetEncodedIntSize(UriIndex);
+        }
+        protected override void WriteValuesTo(ref FlashWriter output)
+        {
+            output.WriteEncodedInt(UriIndex);
+        }
     }
 }

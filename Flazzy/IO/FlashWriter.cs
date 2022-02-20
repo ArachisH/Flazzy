@@ -80,6 +80,18 @@ namespace Flazzy.IO
             Position += value.Length;
         }
 
+        public ref int ReserveInt()
+        {
+            ref int result = ref Unsafe.As<byte, int>(ref _data[0]);
+            
+            // Zero the value
+            result = default;
+
+            Position += sizeof(int);
+
+            return ref result;
+        }
+
         public void WriteString(ReadOnlySpan<char> value)
         {
             WriteEncodedInt(Encoding.UTF8.GetByteCount(value));

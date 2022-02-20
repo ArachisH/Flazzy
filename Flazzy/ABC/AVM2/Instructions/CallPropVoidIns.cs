@@ -33,7 +33,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         public override int GetPopCount()
         {
-            return (ArgCount + ResolveMultinamePops(PropertyName) + 1);
+            return ArgCount + ResolveMultinamePops(PropertyName) + 1;
         }
         public override void Execute(ASMachine machine)
         {
@@ -45,6 +45,13 @@ namespace Flazzy.ABC.AVM2.Instructions
             object obj = machine.Values.Pop();
         }
 
+        protected override int GetBodySize()
+        {
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(PropertyNameIndex);
+            size += FlashWriter.GetEncodedIntSize(ArgCount);
+            return size;
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(PropertyNameIndex);

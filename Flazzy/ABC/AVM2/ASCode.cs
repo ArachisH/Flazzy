@@ -161,14 +161,14 @@ namespace Flazzy.ABC.AVM2
                     _instructions.AddRange(collection);
                 }
                 else _instructions.InsertRange(index, collection);
-                int collectionCount = (_instructions.Count - count);
+                int collectionCount = _instructions.Count - count;
 
                 while (deadJumps.Count > 0)
                 {
                     JumpExits[deadJumps.Pop()] = collection.First();
                 }
 
-                for (int i = (index + collectionCount - 1); i >= index; i--)
+                for (int i = index + collectionCount - 1; i >= index; i--)
                 {
                     ASInstruction instruction = _instructions[i];
                     _indices.Add(instruction, i);
@@ -180,7 +180,7 @@ namespace Flazzy.ABC.AVM2
                     }
                     instructions.Add(instruction);
                 }
-                for (int i = (index + collectionCount); i < _instructions.Count; i++)
+                for (int i = index + collectionCount; i < _instructions.Count; i++)
                 {
                     ASInstruction toPush = _instructions[i];
                     _indices[toPush] += collectionCount;
@@ -499,7 +499,7 @@ namespace Flazzy.ABC.AVM2
         }
         public ASInstruction[] GetJumpBlock(Jumper jumper)
         {
-            int blockStart = (_indices[jumper] + 1);
+            int blockStart = _indices[jumper] + 1;
             int scopeEnd = _indices[JumpExits[jumper]];
 
             var body = new ASInstruction[scopeEnd - blockStart];
@@ -650,7 +650,7 @@ namespace Flazzy.ABC.AVM2
                 }
             }
         }
-        private void Rewrite(FlashWriter output, ASInstruction instruction, long position)
+        private static void Rewrite(FlashWriter output, ASInstruction instruction, long position)
         {
             long currentPosition = output.Position;
             output.Position = (int)position;
@@ -658,7 +658,7 @@ namespace Flazzy.ABC.AVM2
             instruction.WriteTo(ref output);
             output.Position = (int)currentPosition;
         }
-        private bool IsRelyingOnLocals(ASInstruction instruction, Dictionary<ASInstruction, List<Local>> conversions) => conversions.GetValueOrDefault(instruction) != null;
+        private static bool IsRelyingOnLocals(ASInstruction instruction, Dictionary<ASInstruction, List<Local>> conversions) => conversions.GetValueOrDefault(instruction) != null;
         private int GetFinalJumpCount(ASMachine machine, Jumper jumper, List<ASInstruction> cleaned, Dictionary<int, List<ASInstruction>> localReferences, Stack<ASInstruction> valuePushers)
         {
             var magicCount = 0;
@@ -756,7 +756,7 @@ namespace Flazzy.ABC.AVM2
                     bool hasExit = block.Contains(jumpExit.Value); // Does the jump instruction end somewhere in the block?
 
                     ASInstruction afterLast = _instructions[_indices[block.Last()] + 1];
-                    bool isExitAfterLast = (jumpExit.Value == afterLast); // Does the exit of the jump that is in the block come after the final instruction of the current block?
+                    bool isExitAfterLast = jumpExit.Value == afterLast; // Does the exit of the jump that is in the block come after the final instruction of the current block?
 
                     if (hasEntry && !hasExit && !isExitAfterLast ||
                         hasExit && !hasEntry)
@@ -796,12 +796,18 @@ namespace Flazzy.ABC.AVM2
                 block = null;
             }
             JumpExits.Remove(jumper);
-            return (block?.Count() ?? 0);
+            return block?.Count() ?? 0;
         }
 
         public int GetSize()
         {
-            throw new NotImplementedException();
+            // TODO: rewrite logic?
+            int size = 0;
+            for (int i = 0; i < _instructions.Count; i++)
+            {
+                size += _instructions[i].GetSize();
+            }
+            return size;
         }
         public void WriteTo(ref FlashWriter output)
         {
@@ -861,7 +867,7 @@ namespace Flazzy.ABC.AVM2
                         {
                             requiresRewrite = true;
                             long exitPosition = marks[exit];
-                            long jumpCount = (previousPosition - (exitPosition + 1));
+                            long jumpCount = previousPosition - (exitPosition + 1);
 
                             uint fixedOffset = (uint)(uint.MaxValue - jumpCount);
                             if (i == (cases.Length - 1))
@@ -902,7 +908,7 @@ namespace Flazzy.ABC.AVM2
                     else // Backward jumps must always have a label for an exit, and must be behind this instruction.
                     {
                         long exitPosition = marks[exit];
-                        long jumpCount = (output.Position - (exitPosition + 1));
+                        long jumpCount = output.Position - (exitPosition + 1);
 
                         var fixedOffset = (uint)(uint.MaxValue - jumpCount);
                         jumper.Offset = fixedOffset;

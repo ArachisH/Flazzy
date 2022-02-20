@@ -6,14 +6,8 @@
             : base(op)
         { }
 
-        public override int GetPopCount()
-        {
-            return 2;
-        }
-        public override int GetPushCount()
-        {
-            return 1;
-        }
+        public override int GetPopCount() => 2;
+        public override int GetPushCount() => 1;
         public override void Execute(ASMachine machine)
         {
             object right = machine.Values.Pop();
@@ -28,29 +22,23 @@
         }
         protected abstract object Execute(object left, object right);
 
-        public static bool IsValid(OPCode op)
+        public static bool IsValid(OPCode op) => op switch
         {
-            switch (op)
-            {
-                case OPCode.Add_i:
-                case OPCode.Add:
-                case OPCode.Divide:
-                case OPCode.Equals:
-                case OPCode.GreaterEquals:
-                case OPCode.GreaterThan:
-                case OPCode.LessEquals:
-                case OPCode.LessThan:
-                case OPCode.Modulo:
-                case OPCode.Multiply_i:
-                case OPCode.Multiply:
-                case OPCode.StrictEquals:
-                case OPCode.Subtract_i:
-                case OPCode.Subtract:
-                return true;
-
-                default:
-                return false;
-            }
-        }
+            OPCode.Add_i or 
+            OPCode.Add or 
+            OPCode.Divide or 
+            OPCode.Equals or 
+            OPCode.GreaterEquals or 
+            OPCode.GreaterThan or 
+            OPCode.LessEquals or 
+            OPCode.LessThan or 
+            OPCode.Modulo or 
+            OPCode.Multiply_i or 
+            OPCode.Multiply or 
+            OPCode.StrictEquals or 
+            OPCode.Subtract_i or 
+            OPCode.Subtract => true,
+            _ => false,
+        };
     }
 }

@@ -43,6 +43,13 @@ namespace Flazzy.ABC.AVM2.Instructions
             machine.Values.Push(null);
         }
 
+        protected override int GetBodySize()
+        {
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(MethodIndex);
+            size += FlashWriter.GetEncodedIntSize(ArgCount);
+            return size;
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(MethodIndex);

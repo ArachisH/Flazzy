@@ -17,7 +17,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             var left = machine.Values.Pop();
             if (left == null || right == null) return null;
 
-            return (Convert.ToDouble(left) >= Convert.ToDouble(right));
+            return Convert.ToDouble(left) >= Convert.ToDouble(right);
         }
     }
 }

@@ -6,14 +6,8 @@
             : base(OPCode.In)
         { }
 
-        public override int GetPopCount()
-        {
-            return 2;
-        }
-        public override int GetPushCount()
-        {
-            return 1;
-        }
+        public override int GetPopCount() => 2;
+        public override int GetPushCount() => 1;
         public override void Execute(ASMachine machine)
         {
             object obj = machine.Values.Pop();

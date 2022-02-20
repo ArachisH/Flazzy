@@ -4,7 +4,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 {
     public abstract class Local : ASInstruction
     {
-        public virtual int Register { get; set; }
+        public virtual int Register { get; }
 
         public Local(OPCode op)
             : base(op)
@@ -22,11 +22,11 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         public override int GetPopCount()
         {
-            return (IsSetLocal(OP) ? 1 : 0);
+            return IsSetLocal(OP) ? 1 : 0;
         }
         public override int GetPushCount()
         {
-            return (IsGetLocal(OP) ? 1 : 0);
+            return IsGetLocal(OP) ? 1 : 0;
         }
         public override void Execute(ASMachine machine)
         {
@@ -41,106 +41,91 @@ namespace Flazzy.ABC.AVM2.Instructions
             }
         }
 
+        protected override int GetBodySize()
+        {
+            return base.GetBodySize();
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             switch (OP)
             {
-                case OPCode.SetLocal_0:
-                case OPCode.SetLocal_1:
-                case OPCode.SetLocal_2:
-                case OPCode.SetLocal_3:
+                case OPCode.Kill:
 
-                case OPCode.GetLocal_0:
-                case OPCode.GetLocal_1:
-                case OPCode.GetLocal_2:
-                case OPCode.GetLocal_3: return;
+                case OPCode.SetLocal:
+                case OPCode.GetLocal:
 
-                default:
+                case OPCode.IncLocal:
+                case OPCode.IncLocal_i:
+
+                case OPCode.DecLocal:
+                case OPCode.DecLocal_i:
                 output.WriteEncodedInt(Register);
                 break;
             }
         }
 
-        public static bool IsValid(OPCode op)
+        public static bool IsValid(OPCode op) => op switch
         {
-            switch (op)
-            {
-                case OPCode.Kill:
+            OPCode.Kill or 
+            
+            OPCode.DecLocal or 
+            OPCode.DecLocal_i or 
+            
+            OPCode.IncLocal or 
+            OPCode.IncLocal_i or 
+            
+            OPCode.GetLocal or 
+            OPCode.GetLocal_0 or
+            OPCode.GetLocal_1 or 
+            OPCode.GetLocal_2 or 
+            OPCode.GetLocal_3 or 
 
-                case OPCode.DecLocal:
-                case OPCode.DecLocal_i:
-
-                case OPCode.IncLocal:
-                case OPCode.IncLocal_i:
-
-                case OPCode.GetLocal:
-                case OPCode.GetLocal_0:
-                case OPCode.GetLocal_1:
-                case OPCode.GetLocal_2:
-                case OPCode.GetLocal_3:
-
-                case OPCode.SetLocal:
-                case OPCode.SetLocal_0:
-                case OPCode.SetLocal_1:
-                case OPCode.SetLocal_2:
-                case OPCode.SetLocal_3:
-                return true;
-
-                default: return false;
-            }
-        }
-        public static bool IsGetLocal(OPCode op)
+            OPCode.SetLocal or 
+            OPCode.SetLocal_0 or 
+            OPCode.SetLocal_1 or 
+            OPCode.SetLocal_2 or 
+            OPCode.SetLocal_3 => true,
+            
+            _ => false
+        };
+        public static bool IsGetLocal(OPCode op) => op switch
         {
-            switch (op)
-            {
-                case OPCode.GetLocal:
-                case OPCode.GetLocal_0:
-                case OPCode.GetLocal_1:
-                case OPCode.GetLocal_2:
-                case OPCode.GetLocal_3:
-                return true;
-
-                default: return false;
-            }
-        }
-        public static bool IsSetLocal(OPCode op)
+            OPCode.GetLocal or 
+            OPCode.GetLocal_0 or 
+            OPCode.GetLocal_1 or 
+            OPCode.GetLocal_2 or 
+            OPCode.GetLocal_3 => true,
+            
+            _ => false
+        };
+        public static bool IsSetLocal(OPCode op) => op switch
         {
-            switch (op)
-            {
-                case OPCode.SetLocal:
-                case OPCode.SetLocal_0:
-                case OPCode.SetLocal_1:
-                case OPCode.SetLocal_2:
-                case OPCode.SetLocal_3:
-                return true;
+            OPCode.SetLocal or 
+            OPCode.SetLocal_0 or 
+            OPCode.SetLocal_1 or 
+            OPCode.SetLocal_2 or 
+            OPCode.SetLocal_3 => true,
 
-                default: return false;
-            }
-        }
+            _ => false
+        };
 
-        public static Local CreateSet(int register)
+        public static Local CreateSet(int register) => register switch
         {
-            switch (register)
-            {
-                case 0: return new SetLocal0Ins();
-                case 1: return new SetLocal1Ins();
-                case 2: return new SetLocal2Ins();
-                case 3: return new SetLocal3Ins();
-
-                default: return new SetLocalIns(register);
-            }
-        }
-        public static Local CreateGet(int register)
+            0 => new SetLocal0Ins(),
+            1 => new SetLocal1Ins(),
+            2 => new SetLocal2Ins(),
+            3 => new SetLocal3Ins(),
+            
+            _ => new SetLocalIns(register),
+        };
+        public static Local CreateGet(int register) => register switch
         {
-            switch (register)
-            {
-                case 0: return new GetLocal0Ins();
-                case 1: return new GetLocal1Ins();
-                case 2: return new GetLocal2Ins();
-                case 3: return new GetLocal3Ins();
-
-                default: return new GetLocalIns(register);
-            }
-        }
+            0 => new GetLocal0Ins(),
+            1 => new GetLocal1Ins(),
+            2 => new GetLocal2Ins(),
+            3 => new GetLocal3Ins(),
+            
+            _ => new GetLocalIns(register),
+        };
     }
 }

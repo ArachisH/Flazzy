@@ -2,11 +2,7 @@
 {
     public class SetLocal2Ins : Local
     {
-        public override int Register
-        {
-            get => 2;
-            set => throw new NotSupportedException();
-        }
+        public override int Register => 2;
 
         public SetLocal2Ins()
             : base(OPCode.SetLocal_2)

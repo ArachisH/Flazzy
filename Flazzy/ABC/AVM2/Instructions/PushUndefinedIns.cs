@@ -6,10 +6,7 @@
             : base(OPCode.PushUndefined)
         { }
 
-        public override int GetPushCount()
-        {
-            return 1;
-        }
+        public override int GetPushCount() => 1;
         public override void Execute(ASMachine machine)
         {
             machine.Values.Push(null);

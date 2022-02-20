@@ -16,7 +16,7 @@ namespace Flazzy.ABC.AVM2.Instructions
             object value = machine.Registers[Register];
             if (value != null)
             {
-                value = (Convert.ToDouble(value) - 1);
+                value = Convert.ToDouble(value) - 1;
             }
             machine.Registers[Register] = value;
         }

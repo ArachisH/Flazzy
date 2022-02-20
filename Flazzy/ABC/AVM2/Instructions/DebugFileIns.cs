@@ -21,6 +21,10 @@ namespace Flazzy.ABC.AVM2.Instructions
             FileNameIndex = fileNameIndex;
         }
 
+        protected override int GetBodySize()
+        {
+            return FlashWriter.GetEncodedIntSize(FileNameIndex);
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(FileNameIndex);

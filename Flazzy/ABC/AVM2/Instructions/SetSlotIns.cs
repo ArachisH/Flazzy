@@ -20,16 +20,17 @@ namespace Flazzy.ABC.AVM2.Instructions
             SlotIndex = input.ReadEncodedInt();
         }
 
-        public override int GetPopCount()
-        {
-            return 2;
-        }
+        public override int GetPopCount() => 2;
         public override void Execute(ASMachine machine)
         {
             object value = machine.Values.Pop();
             object obj = machine.Values.Pop();
         }
 
+        protected override int GetBodySize()
+        {
+            return FlashWriter.GetEncodedIntSize(SlotIndex);
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(SlotIndex);

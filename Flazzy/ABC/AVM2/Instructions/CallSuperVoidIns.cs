@@ -32,12 +32,9 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         public override int GetPopCount()
         {
-            return (ArgCount + ResolveMultinamePops(MethodName) + 1);
+            return ArgCount + ResolveMultinamePops(MethodName) + 1;
         }
-        public override int GetPushCount()
-        {
-            return 1;
-        }
+        public override int GetPushCount() => 1;
         public override void Execute(ASMachine machine)
         {
             for (int i = 0; i < ArgCount; i++)
@@ -49,6 +46,13 @@ namespace Flazzy.ABC.AVM2.Instructions
             machine.Values.Push(null);
         }
 
+        protected override int GetBodySize()
+        {
+            int size = 0;
+            size += FlashWriter.GetEncodedIntSize(MethodNameIndex);
+            size += FlashWriter.GetEncodedIntSize(ArgCount);
+            return size;
+        }
         protected override void WriteValuesTo(ref FlashWriter output)
         {
             output.WriteEncodedInt(MethodNameIndex);

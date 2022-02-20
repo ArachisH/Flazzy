@@ -13,7 +13,7 @@ namespace Flazzy.ABC.AVM2.Instructions
 
         public override bool? RunCondition(ASMachine machine)
         {
-            return (machine.Values.Pop() as bool?);
+            return machine.Values.Pop() as bool?;
         }
     }
 }
