@@ -33,7 +33,7 @@ namespace Flazzy.ABC
         public ASTrait AddMethod(ASMethod method, string qualifiedName)
         {
             int methodIndex = ABC.AddMethod(method);
-            int qNameIndex = ABC.Pool.AddConstant(AddPublicQualifiedName(qualifiedName));
+            int qNameIndex = AddPublicQualifiedName(qualifiedName);
 
             var trait = new ASTrait(ABC)
             {
