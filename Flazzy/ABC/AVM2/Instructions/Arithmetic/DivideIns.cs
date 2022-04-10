@@ -1,11 +1,10 @@
-﻿namespace Flazzy.ABC.AVM2.Instructions
-{
-    public sealed class DivideIns : Computation
-    {
-        public DivideIns()
-            : base(OPCode.Divide)
-        { }
+﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-        protected override object Execute(dynamic left, dynamic right) => left / right;
-    }
+public sealed class DivideIns : Computation
+{
+    public DivideIns()
+        : base(OPCode.Divide)
+    { }
+
+    protected override object Execute(dynamic left, dynamic right) => left / right;
 }

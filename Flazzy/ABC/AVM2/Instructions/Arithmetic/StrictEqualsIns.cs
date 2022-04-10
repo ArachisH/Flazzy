@@ -1,17 +1,16 @@
-﻿namespace Flazzy.ABC.AVM2.Instructions
+﻿namespace Flazzy.ABC.AVM2.Instructions;
+
+public sealed class StrictEqualsIns : Computation
 {
-    public sealed class StrictEqualsIns : Computation
+    public StrictEqualsIns()
+        : base(OPCode.StrictEquals)
+    { }
+
+    protected override object Execute(object left, object right)
     {
-        public StrictEqualsIns()
-            : base(OPCode.StrictEquals)
-        { }
+        if (left is not IComparable cLeft ||
+            right is not IComparable cRight) return null;
 
-        protected override object Execute(object left, object right)
-        {
-            if (left is not IComparable cLeft || 
-                right is not IComparable cRight) return null;
-
-            return cLeft.CompareTo(cRight) == 0;
-        }
+        return cLeft.CompareTo(cRight) == 0;
     }
 }

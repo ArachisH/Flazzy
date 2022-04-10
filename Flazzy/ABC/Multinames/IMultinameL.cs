@@ -1,8 +1,7 @@
-﻿namespace Flazzy.ABC
+﻿namespace Flazzy.ABC;
+
+public interface IMultinameL
 {
-    public interface IMultinameL
-    {
-        ASNamespaceSet NamespaceSet { get; }
-        int NamespaceSetIndex { get; set; }
-    }
+    ASNamespaceSet NamespaceSet { get; }
+    int NamespaceSetIndex { get; set; }
 }

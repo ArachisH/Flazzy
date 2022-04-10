@@ -1,16 +1,15 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC.AVM2.Instructions
-{
-    public sealed class JumpIns : Jumper
-    {
-        public JumpIns()
-            : base(OPCode.Jump)
-        { }
-        public JumpIns(ref FlashReader input)
-            : base(OPCode.Jump, ref input)
-        { }
+namespace Flazzy.ABC.AVM2.Instructions;
 
-        public override bool? RunCondition(ASMachine machine) => true;
-    }
+public sealed class JumpIns : Jumper
+{
+    public JumpIns()
+        : base(OPCode.Jump)
+    { }
+    public JumpIns(ref FlashReader input)
+        : base(OPCode.Jump, ref input)
+    { }
+
+    public override bool? RunCondition(ASMachine machine) => true;
 }

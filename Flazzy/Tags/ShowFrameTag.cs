@@ -1,7 +1,6 @@
-﻿namespace Flazzy.Tags
+﻿namespace Flazzy.Tags;
+
+public class ShowFrameTag : ITagItem
 {
-    public class ShowFrameTag : ITagItem
-    {
-        public TagKind Kind => TagKind.ShowFrame;
-    }
+    public TagKind Kind => TagKind.ShowFrame;
 }

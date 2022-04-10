@@ -2,25 +2,24 @@
 
 using Flazzy.IO;
 
-namespace Flazzy.Tags
+namespace Flazzy.Tags;
+
+public class MetadataTag : ITagItem
 {
-    public class MetadataTag : ITagItem
+    public TagKind Kind => TagKind.Metadata;
+
+    public string Metadata { get; set; }
+
+    public MetadataTag()
+    { }
+    public MetadataTag(ref FlashReader input)
     {
-        public TagKind Kind => TagKind.Metadata;
+        Metadata = input.ReadNullString();
+    }
 
-        public string Metadata { get; set; }
-
-        public MetadataTag()
-        { }
-        public MetadataTag(ref FlashReader input)
-        {
-            Metadata = input.ReadNullString();
-        }
-
-        public int GetBodySize() => Encoding.UTF8.GetByteCount(Metadata) + 1;
-        public void WriteBodyTo(ref FlashWriter output)
-        {
-            output.WriteNullString(Metadata);
-        }
+    public int GetBodySize() => Encoding.UTF8.GetByteCount(Metadata) + 1;
+    public void WriteBodyTo(ref FlashWriter output)
+    {
+        output.WriteNullString(Metadata);
     }
 }

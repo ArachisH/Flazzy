@@ -1,147 +1,133 @@
-﻿using Flazzy.IO;
+﻿using System.Buffers;
+
+using Flazzy.IO;
 using Flazzy.Tags;
 using Flazzy.Records;
 using Flazzy.IO.Compression;
 
-namespace Flazzy
+namespace Flazzy;
+
+public class ShockwaveFlash : IDisposable
 {
-    public class ShockwaveFlash : IDisposable
+    public List<ITagItem> Tags { get; }
+
+    public CompressionKind Compression { get; set; }
+    public byte Version { get; set; }
+    public FrameRecord Frame { get; set; }
+
+    protected ShockwaveFlash()
     {
-        public List<ITagItem> Tags { get; }
-        public CompressionKind Compression { get; }
-        public string Signature => (char)Compression + "WS";
+        Tags = new List<ITagItem>();
+        Frame = new FrameRecord();
+    }
 
-        public byte Version { get; set; }
-        public uint FileLength { get; set; }
-        public FrameRecord Frame { get; set; }
+    public void Assemble(IBufferWriter<byte> output)
+    {
+        Assemble(output, Compression);
+    }
+    public void Assemble(IBufferWriter<byte> output, CompressionKind compression)
+    {
+        if (Compression == CompressionKind.LZMA) 
+            throw new NotSupportedException($"{nameof(CompressionKind.LZMA)} is not supported!");
 
-        protected ShockwaveFlash(ref FlashReader input)
-            : this(false)
+        // Write SWF body
+        var bodyWriter = new ArrayBufferWriter<byte>();
+        ((IFlashItem)Frame).WriteTo(bodyWriter);
+
+        foreach (var tag in Tags)
         {
-            Compression = (CompressionKind)input.ReadString(3)[0];
-            Version = input.ReadByte();
-            FileLength = input.ReadUInt32();
-
-            if (Compression == CompressionKind.LZMA)
-            {
-                throw new NotSupportedException("LZMA compression is not supported.");
-            }
-
-            //_input = (Compression == CompressionKind.ZLib) ?
-            //    ZLib.WrapDecompressor(input.BaseStream) : input;
-            Frame = new FrameRecord(ref input);
-        }
-        protected ShockwaveFlash(bool isCreatingTemplate)
-        {
-            Tags = new List<ITagItem>();
-            if (isCreatingTemplate)
-            {
-                Frame = new FrameRecord();
-                Frame.Area = new RectangeRecord();
-                Compression = CompressionKind.ZLib;
-            }
+            tag.WriteTo(bodyWriter);
         }
 
-        public virtual void Disassemble(ref FlashReader input, Action<ITagItem> callback = null)
+        // TODO: Compare calculating entire body size manually when CompressionKind.None to the cost of ArrayBufferWriter allocs. I expect manual calc to be worth it.
+        int bodyLength = bodyWriter.WrittenCount;
+
+        // Write SWF header
+        Span<byte> headerSpan = stackalloc byte[8];
+        var headerWriter = new FlashWriter(headerSpan);
+
+        headerWriter.Write((byte)compression);
+        headerWriter.Write((short)0x5357); // "WS"
+        headerWriter.Write(Version);
+        headerWriter.Write(bodyLength + 8); // uncompressed body length + SWF header size (8)
+        output.Write(headerSpan);
+
+        if (compression == CompressionKind.ZLib)
         {
-            long position = 8 + Frame.Area.GetSize() + 4;
-            while (position != FileLength)
-            {
-                var header = new TagHeader(ref input);
-                position += header.GetSize();
+            byte[] compressedBuffer = ZLib.Compress(bodyWriter.WrittenSpan);
+            output.Write(compressedBuffer);
+        }
+        else output.Write(bodyWriter.WrittenSpan);
+    }
 
-                long expectedPosition = header.Length + position;
+    public byte[] ToArray()
+    {
+        return ToArray(Compression);
+    }
+    public byte[] ToArray(CompressionKind compression)
+    {
+        var output = new ArrayBufferWriter<byte>();
+        Assemble(output, compression);
+        return output.WrittenSpan.ToArray();
+    }
 
-                ITagItem tag = ITagItem.ReadTag(ref input, in header);
-                position += tag.GetBodySize();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            Tags.Clear();
+        }
+    }
 
-                if (position != expectedPosition)
-                {
-                    throw new IOException($"Expected position value '{expectedPosition}', instead got '{position}'.");
-                }
-                callback?.Invoke(tag);
-                Tags.Add(tag);
+    public static ShockwaveFlash Read(string path)
+    {
+        return Read(File.ReadAllBytes(path));
+    }
+    public static ShockwaveFlash Read(ReadOnlySpan<byte> data)
+    {
+        var input = new FlashReader(data);
 
-                if (tag.Kind == TagKind.End) break;
-            }
+        var shockwaveFlash = new ShockwaveFlash
+        {
+            Compression = (CompressionKind)input.ReadBytes(3)[0],
+            Version = input.ReadByte()
+        };
+
+        uint length = input.ReadUInt32() - 8; // TODO: is it was always -8
+        Span<byte> bodySpan = new byte[length];
+
+        if (shockwaveFlash.Compression == CompressionKind.None)
+        {
+            input.ReadBytes(bodySpan);
+        }
+        else if (shockwaveFlash.Compression == CompressionKind.ZLib)
+        {
+            ReadOnlySpan<byte> compressed = input.ReadBytes(input.Length - input.Position);
+            int totalDecompressed = ZLib.Decompress(compressed, bodySpan);
+
+            bodySpan = bodySpan.Slice(0, totalDecompressed);
+        }
+        else throw new NotSupportedException($"{nameof(CompressionKind.LZMA)} is not supported!");
+
+        var bodyInput = new FlashReader(bodySpan);
+        shockwaveFlash.Frame = new FrameRecord(ref bodyInput);
+
+        while (bodyInput.IsDataAvailable)
+        {
+            if (!ITagItem.TryRead(ref bodyInput, out var tag))
+                break;
+
+            shockwaveFlash.Tags.Add(tag);
+
+            if (tag.Kind == TagKind.End)
+                break;
         }
 
-        //public void Assemble(FlashWriter output)
-        //{
-        //    Assemble(output, Compression, null);
-        //}
-        //public void Assemble(FlashWriter output, Action<ITagItem> callback)
-        //{
-        //    Assemble(output, Compression, callback);
-        //}
-        //
-        //public void Assemble(FlashWriter output, CompressionKind compression)
-        //{
-        //    Assemble(output, compression, null);
-        //}
-        public virtual void Assemble(ref FlashWriter output, CompressionKind compression, Action<ITagItem> callback)
-        {
-            // TODO: output.WriteUInt24(((char)compression) + "WS", true);
-            output.Write(Version);
-            // Reserve int here
-            ref int fileLength = ref output.ReserveInt();
-        
-            Frame.WriteTo(ref output);
-            fileLength = Frame.Area.GetSize() + 4;
-            foreach (var tag in Tags)
-            {
-                callback?.Invoke(tag);
-                tag.WriteBodyTo(ref output);
-
-                //fileLength += tag.GetSize();
-                //fileLength += tag.Header.IsLongTag ? 6 : 2;
-            }
-        
-            //output.Position = 4;
-            //output.Write((uint)fileLength);
-            //output.Position = output.Length;
-        }
-
-        //public void CopyTo(Stream output)
-        //{
-        //    CopyTo(output, Compression, null);
-        //}
-        //public void CopyTo(Stream output, Action<TagItem> callback)
-        //{
-        //    CopyTo(output, Compression, callback);
-        //}
-        //
-        //public void CopyTo(Stream output, CompressionKind compression)
-        //{
-        //    CopyTo(output, compression, null);
-        //}
-        //public void CopyTo(Stream output, CompressionKind compression, Action<TagItem> callback)
-        //{
-        //    var fOutput = new FlashWriter(output);
-        //    Assemble(fOutput, compression, callback);
-        //}
-
-        //public byte[] ToArray()
-        //{
-        //    return ToArray(Compression);
-        //}
-        //public byte[] ToArray(CompressionKind compression)
-        //{
-        //    using var output = new MemoryStream((int)FileLength);
-        //    CopyTo(output, compression, null);
-        //    return output.ToArray();
-        //}
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                Tags.Clear();
-            }
-        }
+        return shockwaveFlash;
     }
 }

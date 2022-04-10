@@ -1,44 +1,43 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC.AVM2.Instructions
+namespace Flazzy.ABC.AVM2.Instructions;
+
+public sealed class NewArrayIns : ASInstruction
 {
-    public sealed class NewArrayIns : ASInstruction
+    public int ArgCount { get; set; }
+
+    public NewArrayIns()
+        : base(OPCode.NewArray)
+    { }
+    public NewArrayIns(int argCount)
+        : this()
     {
-        public int ArgCount { get; set; }
+        ArgCount = argCount;
+    }
+    public NewArrayIns(ref FlashReader input)
+        : this()
+    {
+        ArgCount = input.ReadEncodedInt();
+    }
 
-        public NewArrayIns()
-            : base(OPCode.NewArray)
-        { }
-        public NewArrayIns(int argCount)
-            : this()
+    public override int GetPopCount() => ArgCount;
+    public override int GetPushCount() => 1;
+    public override void Execute(ASMachine machine)
+    {
+        var newarray = new object[ArgCount];
+        for (int i = ArgCount - 1; i >= 0; i--)
         {
-            ArgCount = argCount;
+            newarray[i] = machine.Values.Pop();
         }
-        public NewArrayIns(ref FlashReader input)
-            : this()
-        {
-            ArgCount = input.ReadEncodedInt();
-        }
+        machine.Values.Push(newarray);
+    }
 
-        public override int GetPopCount() => ArgCount;
-        public override int GetPushCount() => 1;
-        public override void Execute(ASMachine machine)
-        {
-            var newarray = new object[ArgCount];
-            for (int i = ArgCount - 1; i >= 0; i--)
-            {
-                newarray[i] = machine.Values.Pop();
-            }
-            machine.Values.Push(newarray);
-        }
-
-        protected override int GetBodySize()
-        {
-            return FlashWriter.GetEncodedIntSize(ArgCount);
-        }
-        protected override void WriteValuesTo(ref FlashWriter output)
-        {
-            output.WriteEncodedInt(ArgCount);
-        }
+    protected override int GetBodySize()
+    {
+        return FlashWriter.GetEncodedIntSize(ArgCount);
+    }
+    protected override void WriteValuesTo(ref FlashWriter output)
+    {
+        output.WriteEncodedInt(ArgCount);
     }
 }

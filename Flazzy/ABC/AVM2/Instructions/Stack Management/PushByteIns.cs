@@ -1,38 +1,37 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC.AVM2.Instructions
+namespace Flazzy.ABC.AVM2.Instructions;
+
+public sealed class PushByteIns : Primitive
 {
-    public sealed class PushByteIns : Primitive
+    private byte _value;
+    new public byte Value
     {
-        private byte _value;
-        new public byte Value
+        get => _value;
+        set
         {
-            get => _value;
-            set
-            {
-                _value = value;
-                base.Value = value;
-            }
+            _value = value;
+            base.Value = value;
         }
+    }
 
-        public PushByteIns()
-            : base(OPCode.PushByte)
-        { }
-        public PushByteIns(byte value)
-            : this()
-        {
-            Value = value;
-        }
-        public PushByteIns(ref FlashReader input)
-            : this()
-        {
-            Value = input.ReadByte();
-        }
+    public PushByteIns()
+        : base(OPCode.PushByte)
+    { }
+    public PushByteIns(byte value)
+        : this()
+    {
+        Value = value;
+    }
+    public PushByteIns(ref FlashReader input)
+        : this()
+    {
+        Value = input.ReadByte();
+    }
 
-        protected override int GetBodySize() => sizeof(byte);
-        protected override void WriteValuesTo(ref FlashWriter output)
-        {
-            output.Write(Value);
-        }
+    protected override int GetBodySize() => sizeof(byte);
+    protected override void WriteValuesTo(ref FlashWriter output)
+    {
+        output.Write(Value);
     }
 }

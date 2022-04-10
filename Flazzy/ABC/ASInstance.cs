@@ -1,155 +1,154 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC
+namespace Flazzy.ABC;
+
+public class ASInstance : ASContainer
 {
-    public class ASInstance : ASContainer
+    public ClassFlags Flags { get; set; }
+    public bool IsInterface => Flags.HasFlag(ClassFlags.Interface);
+
+    public int SuperIndex { get; set; }
+    public ASMultiname Super => ABC.Pool.Multinames[SuperIndex];
+
+    public int ConstructorIndex { get; set; }
+    public ASMethod Constructor => ABC.Methods[ConstructorIndex];
+
+    public int QNameIndex { get; set; }
+    public override ASMultiname QName => ABC.Pool.Multinames[QNameIndex];
+
+    public int ProtectedNamespaceIndex { get; set; }
+    public ASNamespace ProtectedNamespace => ABC.Pool.Namespaces[ProtectedNamespaceIndex];
+
+    public List<int> InterfaceIndices { get; }
+
+    public ASInstance(ABCFile abc)
+        : base(abc)
     {
-        public ClassFlags Flags { get; set; }
-        public bool IsInterface => Flags.HasFlag(ClassFlags.Interface);
+        InterfaceIndices = new List<int>();
+    }
+    public ASInstance(ABCFile abc, ref FlashReader input)
+        : this(abc)
+    {
+        QNameIndex = input.ReadEncodedInt();
+        SuperIndex = input.ReadEncodedInt();
+        Flags = (ClassFlags)input.ReadByte();
 
-        public int SuperIndex { get; set; }
-        public ASMultiname Super => ABC.Pool.Multinames[SuperIndex];
-
-        public int ConstructorIndex { get; set; }
-        public ASMethod Constructor => ABC.Methods[ConstructorIndex];
-
-        public int QNameIndex { get; set; }
-        public override ASMultiname QName => ABC.Pool.Multinames[QNameIndex];
-
-        public int ProtectedNamespaceIndex { get; set; }
-        public ASNamespace ProtectedNamespace => ABC.Pool.Namespaces[ProtectedNamespaceIndex];
-
-        public List<int> InterfaceIndices { get; }
-
-        public ASInstance(ABCFile abc)
-            : base(abc)
+        if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
         {
-            InterfaceIndices = new List<int>();
-        }
-        public ASInstance(ABCFile abc, ref FlashReader input)
-            : this(abc)
-        {
-            QNameIndex = input.ReadEncodedInt();
-            SuperIndex = input.ReadEncodedInt();
-            Flags = (ClassFlags)input.ReadByte();
-
-            if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
-            {
-                ProtectedNamespaceIndex = input.ReadEncodedInt();
-            }
-
-            InterfaceIndices.Capacity = input.ReadEncodedInt();
-            for (int i = 0; i < InterfaceIndices.Capacity; i++)
-            {
-                InterfaceIndices.Add(input.ReadEncodedInt());
-            }
-
-            ConstructorIndex = input.ReadEncodedInt();
-            Constructor.IsConstructor = true;
-            Constructor.Container = this;
-
-            PopulateTraits(ref input);
+            ProtectedNamespaceIndex = input.ReadEncodedInt();
         }
 
-        public IEnumerable<ASMultiname> GetInterfaces()
+        InterfaceIndices.Capacity = input.ReadEncodedInt();
+        for (int i = 0; i < InterfaceIndices.Capacity; i++)
         {
-            for (int i = 0; i < InterfaceIndices.Count; i++)
-            {
-                yield return ABC.Pool.Multinames[InterfaceIndices[i]];
-            }
+            InterfaceIndices.Add(input.ReadEncodedInt());
         }
-        public bool ContainsInterface(string qualifiedName)
+
+        ConstructorIndex = input.ReadEncodedInt();
+        Constructor.IsConstructor = true;
+        Constructor.Container = this;
+
+        PopulateTraits(ref input);
+    }
+
+    public IEnumerable<ASMultiname> GetInterfaces()
+    {
+        for (int i = 0; i < InterfaceIndices.Count; i++)
         {
-            if (Super.Name != "Object")
+            yield return ABC.Pool.Multinames[InterfaceIndices[i]];
+        }
+    }
+    public bool ContainsInterface(string qualifiedName)
+    {
+        if (Super.Name != "Object")
+        {
+            ASInstance superInstance = ABC.GetInstance(Super);
+            if (superInstance.ContainsInterface(qualifiedName))
             {
-                ASInstance superInstance = ABC.GetInstance(Super);
-                if (superInstance.ContainsInterface(qualifiedName))
-                {
-                    return true;
-                }
-            }
-            foreach (ASMultiname @interface in GetInterfaces())
-            {
-                if (@interface.Name != qualifiedName) continue;
                 return true;
             }
-            return false;
         }
-
-        public override string ToAS3()
+        foreach (ASMultiname @interface in GetInterfaces())
         {
-            string as3 = QName.Namespace.GetAS3Modifiers();
-            bool isInterface = Flags.HasFlag(ClassFlags.Interface);
-
-            if (!string.IsNullOrWhiteSpace(as3)) as3 += " ";
-            if (Flags.HasFlag(ClassFlags.Final))
-            {
-                as3 += "final ";
-            }
-
-            if (Flags.HasFlag(ClassFlags.Interface))
-            {
-                as3 += "interface ";
-            }
-            else as3 += "class ";
-
-            as3 += QName.Name;
-            if (!isInterface && ((Super?.Name ?? "Object") != "Object"))
-            {
-                as3 += $" extends {Super.Name}";
-            }
-
-            if (InterfaceIndices.Count > 0)
-            {
-                string interfacesAS3 = string.Join(
-                    ", ", GetInterfaces().Select(i => i.Name));
-
-                as3 += (" implements " + interfacesAS3);
-            }
-
-            return as3;
+            if (@interface.Name != qualifiedName) continue;
+            return true;
         }
+        return false;
+    }
 
-        public override int GetSize()
+    public override string ToAS3()
+    {
+        string as3 = QName.Namespace.GetAS3Modifiers();
+        bool isInterface = Flags.HasFlag(ClassFlags.Interface);
+
+        if (!string.IsNullOrWhiteSpace(as3)) as3 += " ";
+        if (Flags.HasFlag(ClassFlags.Final))
         {
-            int size = 0;
-            size += FlashWriter.GetEncodedIntSize(QNameIndex);
-            size += FlashWriter.GetEncodedIntSize(SuperIndex);
-            size += sizeof(byte);
-
-            if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
-            {
-                size += FlashWriter.GetEncodedIntSize(ProtectedNamespaceIndex);
-            }
-
-            size += FlashWriter.GetEncodedIntSize(InterfaceIndices.Count);
-            for (int i = 0; i < InterfaceIndices.Count; i++)
-            {
-                size += FlashWriter.GetEncodedIntSize(InterfaceIndices[i]);
-            }
-
-            size += FlashWriter.GetEncodedIntSize(ConstructorIndex);
-            return size + base.GetSize();
+            as3 += "final ";
         }
-        public override void WriteTo(ref FlashWriter output)
+
+        if (Flags.HasFlag(ClassFlags.Interface))
         {
-            output.WriteEncodedInt(QNameIndex);
-            output.WriteEncodedInt(SuperIndex);
-            output.Write((byte)Flags);
-
-            if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
-            {
-                output.WriteEncodedInt(ProtectedNamespaceIndex);
-            }
-
-            output.WriteEncodedInt(InterfaceIndices.Count);
-            for (int i = 0; i < InterfaceIndices.Count; i++)
-            {
-                output.WriteEncodedInt(InterfaceIndices[i]);
-            }
-
-            output.WriteEncodedInt(ConstructorIndex);
-            base.WriteTo(ref output);
+            as3 += "interface ";
         }
+        else as3 += "class ";
+
+        as3 += QName.Name;
+        if (!isInterface && ((Super?.Name ?? "Object") != "Object"))
+        {
+            as3 += $" extends {Super.Name}";
+        }
+
+        if (InterfaceIndices.Count > 0)
+        {
+            string interfacesAS3 = string.Join(
+                ", ", GetInterfaces().Select(i => i.Name));
+
+            as3 += (" implements " + interfacesAS3);
+        }
+
+        return as3;
+    }
+
+    public override int GetSize()
+    {
+        int size = 0;
+        size += FlashWriter.GetEncodedIntSize(QNameIndex);
+        size += FlashWriter.GetEncodedIntSize(SuperIndex);
+        size += sizeof(byte);
+
+        if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
+        {
+            size += FlashWriter.GetEncodedIntSize(ProtectedNamespaceIndex);
+        }
+
+        size += FlashWriter.GetEncodedIntSize(InterfaceIndices.Count);
+        for (int i = 0; i < InterfaceIndices.Count; i++)
+        {
+            size += FlashWriter.GetEncodedIntSize(InterfaceIndices[i]);
+        }
+
+        size += FlashWriter.GetEncodedIntSize(ConstructorIndex);
+        return size + base.GetSize();
+    }
+    public override void WriteTo(ref FlashWriter output)
+    {
+        output.WriteEncodedInt(QNameIndex);
+        output.WriteEncodedInt(SuperIndex);
+        output.Write((byte)Flags);
+
+        if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
+        {
+            output.WriteEncodedInt(ProtectedNamespaceIndex);
+        }
+
+        output.WriteEncodedInt(InterfaceIndices.Count);
+        for (int i = 0; i < InterfaceIndices.Count; i++)
+        {
+            output.WriteEncodedInt(InterfaceIndices[i]);
+        }
+
+        output.WriteEncodedInt(ConstructorIndex);
+        base.WriteTo(ref output);
     }
 }

@@ -1,12 +1,20 @@
-﻿using Flazzy.IO;
+﻿using System.Buffers;
 
-namespace Flazzy
+using Flazzy.IO;
+
+namespace Flazzy;
+
+public interface IFlashItem
 {
-    // TODO: Would a TryWriteTo(Span<byte> dest, out int bytesWritten) + A "maximum" size allocation hint be better?
-    // This size hint would return faster calculated size hint (no branches in encoded int size calculation)
-    public interface IFlashItem
+    int GetSize();
+    void WriteTo(ref FlashWriter output);
+
+    public void WriteTo(IBufferWriter<byte> output)
     {
-        int GetSize();
-        void WriteTo(ref FlashWriter output);
+        int size = GetSize();
+        var writer = new FlashWriter(output.GetSpan(size));
+        WriteTo(ref writer);
+
+        output.Advance(size);
     }
 }

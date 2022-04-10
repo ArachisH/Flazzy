@@ -1,7 +1,6 @@
-﻿namespace Flazzy.Tags
+﻿namespace Flazzy.Tags;
+
+public class EndTag : ITagItem
 {
-    public class EndTag : ITagItem
-    {
-        public TagKind Kind => TagKind.End;
-    }
+    public TagKind Kind => TagKind.End;
 }

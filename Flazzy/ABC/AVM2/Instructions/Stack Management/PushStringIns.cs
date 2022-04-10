@@ -1,61 +1,60 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC.AVM2.Instructions
+namespace Flazzy.ABC.AVM2.Instructions;
+
+public sealed class PushStringIns : Primitive
 {
-    public sealed class PushStringIns : Primitive
+    private string _value;
+    new public string Value
     {
-        private string _value;
-        new public string Value
+        get => _value;
+        set
         {
-            get => _value;
-            set
-            {
-                _value = value;
-                _valueIndex = ABC.Pool.AddConstant(value);
+            _value = value;
+            _valueIndex = ABC.Pool.AddConstant(value);
 
-                base.Value = value;
-            }
+            base.Value = value;
         }
+    }
 
-        private int _valueIndex;
-        public int ValueIndex
+    private int _valueIndex;
+    public int ValueIndex
+    {
+        get => _valueIndex;
+        set
         {
-            get => _valueIndex;
-            set
-            {
-                _valueIndex = value;
-                _value = ABC.Pool.Strings[value];
+            _valueIndex = value;
+            _value = ABC.Pool.Strings[value];
 
-                base.Value = _value;
-            }
+            base.Value = _value;
         }
+    }
 
-        public PushStringIns(ABCFile abc)
-            : base(OPCode.PushString, abc)
-        { }
-        public PushStringIns(ABCFile abc, string value)
-            : this(abc)
-        {
-            Value = value;
-        }
-        public PushStringIns(ABCFile abc, int valueIndex)
-            : this(abc)
-        {
-            ValueIndex = valueIndex;
-        }
-        public PushStringIns(ABCFile abc, ref FlashReader input)
-            : this(abc)
-        {
-            ValueIndex = input.ReadEncodedInt();
-        }
+    public PushStringIns(ABCFile abc)
+        : base(OPCode.PushString, abc)
+    { }
+    public PushStringIns(ABCFile abc, string value)
+        : this(abc)
+    {
+        Value = value;
+    }
+    public PushStringIns(ABCFile abc, int valueIndex)
+        : this(abc)
+    {
+        ValueIndex = valueIndex;
+    }
+    public PushStringIns(ABCFile abc, ref FlashReader input)
+        : this(abc)
+    {
+        ValueIndex = input.ReadEncodedInt();
+    }
 
-        protected override int GetBodySize()
-        {
-            return FlashWriter.GetEncodedIntSize(ValueIndex);
-        }
-        protected override void WriteValuesTo(ref FlashWriter output)
-        {
-            output.WriteEncodedInt(ValueIndex);
-        }
+    protected override int GetBodySize()
+    {
+        return FlashWriter.GetEncodedIntSize(ValueIndex);
+    }
+    protected override void WriteValuesTo(ref FlashWriter output)
+    {
+        output.WriteEncodedInt(ValueIndex);
     }
 }

@@ -1,9 +1,8 @@
-﻿namespace Flazzy.ABC
-{
-    public interface IAS3Item : IFlashItem
-    {
-        ABCFile ABC { get; }
+﻿namespace Flazzy.ABC;
 
-        string ToAS3();
-    }
+public interface IAS3Item
+{
+    ABCFile ABC { get; }
+
+    string ToAS3();
 }

@@ -1,9 +1,8 @@
-﻿namespace Flazzy.ABC.AVM2.Instructions
+﻿namespace Flazzy.ABC.AVM2.Instructions;
+
+public sealed class NopIns : ASInstruction
 {
-    public sealed class NopIns : ASInstruction
-    {
-        public NopIns()
-            : base(OPCode.Nop)
-        { }
-    }
+    public NopIns()
+        : base(OPCode.Nop)
+    { }
 }

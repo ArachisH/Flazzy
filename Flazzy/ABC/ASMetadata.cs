@@ -1,52 +1,51 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC
+namespace Flazzy.ABC;
+
+public class ASMetadata : IFlashItem
 {
-    public class ASMetadata : IFlashItem
+    private readonly ABCFile _abc;
+
+    public int NameIndex { get; set; }
+    public string Name => _abc.Pool.Strings[NameIndex];
+
+    public List<ASItemInfo> Items { get; }
+
+    public ASMetadata(ABCFile abc)
     {
-        private readonly ABCFile _abc;
+        _abc = abc;
 
-        public int NameIndex { get; set; }
-        public string Name => _abc.Pool.Strings[NameIndex];
-
-        public List<ASItemInfo> Items { get; }
-
-        public ASMetadata(ABCFile abc)
+        Items = new List<ASItemInfo>();
+    }
+    public ASMetadata(ABCFile abc, ref FlashReader input)
+        : this(abc)
+    {
+        NameIndex = input.ReadEncodedInt();
+        Items.Capacity = input.ReadEncodedInt();
+        for (int i = 0; i < Items.Capacity; i++)
         {
-            _abc = abc;
-
-            Items = new List<ASItemInfo>();
+            Items.Add(new ASItemInfo(abc, ref input));
         }
-        public ASMetadata(ABCFile abc, ref FlashReader input)
-            : this(abc)
-        {
-            NameIndex = input.ReadEncodedInt();
-            Items.Capacity = input.ReadEncodedInt();
-            for (int i = 0; i < Items.Capacity; i++)
-            {
-                Items.Add(new ASItemInfo(abc, ref input));
-            }
-        }
+    }
 
-        public int GetSize()
+    public int GetSize()
+    {
+        int size = 0;
+        size += FlashWriter.GetEncodedIntSize(NameIndex);
+        size += FlashWriter.GetEncodedIntSize(Items.Count);
+        for (int i = 0; i < Items.Count; i++)
         {
-            int size = 0;
-            size += FlashWriter.GetEncodedIntSize(NameIndex);
-            size += FlashWriter.GetEncodedIntSize(Items.Count);
-            for (int i = 0; i < Items.Count; i++)
-            {
-                size += Items[i].GetSize();
-            }
-            return size;
+            size += Items[i].GetSize();
         }
-        public void WriteTo(ref FlashWriter output)
+        return size;
+    }
+    public void WriteTo(ref FlashWriter output)
+    {
+        output.WriteEncodedInt(NameIndex);
+        output.WriteEncodedInt(Items.Count);
+        foreach (var item in Items)
         {
-            output.WriteEncodedInt(NameIndex);
-            output.WriteEncodedInt(Items.Count);
-            foreach (var item in Items)
-            {
-                item.WriteTo(ref output);
-            }
+            item.WriteTo(ref output);
         }
     }
 }

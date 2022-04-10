@@ -1,41 +1,40 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC.AVM2.Instructions
+namespace Flazzy.ABC.AVM2.Instructions;
+
+public sealed class NewClassIns : ASInstruction
 {
-    public sealed class NewClassIns : ASInstruction
+    public int ClassIndex { get; set; }
+    public ASClass Class => ABC.Classes[ClassIndex];
+
+    public NewClassIns(ABCFile abc)
+        : base(OPCode.NewClass, abc)
+    { }
+    public NewClassIns(ABCFile abc, int classIndex)
+        : this(abc)
     {
-        public int ClassIndex { get; set; }
-        public ASClass Class => ABC.Classes[ClassIndex];
+        ClassIndex = classIndex;
+    }
+    public NewClassIns(ABCFile abc, ref FlashReader input)
+        : this(abc)
+    {
+        ClassIndex = input.ReadEncodedInt();
+    }
 
-        public NewClassIns(ABCFile abc)
-            : base(OPCode.NewClass, abc)
-        { }
-        public NewClassIns(ABCFile abc, int classIndex)
-            : this(abc)
-        {
-            ClassIndex = classIndex;
-        }
-        public NewClassIns(ABCFile abc, ref FlashReader input)
-            : this(abc)
-        {
-            ClassIndex = input.ReadEncodedInt();
-        }
+    public override int GetPopCount() => 1;
+    public override int GetPushCount() => 1;
+    public override void Execute(ASMachine machine)
+    {
+        object baseType = machine.Values.Pop();
+        machine.Values.Push(null);
+    }
 
-        public override int GetPopCount() => 1;
-        public override int GetPushCount() => 1;
-        public override void Execute(ASMachine machine)
-        {
-            object baseType = machine.Values.Pop();
-            machine.Values.Push(null);
-        }
-
-        protected override int GetBodySize()
-        {
-            return FlashWriter.GetEncodedIntSize(ClassIndex);
-        }
-        protected override void WriteValuesTo(ref FlashWriter output)
-        {
-            output.WriteEncodedInt(ClassIndex);
-        }
+    protected override int GetBodySize()
+    {
+        return FlashWriter.GetEncodedIntSize(ClassIndex);
+    }
+    protected override void WriteValuesTo(ref FlashWriter output)
+    {
+        output.WriteEncodedInt(ClassIndex);
     }
 }
