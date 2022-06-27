@@ -2,7 +2,7 @@
 
 namespace Flazzy.Records;
 
-public class RectangeRecord : IFlashItem
+public sealed class RectangeRecord : IFlashItem
 {
     public int X { get; set; }
     public int Y { get; set; }

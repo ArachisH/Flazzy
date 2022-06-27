@@ -1,4 +1,7 @@
 ﻿using System.Text;
+using System.Numerics;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.Intrinsics.Arm;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
@@ -7,7 +10,7 @@ namespace Flazzy.IO;
 public ref struct FlashWriter
 {
     private readonly Span<byte> _data;
-
+    
     public int Position { get; set; }
 
     public FlashWriter(Span<byte> data)
@@ -117,16 +120,30 @@ public ref struct FlashWriter
 
     public static int GetEncodedIntSize(int value)
     {
-        return GetEncodedUIntSize((uint)value);
+        return (int)GetEncodedUIntSize((uint)value);
     }
-    public static int GetEncodedUIntSize(uint value)
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint GetEncodedUIntSize(uint value)
     {
-        // TODO: Research if we can turn this branchless
-        if (value < 0x80) return 1;
-        if (value < 0x4000) return 2;
-        if (value < 0x200000) return 3;
-        if (value < 0x10000000) return 4;
-        return 5;
+        // Avoid BitOperation software fallback
+        if (Lzcnt.IsSupported || X86Base.IsSupported || ArmBase.IsSupported)
+        {
+            // bits_to_encode = (data != 0) ? 32 - CLZ(x) : 1  // 32 - CLZ(data | 1)
+            // bytes = ceil(bits_to_encode / 7.0);             // (6 + bits_to_encode) / 7
+            uint x = 6 + 32 - (uint)BitOperations.LeadingZeroCount(value | 1);
+            // Division by 7 is done by (x * 37) >> 8 where 37 = ceil(256 / 7).
+            // This works for 0 <= x < 256 / (7 * 37 - 256), i.e. 0 <= x <= 85.
+            return (x * 37) >> 8;
+        }
+        else
+        {
+            if ((value & (~0U << 7)) == 0) return 1;
+            if ((value & (~0U << 14)) == 0) return 2;
+            if ((value & (~0U << 21)) == 0) return 3;
+            if ((value & (~0U << 28)) == 0) return 4;
+            return 5;
+        }
     }
 
     public static void ThrowIndexOutOfRange() => throw new IndexOutOfRangeException();

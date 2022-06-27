@@ -1,4 +1,6 @@
-﻿namespace Flazzy.IO;
+﻿using System.Numerics;
+
+namespace Flazzy.IO;
 
 public ref struct BitWriter
 {
@@ -38,16 +40,7 @@ public ref struct BitWriter
         }
     }
 
-    public static int CountUBits(uint value)
-    {
-        int count = 0;
-        while (value > 0)
-        {
-            value >>= 1;
-            count++;
-        }
-        return count;
-    }
+    public static int CountUBits(uint value) => 32 - BitOperations.LeadingZeroCount(value);
     public static int CountSBits(int value)
     {
         if (value == 0) return 0;
