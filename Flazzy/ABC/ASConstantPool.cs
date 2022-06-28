@@ -187,7 +187,7 @@ public class ASConstantPool : IFlashItem
         size += FlashWriter.GetEncodedIntSize(UIntegers.Count);
         for (int i = 1; i < UIntegers.Count; i++)
         {
-            size += (int)FlashWriter.GetEncodedUIntSize(UIntegers[i]);
+            size += FlashWriter.GetEncodedUIntSize(UIntegers[i]);
         }
 
         size += FlashWriter.GetEncodedIntSize(Doubles.Count);

@@ -11,6 +11,7 @@ public class BitTests
     [InlineData(1, 1)]
     [InlineData(2, 2)]
     [InlineData(0b_00111101_00000000, 14)]
+    [InlineData(0xFFFF_FFFF, 32)]
     public void BitWriter_CountUnsignedBits(uint value, int expectedCount)
     {
         Assert.Equal(expectedCount, BitWriter.CountUBits(value));

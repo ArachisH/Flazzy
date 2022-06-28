@@ -118,20 +118,20 @@ public ref struct FlashWriter
         Position += len + 1;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetEncodedIntSize(int value)
     {
-        return (int)GetEncodedUIntSize((uint)value);
+        return GetEncodedUIntSize((uint)value);
     }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint GetEncodedUIntSize(uint value)
+    public static int GetEncodedUIntSize(uint value)
     {
         // Avoid BitOperation software fallback
         if (Lzcnt.IsSupported || X86Base.IsSupported || ArmBase.IsSupported)
         {
-            // bits_to_encode = (data != 0) ? 32 - CLZ(x) : 1  // 32 - CLZ(data | 1)
+            // bits_to_encode = (data != 0) ? 32 - CLZ(x) : 1  // 32 - CLZ(data | 1) 
             // bytes = ceil(bits_to_encode / 7.0);             // (6 + bits_to_encode) / 7
-            uint x = 6 + 32 - (uint)BitOperations.LeadingZeroCount(value | 1);
+            int x = 6 + 32 - BitOperations.LeadingZeroCount(value | 1);
             // Division by 7 is done by (x * 37) >> 8 where 37 = ceil(256 / 7).
             // This works for 0 <= x < 256 / (7 * 37 - 256), i.e. 0 <= x <= 85.
             return (x * 37) >> 8;
