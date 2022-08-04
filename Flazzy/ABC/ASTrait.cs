@@ -145,6 +145,58 @@ namespace Flazzy.ABC
             }
         }
 
+        public override string ToAS3()
+        {
+            switch(Kind)
+            {
+                case TraitKind.Constant:
+                case TraitKind.Slot:
+                    {
+                        var str = string.Empty;
+                        if(!IsStatic && Attributes.HasFlag(TraitAttributes.Override))
+                        {
+                            str += "override ";
+                        }
+                        str += QName.Namespace.GetAS3Modifiers();
+                        str += " ";
+                        if (IsStatic)
+                        {
+                            str += "static ";
+                        }
+                        str += Kind == TraitKind.Constant ? "const " : "var ";
+                        str += QName.Name;
+                        if(Type != null)
+                        {
+                            str += ":";
+                            str += Type.Name ?? Type.QName.Name;
+                            if (Type.Kind == MultinameKind.TypeName)
+                            {
+                                str += ".";
+                                str += "<";
+                                str += string.Join(',', Type.TypeIndices.Select(i => ABC.Pool.Multinames[i].Name));
+                                str += ">";
+                            }
+                        }
+                        if (Value?.ToString().Length > 0)
+                        {
+                            str += " ";
+                            str += "=";
+                            str += " ";
+                            if (ValueKind == ConstantKind.String)
+                            {
+                                str += "\"";
+                                str += Value.ToString();
+                                str += "\"";
+                            }
+                            else str += Value.ToString();
+                        }
+                        str += ";";
+                        return str;
+                    }
+            }
+            return string.Empty;
+        }
+
         public override void WriteTo(FlashWriter output)
         {
             var bitContainer = (byte)(
