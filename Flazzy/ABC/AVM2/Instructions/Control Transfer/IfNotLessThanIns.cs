@@ -1,6 +1,4 @@
-﻿using System;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 
 namespace Flazzy.ABC.AVM2.Instructions
 {

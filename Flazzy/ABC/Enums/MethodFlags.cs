@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Flazzy.ABC
+﻿namespace Flazzy.ABC
 {
     [Flags]
     public enum MethodFlags
