@@ -184,9 +184,9 @@ namespace Flazzy.ABC
                                 builder.Append(Value.ToString());
                                 builder.Append("\"");
                             }
-                            else builder.Append(Value.ToString());
+                            else builder.Append(Value.ToString().ToLower());
                         }
-                        builder.Append(";");
+                        builder.Append(';');
                         return builder.ToString();
                     }
             }
