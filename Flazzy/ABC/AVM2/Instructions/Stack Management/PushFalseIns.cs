@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Flazzy.ABC.AVM2.Instructions
+﻿namespace Flazzy.ABC.AVM2.Instructions
 {
     public class PushFalseIns : Primitive
     {

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 using Flazzy.ABC.AVM2;
 
 namespace Flazzy.ABC

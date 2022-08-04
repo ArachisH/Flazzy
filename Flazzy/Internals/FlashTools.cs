@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Flazzy
+﻿namespace Flazzy
 {
     internal static class FlashTools
     {

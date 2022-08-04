@@ -2,7 +2,6 @@
 using Flazzy.Tags;
 using Flazzy.Records;
 using Flazzy.IO.Compression;
-using System.IO.Compression;
 
 namespace Flazzy
 {

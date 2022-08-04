@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 
 namespace Flazzy.Records
 {
