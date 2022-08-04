@@ -75,6 +75,10 @@ namespace Flazzy.ABC
             ASMultiname qName = Trait?.QName ?? Container?.QName;
             if (qName != null)
             {
+                if(Trait.Attributes.HasFlag(TraitAttributes.Override))
+                {
+                    builder.Append("override ");
+                }
                 builder.Append(qName.Namespace.GetAS3Modifiers());
                 if (builder.Length > 0)
                 {

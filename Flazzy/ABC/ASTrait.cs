@@ -153,7 +153,7 @@ namespace Flazzy.ABC
                 case TraitKind.Slot:
                     {
                         var str = string.Empty;
-                        if(!IsStatic && Attributes.HasFlag(TraitAttributes.Override))
+                        if(Attributes.HasFlag(TraitAttributes.Override))
                         {
                             str += "override ";
                         }
@@ -171,17 +171,14 @@ namespace Flazzy.ABC
                             str += Type.Name ?? Type.QName.Name;
                             if (Type.Kind == MultinameKind.TypeName)
                             {
-                                str += ".";
-                                str += "<";
+                                str += ".<";
                                 str += string.Join(',', Type.TypeIndices.Select(i => ABC.Pool.Multinames[i].Name));
                                 str += ">";
                             }
                         }
-                        if (Value?.ToString().Length > 0)
+                        if (!string.IsNullOrEmpty(Value?.ToString()))
                         {
-                            str += " ";
-                            str += "=";
-                            str += " ";
+                            str += " = ";
                             if (ValueKind == ConstantKind.String)
                             {
                                 str += "\"";
