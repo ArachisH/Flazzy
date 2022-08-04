@@ -1,4 +1,5 @@
-﻿using Flazzy.IO;
+﻿using System.Text;
+using Flazzy.IO;
 
 namespace Flazzy.ABC
 {
@@ -150,43 +151,43 @@ namespace Flazzy.ABC
                 case TraitKind.Constant:
                 case TraitKind.Slot:
                     {
-                        var str = string.Empty;
+                        StringBuilder builder = new();
                         if(Attributes.HasFlag(TraitAttributes.Override))
                         {
-                            str += "override ";
+                            builder.Append("override ");
                         }
-                        str += QName.Namespace.GetAS3Modifiers();
-                        str += " ";
+                        builder.Append(QName.Namespace.GetAS3Modifiers());
+                        builder.Append(' ');
                         if (IsStatic)
                         {
-                            str += "static ";
+                            builder.Append("static ");
                         }
-                        str += Kind == TraitKind.Constant ? "const " : "var ";
-                        str += QName.Name;
+                        builder.Append(Kind == TraitKind.Constant ? "const " : "var ");
+                        builder.Append(QName.Name);
                         if(Type != null)
                         {
-                            str += ":";
-                            str += Type.Name ?? Type.QName.Name;
+                            builder.Append(':');
+                            builder.Append(Type.Name ?? Type.QName.Name);
                             if (Type.Kind == MultinameKind.TypeName)
                             {
-                                str += ".<";
-                                str += string.Join(',', Type.TypeIndices.Select(i => ABC.Pool.Multinames[i].Name));
-                                str += ">";
+                                builder.Append(".<");
+                                builder.Append(string.Join(',', Type.TypeIndices.Select(i => ABC.Pool.Multinames[i].Name)));
+                                builder.Append('>');
                             }
                         }
                         if (!string.IsNullOrEmpty(Value?.ToString()))
                         {
-                            str += " = ";
+                            builder.Append(" = ");
                             if (ValueKind == ConstantKind.String)
                             {
-                                str += "\"";
-                                str += Value.ToString();
-                                str += "\"";
+                                builder.Append("\"");
+                                builder.Append(Value.ToString());
+                                builder.Append("\"");
                             }
-                            else str += Value.ToString();
+                            else builder.Append(Value.ToString());
                         }
-                        str += ";";
-                        return str;
+                        builder.Append(";");
+                        return builder.ToString();
                     }
             }
             return string.Empty;
