@@ -84,7 +84,15 @@ namespace Flazzy.ABC
                 {
                     builder.Append("static ");
                 }
-                builder.Append("function ");
+                builder.Append("function ");    
+                if(Trait.Kind == TraitKind.Getter)
+                {
+                    builder.Append("get ");
+                }
+                if(Trait.Kind == TraitKind.Setter)
+                {
+                    builder.Append("set ");
+                }
                 builder.Append(qName.Name);
             }
             else if (IsAnonymous) builder.Append("function");
