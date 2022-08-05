@@ -156,8 +156,12 @@ namespace Flazzy.ABC
                         {
                             builder.Append("override ");
                         }
-                        builder.Append(QName.Namespace.GetAS3Modifiers());
-                        builder.Append(' ');
+                        var modifiers = QName.Namespace.GetAS3Modifiers();
+                        if(!string.IsNullOrEmpty(modifiers))
+                        {
+                            builder.Append(modifiers);
+                            builder.Append(' ');
+                        }
                         if (IsStatic)
                         {
                             builder.Append("static ");
@@ -180,13 +184,13 @@ namespace Flazzy.ABC
                             builder.Append(" = ");
                             if (ValueKind == ConstantKind.String)
                             {
-                                builder.Append("\"");
+                                builder.Append('"');
                                 builder.Append(Value.ToString());
-                                builder.Append("\"");
+                                builder.Append('"');
                             }
-                            else builder.Append(Value.ToString());
+                            else builder.Append(Value.ToString().ToLower());
                         }
-                        builder.Append(";");
+                        builder.Append(';');
                         return builder.ToString();
                     }
             }

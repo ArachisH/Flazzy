@@ -118,13 +118,17 @@ namespace Flazzy.ABC
                 builder.Append(Parameters.Count + 1);
             }
             builder.Append(')'); // Parameters End
-
             if (ReturnType != null)
             {
                 builder.Append(':');
-                builder.Append(ReturnType.Name);
+                if(ReturnType.Kind == MultinameKind.TypeName)
+                {
+                    builder.Append(ReturnType.QName.Name);
+                    builder.Append(".<");
+                    builder.Append(string.Join(',', ReturnType.TypeIndices.Select(i => ABC.Pool.Multinames[i].Name)));
+                    builder.Append('>');
+                } else builder.Append(ReturnType.Name);
             }
-
             return builder.ToString();
         }
 
