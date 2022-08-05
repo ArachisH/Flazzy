@@ -125,7 +125,7 @@ namespace Flazzy.ABC
                 {
                     builder.Append(ReturnType.QName.Name);
                     builder.Append(".<");
-                    builder.Append(string.Join(',', ReturnType.TypeIndices.Select(i => ABC.Pool.Multinames[i])));
+                    builder.Append(string.Join(',', ReturnType.TypeIndices.Select(i => ABC.Pool.Multinames[i].Name)));
                     builder.Append('>');
                 } else builder.Append(ReturnType.Name);
             }
