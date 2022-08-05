@@ -118,7 +118,7 @@ namespace Flazzy.ABC
                 builder.Append(Parameters.Count + 1);
             }
             builder.Append(')'); // Parameters End
-            if ((ReturnType ?? ReturnType.QName) != null)
+            if (ReturnType != null)
             {
                 builder.Append(':');
                 if(ReturnType.Kind == MultinameKind.TypeName)
