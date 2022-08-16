@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Flazzy.IO;
 
-using Flazzy.IO;
+using System.Diagnostics;
 
 namespace Flazzy.ABC;
 
+[DebuggerDisplay("{Kind}: \"{Namespace.Name}.{Name}\"")]
 public class ASMultiname : IEquatable<ASMultiname>, IFlashItem, IPoolConstant, IQName, IRTQName, IMultiname, IMultinameL
 {
     public ASConstantPool Pool { get; init; }
@@ -57,7 +58,6 @@ public class ASMultiname : IEquatable<ASMultiname>, IFlashItem, IPoolConstant, I
     public ASNamespaceSet NamespaceSet => Pool.NamespaceSets[NamespaceSetIndex];
 
     public List<int> TypeIndices { get; }
-    protected override string DebuggerDisplay => $"{Kind}: \"{Namespace.Name}.{Name}\"";
 
     public static bool operator ==(ASMultiname left, ASMultiname right)
     {
@@ -283,13 +283,4 @@ public class ASMultiname : IEquatable<ASMultiname>, IFlashItem, IPoolConstant, I
     }
 
     public override string ToString() => $"{Kind}: \"{Namespace.Name}.{Name}\"";
-
-    public static bool operator ==(ASMultiname left, ASMultiname right)
-    {
-        return EqualityComparer<ASMultiname>.Default.Equals(left, right);
-    }
-    public static bool operator !=(ASMultiname left, ASMultiname right)
-    {
-        return !(left == right);
-    }
 }

@@ -1,12 +1,13 @@
-﻿using System;
+﻿using Flazzy.IO;
 
-using Flazzy.IO;
+using System.Diagnostics;
 
 namespace Flazzy.ABC;
 
 /// <summary>
 /// Represents a namespace in the bytecode.
 /// </summary>
+[DebuggerDisplay("{Kind}: \"{Name}\"")]
 public class ASNamespace : IEquatable<ASNamespace>, IFlashItem, IPoolConstant
 {
     public ASConstantPool Pool { get; init; }
@@ -25,8 +26,6 @@ public class ASNamespace : IEquatable<ASNamespace>, IFlashItem, IPoolConstant
     /// Gets or sets the kind of namespace this entry should be interpreted as by the loader.
     /// </summary>
     public NamespaceKind Kind { get; set; }
-
-    protected override string DebuggerDisplay => $"{Kind}: \"{Name}\"";
 
     public static bool operator ==(ASNamespace left, ASNamespace right)
     {
@@ -69,7 +68,7 @@ public class ASNamespace : IEquatable<ASNamespace>, IFlashItem, IPoolConstant
         size += FlashWriter.GetEncodedIntSize(NameIndex);
         return size;
     }
-    public void WriteTo(FlashWriter output)
+    public void WriteTo(ref FlashWriter output)
     {
         output.Write((byte)Kind);
         output.WriteEncodedInt(NameIndex);

@@ -143,7 +143,7 @@ public class ASTrait : IFlashItem, IAS3Item, IMethodGSTrait, ISlotConstantTrait,
         }
     }
 
-    public override string ToAS3()
+    public string ToAS3()
     {
         switch(Kind)
         {

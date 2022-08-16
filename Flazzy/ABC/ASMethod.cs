@@ -23,8 +23,6 @@ public class ASMethod : IFlashItem, IAS3Item
     public ASContainer Container { get; internal set; }
     public bool IsAnonymous => Trait == null && !IsConstructor;
 
-    protected override string DebuggerDisplay => ToAS3();
-
     public ASMethod(ABCFile abc)
     {
         ABC = abc;
@@ -133,6 +131,7 @@ public class ASMethod : IFlashItem, IAS3Item
         }
         return builder.ToString();
     }
+    public override string ToString() => ToAS3();
 
     public int GetSize()
     {

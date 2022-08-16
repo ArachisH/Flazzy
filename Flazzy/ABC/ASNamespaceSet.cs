@@ -1,13 +1,14 @@
 ﻿using Flazzy.IO;
 
+using System.Diagnostics;
+
 namespace Flazzy.ABC;
 
+[DebuggerDisplay("Namespaces: {NamespaceIndices.Count:n0}")]
 public class ASNamespaceSet : IEquatable<ASNamespaceSet>, IFlashItem, IPoolConstant
 {
     public ASConstantPool Pool { get; init; }
     public List<int> NamespaceIndices { get; }
-
-    protected override string DebuggerDisplay => $"Namespaces: {NamespaceIndices.Count:n0}";
 
     public static bool operator ==(ASNamespaceSet left, ASNamespaceSet right)
     {
@@ -31,33 +32,6 @@ public class ASNamespaceSet : IEquatable<ASNamespaceSet>, IFlashItem, IPoolConst
         {
             NamespaceIndices.Add(input.ReadEncodedInt());
         }
-    }
-
-    public override int GetHashCode()
-    {
-        var hash = new HashCode();
-        foreach (ASNamespace @namespace in GetNamespaces())
-        {
-            hash.Add(@namespace);
-        }
-        return hash.ToHashCode();
-    }
-    public override bool Equals(object obj)
-    {
-        return Equals(obj as ASNamespaceSet);
-    }
-    public bool Equals(ASNamespaceSet other)
-    {
-        if (other == null) return false;
-        if (!ReferenceEquals(this, other))
-        {
-            if (NamespaceIndices.Count != other.NamespaceIndices.Count) return false;
-            for (int i = 0; i < NamespaceIndices.Count; i++)
-            {
-                if (Pool.Namespaces[NamespaceIndices[i]] != other.Pool.Namespaces[NamespaceIndices[i]]) return false;
-            }
-        }
-        return true;
     }
 
     public IEnumerable<ASNamespace> GetNamespaces()
