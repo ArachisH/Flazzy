@@ -32,9 +32,10 @@ public class ABCFile : IFlashItem, IDisposable
     public ABCFile(ref FlashReader input)
         : this()
     {
-        ushort minor = input.ReadUInt16();
-        ushort major = input.ReadUInt16();
-        Version = new Version(major, minor);
+        Version = new Version(
+            minor: input.ReadUInt16(), 
+            major: input.ReadUInt16());
+        
         Pool = new ASConstantPool(this, ref input);
 
         Methods.Capacity = input.ReadEncodedInt();
@@ -58,7 +59,7 @@ public class ABCFile : IFlashItem, IDisposable
         _classByQNameCache.EnsureCapacity(Instances.Count);
         _instanceByConstructorCache.EnsureCapacity(Instances.Count);
 
-        Classes.Capacity = input.ReadEncodedInt();
+        Classes.Capacity = Instances.Count;
         for (int i = 0; i < Classes.Capacity; i++)
         {
             var @class = new ASClass(this, ref input)

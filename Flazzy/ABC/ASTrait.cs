@@ -145,18 +145,18 @@ public class ASTrait : IFlashItem, IAS3Item, IMethodGSTrait, ISlotConstantTrait,
 
     public string ToAS3()
     {
-        switch(Kind)
+        switch (Kind)
         {
             case TraitKind.Constant:
             case TraitKind.Slot:
                 {
                     StringBuilder builder = new();
-                    if(Attributes.HasFlag(TraitAttributes.Override))
+                    if (Attributes.HasFlag(TraitAttributes.Override))
                     {
                         builder.Append("override ");
                     }
                     var modifiers = QName.Namespace.GetAS3Modifiers();
-                    if(!string.IsNullOrEmpty(modifiers))
+                    if (!string.IsNullOrEmpty(modifiers))
                     {
                         builder.Append(modifiers);
                         builder.Append(' ');
@@ -167,7 +167,7 @@ public class ASTrait : IFlashItem, IAS3Item, IMethodGSTrait, ISlotConstantTrait,
                     }
                     builder.Append(Kind == TraitKind.Constant ? "const " : "var ");
                     builder.Append(QName.Name);
-                    if(Type != null)
+                    if (Type != null)
                     {
                         builder.Append(':');
                         builder.Append(Type.Name ?? Type.QName.Name);

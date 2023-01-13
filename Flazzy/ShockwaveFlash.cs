@@ -27,7 +27,7 @@ public class ShockwaveFlash : IDisposable
     }
     public void Assemble(IBufferWriter<byte> output, CompressionKind compression)
     {
-        if (Compression == CompressionKind.LZMA) 
+        if (Compression == CompressionKind.LZMA)
             throw new NotSupportedException($"{nameof(CompressionKind.LZMA)} is not supported!");
 
         // Write SWF body

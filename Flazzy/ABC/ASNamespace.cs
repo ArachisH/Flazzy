@@ -74,22 +74,11 @@ public class ASNamespace : IEquatable<ASNamespace>, IFlashItem, IPoolConstant
         output.WriteEncodedInt(NameIndex);
     }
 
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Name, Kind);
-    }
+    public override int GetHashCode() 
+        => HashCode.Combine(Name, Kind);
+    
     public bool Equals(ASNamespace other)
-    {
-        if (other == null) return false;
-        if (!ReferenceEquals(this, other))
-        {
-            if (Name != other.Name) return false;
-            if (Kind != other.Kind) return false;
-        }
-        return true;
-    }
-    public override bool Equals(object obj)
-    {
-        return Equals(obj as ASNamespace);
-    }
+        => Name == other.Name && Kind == other.Kind;
+    public override bool Equals(object obj) 
+        => obj is ASNamespace other && Equals(other);
 }

@@ -53,7 +53,7 @@ public readonly ref struct TagHeader
     public static bool TryRead(ref FlashReader input, out TagHeader header)
     {
         header = default;
-        if (input.Length >= 2) 
+        if (input.Length >= 2)
         {
             ushort value = input.ReadUInt16();
             TagKind kind = (TagKind)(value >> 6);

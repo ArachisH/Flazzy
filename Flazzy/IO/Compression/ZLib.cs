@@ -25,7 +25,7 @@ internal unsafe static class ZLib
             return totalRead;
         }
     }
-    
+
     internal static byte[] Compress(ReadOnlySpan<byte> input)
     {
         using var stream = new MemoryStream(input.Length);

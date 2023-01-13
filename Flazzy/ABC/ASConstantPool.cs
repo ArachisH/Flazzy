@@ -69,22 +69,25 @@ public class ASConstantPool : IFlashItem
         if (Strings.Capacity > 0) Strings.Add(default);
         for (int i = 1; i < Strings.Capacity; i++)
         {
-            Strings.Add(input.ReadNullString());
+            Strings.Add(input.ReadString());
         }
 
         Namespaces.Capacity = input.ReadEncodedInt();
+        if (Namespaces.Capacity > 0) Namespaces.Add(default);
         for (int i = 1; i < Namespaces.Capacity; i++)
         {
             Namespaces.Add(new ASNamespace(this, ref input));
         }
 
         NamespaceSets.Capacity = input.ReadEncodedInt();
+        if (NamespaceSets.Capacity > 0) NamespaceSets.Add(default);
         for (int i = 1; i < NamespaceSets.Capacity; i++)
         {
             NamespaceSets.Add(new ASNamespaceSet(this, ref input));
         }
 
         Multinames.Capacity = input.ReadEncodedInt();
+        if (Multinames.Capacity > 0) Multinames.Add(default);
         for (int i = 1; i < Multinames.Capacity; i++)
         {
             Multinames.Add(ReadMultiname(ref input));
@@ -263,7 +266,8 @@ public class ASConstantPool : IFlashItem
         WriteItems(ref output, Multinames);
     }
 
-    private static void WriteItems<T>(ref FlashWriter output, List<T> constants) where T : IFlashItem
+    private static void WriteItems<T>(ref FlashWriter output, List<T> constants) 
+        where T : IFlashItem
     {
         output.WriteEncodedInt(constants.Count);
         for (int i = 1; i < constants.Count; i++)

@@ -1,6 +1,7 @@
 ﻿using Flazzy.IO;
 
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Flazzy.ABC;
 
@@ -63,21 +64,19 @@ public class ASNamespaceSet : IEquatable<ASNamespaceSet>, IFlashItem, IPoolConst
 
     public bool Equals(ASNamespaceSet other)
     {
-        if (other == null) return false;
-        if (!ReferenceEquals(this, other))
+        if (ReferenceEquals(this, other)) return true;
+
+        if (NamespaceIndices.Count != other.NamespaceIndices.Count) return false;
+        for (int i = 0; i < NamespaceIndices.Count; i++)
         {
-            if (NamespaceIndices.Count != other.NamespaceIndices.Count) return false;
-            for (int i = 0; i < NamespaceIndices.Count; i++)
-            {
-                if (Pool.Namespaces[NamespaceIndices[i]] != other.Pool.Namespaces[NamespaceIndices[i]]) return false;
-            }
+            if (Pool.Namespaces[NamespaceIndices[i]] != other.Pool.Namespaces[NamespaceIndices[i]]) 
+                return false;
         }
         return true;
     }
     public override bool Equals(object obj)
-    {
-        return Equals(obj as ASNamespaceSet);
-    }
+        => obj is ASNamespaceSet other && Equals(other);
+    
     public override int GetHashCode()
     {
         var hash = new HashCode();
@@ -87,4 +86,4 @@ public class ASNamespaceSet : IEquatable<ASNamespaceSet>, IFlashItem, IPoolConst
         }
         return hash.ToHashCode();
     }
-}
+} 

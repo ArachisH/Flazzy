@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
@@ -40,13 +41,13 @@ public unsafe ref struct FlashReader
 
     public short ReadInt16()
     {
-        short value = MemoryMarshal.Read<short>(_data.Slice(Position));
+        short value = BinaryPrimitives.ReadInt16LittleEndian(_data.Slice(Position));
         Position += sizeof(short);
         return value;
     }
     public ushort ReadUInt16()
     {
-        ushort value = MemoryMarshal.Read<ushort>(_data.Slice(Position));
+        ushort value = BinaryPrimitives.ReadUInt16LittleEndian(_data.Slice(Position));
         Position += sizeof(ushort);
         return value;
     }
@@ -64,26 +65,26 @@ public unsafe ref struct FlashReader
 
     public int ReadInt32()
     {
-        int value = MemoryMarshal.Read<int>(_data.Slice(Position));
+        int value = BinaryPrimitives.ReadInt32LittleEndian(_data.Slice(Position));
         Position += sizeof(int);
         return value;
     }
     public uint ReadUInt32()
     {
-        uint value = MemoryMarshal.Read<uint>(_data.Slice(Position));
+        uint value = BinaryPrimitives.ReadUInt32LittleEndian(_data.Slice(Position));
         Position += sizeof(uint);
         return value;
     }
 
     public ulong ReadUInt64()
     {
-        ulong value = MemoryMarshal.Read<ulong>(_data.Slice(Position));
+        ulong value = BinaryPrimitives.ReadUInt64LittleEndian(_data.Slice(Position));
         Position += sizeof(ulong);
         return value;
     }
     public double ReadDouble()
     {
-        double value = MemoryMarshal.Read<double>(_data.Slice(Position));
+        double value = BinaryPrimitives.ReadDoubleLittleEndian(_data.Slice(Position));
         Position += sizeof(double);
         return value;
     }

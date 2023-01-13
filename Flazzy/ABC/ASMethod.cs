@@ -75,7 +75,7 @@ public class ASMethod : IFlashItem, IAS3Item
         ASMultiname qName = Trait?.QName ?? Container?.QName;
         if (qName != null)
         {
-            if(Trait.Attributes.HasFlag(TraitAttributes.Override))
+            if (Trait.Attributes.HasFlag(TraitAttributes.Override))
             {
                 builder.Append("override ");
             }
@@ -88,12 +88,12 @@ public class ASMethod : IFlashItem, IAS3Item
             {
                 builder.Append("static ");
             }
-            builder.Append("function ");    
-            if(Trait.Kind == TraitKind.Getter)
+            builder.Append("function ");
+            if (Trait.Kind == TraitKind.Getter)
             {
                 builder.Append("get ");
             }
-            if(Trait.Kind == TraitKind.Setter)
+            if (Trait.Kind == TraitKind.Setter)
             {
                 builder.Append("set ");
             }
@@ -121,13 +121,14 @@ public class ASMethod : IFlashItem, IAS3Item
         if (ReturnType != null)
         {
             builder.Append(':');
-            if(ReturnType.Kind == MultinameKind.TypeName)
+            if (ReturnType.Kind == MultinameKind.TypeName)
             {
                 builder.Append(ReturnType.QName.Name);
                 builder.Append(".<");
                 builder.Append(string.Join(',', ReturnType.TypeIndices.Select(i => ABC.Pool.Multinames[i].Name)));
                 builder.Append('>');
-            } else builder.Append(ReturnType.Name);
+            }
+            else builder.Append(ReturnType.Name);
         }
         return builder.ToString();
     }

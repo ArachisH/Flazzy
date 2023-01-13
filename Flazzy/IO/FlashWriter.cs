@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using System.Numerics;
+using System.Buffers.Binary;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics.Arm;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 namespace Flazzy.IO;
@@ -10,7 +10,7 @@ namespace Flazzy.IO;
 public ref struct FlashWriter
 {
     private readonly Span<byte> _data;
-    
+
     public int Position { get; set; }
 
     public FlashWriter(Span<byte> data)
@@ -25,32 +25,32 @@ public ref struct FlashWriter
     public void Write(bool value) => Write(Unsafe.As<bool, byte>(ref value));
     public void Write(short value)
     {
-        MemoryMarshal.Write(_data.Slice(Position), ref value);
+        BinaryPrimitives.WriteInt16LittleEndian(_data.Slice(Position), value);
         Position += sizeof(short);
     }
     public void Write(ushort value)
     {
-        MemoryMarshal.Write(_data.Slice(Position), ref value);
+        BinaryPrimitives.WriteUInt16LittleEndian(_data.Slice(Position), value);
         Position += sizeof(ushort);
     }
     public void Write(int value)
     {
-        MemoryMarshal.Write(_data.Slice(Position), ref value);
+        BinaryPrimitives.WriteInt32LittleEndian(_data.Slice(Position), value);
         Position += sizeof(int);
     }
     public void Write(uint value)
     {
-        MemoryMarshal.Write(_data.Slice(Position), ref value);
+        BinaryPrimitives.WriteUInt32LittleEndian(_data.Slice(Position), value);
         Position += sizeof(uint);
     }
     public void Write(ulong value)
     {
-        MemoryMarshal.Write(_data.Slice(Position), ref value);
+        BinaryPrimitives.WriteUInt64LittleEndian(_data.Slice(Position), value);
         Position += sizeof(ulong);
     }
     public void Write(double value)
     {
-        MemoryMarshal.Write(_data.Slice(Position), ref value);
+        BinaryPrimitives.WriteDoubleLittleEndian(_data.Slice(Position), value);
         Position += sizeof(double);
     }
     public void WriteUInt24(uint value)
@@ -68,16 +68,6 @@ public ref struct FlashWriter
         WriteEncodedUInt((uint)value);
     }
     public void WriteEncodedUInt(uint value)
-    {
-        while (value > 0x7Fu)
-        {
-            Write((byte)(value | ~0x7Fu));
-            value >>= 7;
-        }
-        Write((byte)value);
-    }
-
-    public void WriteEncodedUInt2(uint value)
     {
         while (value > 0x7Fu)
         {
@@ -145,6 +135,4 @@ public ref struct FlashWriter
             return 5;
         }
     }
-
-    public static void ThrowIndexOutOfRange() => throw new IndexOutOfRangeException();
 }

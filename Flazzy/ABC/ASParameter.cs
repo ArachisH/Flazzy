@@ -62,22 +62,22 @@ public class ASParameter
             switch (ValueKind)
             {
                 case ConstantKind.String:
-                builder.Append('"');
-                builder.Append(Value);
-                builder.Append('"');
-                break;
+                    builder.Append('"');
+                    builder.Append(Value);
+                    builder.Append('"');
+                    break;
 
                 case ConstantKind.Null:
-                builder.Append("null");
-                break;
+                    builder.Append("null");
+                    break;
 
                 case ConstantKind.True:
-                builder.Append("true");
-                break;
+                    builder.Append("true");
+                    break;
 
                 case ConstantKind.False:
-                builder.Append("false");
-                break;
+                    builder.Append("false");
+                    break;
 
                 default: builder.Append(Value); break;
             }

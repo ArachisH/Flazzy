@@ -102,19 +102,19 @@ public abstract class ASContainer : IFlashItem, IAS3Item
             .Where(sct => (sct.Type?.Name ?? "*") == returnTypeName);
     }
 
-        public ASTrait GetSlot(string qualifiedName)
-        {
-            return GetTraits(TraitKind.Slot).FirstOrDefault(st => st.QName.Name == qualifiedName);
-        }
-        public ASTrait GetGetter(string qualifiedName)
-        {
-            return GetGetters()
-                .FirstOrDefault(g => g.QName.Name == qualifiedName);
-        }
-        public ASTrait GetConstant(string qualifiedName)
-        {
-            return GetTraits(TraitKind.Constant).FirstOrDefault(ct => ct.QName.Name == qualifiedName);
-        }
+    public ASTrait GetSlot(string qualifiedName)
+    {
+        return GetTraits(TraitKind.Slot).FirstOrDefault(st => st.QName.Name == qualifiedName);
+    }
+    public ASTrait GetGetter(string qualifiedName)
+    {
+        return GetGetters()
+            .FirstOrDefault(g => g.QName.Name == qualifiedName);
+    }
+    public ASTrait GetConstant(string qualifiedName)
+    {
+        return GetTraits(TraitKind.Constant).FirstOrDefault(ct => ct.QName.Name == qualifiedName);
+    }
 
     public IEnumerable<ASTrait> GetTraits(params TraitKind[] kinds)
     {
