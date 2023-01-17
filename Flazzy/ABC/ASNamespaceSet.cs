@@ -1,7 +1,6 @@
 ﻿using Flazzy.IO;
 
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace Flazzy.ABC;
 
@@ -49,7 +48,7 @@ public class ASNamespaceSet : IEquatable<ASNamespaceSet>, IFlashItem, IPoolConst
         size += FlashWriter.GetEncodedIntSize(NamespaceIndices.Count);
         for (int i = 0; i < NamespaceIndices.Count; i++)
         {
-            size += FlashWriter.GetEncodedIntSize(NamespaceIndices.Count);
+            size += FlashWriter.GetEncodedIntSize(NamespaceIndices[i]);
         }
         return size;
     }

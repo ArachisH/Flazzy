@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Buffers.Binary;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics.Arm;
+using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 namespace Flazzy.IO;
@@ -83,18 +84,37 @@ public ref struct FlashWriter
         Position += value.Length;
     }
 
-    public ref uint ReserveUInt32()
+    internal void WriteDoubleArray(ReadOnlySpan<double> values)
     {
-        // Reserve from memory and zero it
-        ref uint result = ref Unsafe.As<byte, uint>(ref _data[0]);
-        result = default;
+        if (BitConverter.IsLittleEndian)
+        {
+            // Because we are on little-endian platform, we can just blit the values.
+            MemoryMarshal.Cast<double, byte>(values).CopyTo(_data.Slice(Position));
+        }
+        else
+        {
+            // Execute bounds-check.
+            Span<byte> destination = _data.Slice(Position, values.Length * sizeof(double));
+            ref byte destinationPtr = ref MemoryMarshal.GetReference(destination);
 
-        Position += sizeof(uint);
-        return ref result;
+            for (int i = 0; i < values.Length; i++)
+            {
+                // Reverse the binary representation of the double and blit it to the output
+                Unsafe.WriteUnaligned(ref destinationPtr,
+                    BinaryPrimitives.ReverseEndianness(
+                        BitConverter.DoubleToUInt64Bits(values[i])));
+
+                // Bump the destination pointer by element size.
+                destinationPtr = Unsafe.Add(ref destinationPtr, sizeof(double));
+            }
+        }
+
+        Position += values.Length * sizeof(double);
     }
 
     public void WriteString(ReadOnlySpan<char> value)
     {
+        // TODO: UTF8 "Encoding" 2x vs. UTF8.GetMaxByteCount -> stackalloc/rent -> encoding
         WriteEncodedInt(Encoding.UTF8.GetByteCount(value));
 
         int len = Encoding.UTF8.GetBytes(value, _data.Slice(Position));

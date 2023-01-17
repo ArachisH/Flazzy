@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.InteropServices;
+using System.Text;
 
 using Flazzy.IO;
 
@@ -238,21 +239,9 @@ public class ASConstantPool : IFlashItem
         }
 
         output.WriteEncodedInt(Doubles.Count);
-        for (int i = 1; i < Doubles.Count; i++)
+        if (Doubles.Count > 1)
         {
-            output.Write(Doubles[i]);
-        }
-
-        output.WriteEncodedInt(Doubles.Count);
-        for (int i = 1; i < Doubles.Count; i++)
-        {
-            output.Write(Doubles[i]);
-        }
-
-        output.WriteEncodedInt(Doubles.Count);
-        for (int i = 1; i < Doubles.Count; i++)
-        {
-            output.Write(Doubles[i]);
+            output.WriteDoubleArray(CollectionsMarshal.AsSpan(Doubles).Slice(1));
         }
 
         output.WriteEncodedInt(Strings.Count);

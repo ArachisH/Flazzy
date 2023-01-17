@@ -60,9 +60,8 @@ public class ASMethod : IFlashItem, IAS3Item
 
         if (Flags.HasFlag(MethodFlags.HasParamNames))
         {
-            for (int i = 0; i < Parameters.Count; i++)
+            foreach (ASParameter parameter in Parameters)
             {
-                ASParameter parameter = Parameters[i];
                 parameter.NameIndex = input.ReadEncodedInt();
             }
         }
@@ -139,6 +138,7 @@ public class ASMethod : IFlashItem, IAS3Item
         int size = 0;
         size += FlashWriter.GetEncodedIntSize(Parameters.Count);
         size += FlashWriter.GetEncodedIntSize(ReturnTypeIndex);
+        throw new NotImplementedException();
         return size;
     }
     public void WriteTo(ref FlashWriter output)

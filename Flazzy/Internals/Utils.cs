@@ -1,7 +1,7 @@
 ﻿using Flazzy.IO;
 using Flazzy.Tags;
 
-using System.Runtime.InteropServices;
+using System.Buffers.Binary;
 
 namespace Flazzy;
 
@@ -9,13 +9,15 @@ internal static class Utils
 {
     internal static ImageFormat GetImageFormat(ReadOnlySpan<byte> data)
     {
-        if (MemoryMarshal.Read<int>(data) == -654321153 || MemoryMarshal.Read<short>(data) == -9985)
+        if (BinaryPrimitives.ReadInt32LittleEndian(data) == -654321153 ||
+            BinaryPrimitives.ReadInt16LittleEndian(data) == -9985)
             return ImageFormat.JPEG;
 
-        if (MemoryMarshal.Read<int>(data) == 944130375 && MemoryMarshal.Read<short>(data) == 24889)
+        if (BinaryPrimitives.ReadInt32LittleEndian(data) == 944130375 &&
+            BinaryPrimitives.ReadInt16LittleEndian(data) == 24889)
             return ImageFormat.GIF98a;
 
-        if (MemoryMarshal.Read<long>(data) == 727905341920923785)
+        if (BinaryPrimitives.ReadInt64LittleEndian(data) == 727905341920923785)
             return ImageFormat.PNG;
 
         throw new ArgumentException("Provided data contains an unknown image format.");
