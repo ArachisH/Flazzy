@@ -94,8 +94,11 @@ public ref struct FlashWriter
         else
         {
             // Execute bounds-check.
-            Span<byte> destination = _data.Slice(Position, values.Length * sizeof(double));
-            ref byte destinationPtr = ref MemoryMarshal.GetReference(destination);
+            if (_data.Length - Position < values.Length * sizeof(double))
+                ThrowOutOfRange();
+
+            ref byte destinationPtr = ref Unsafe.Add(
+                ref MemoryMarshal.GetReference(_data), (nint)(uint)Position);
 
             for (int i = 0; i < values.Length; i++)
             {
@@ -110,6 +113,9 @@ public ref struct FlashWriter
         }
 
         Position += values.Length * sizeof(double);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void ThrowOutOfRange() => new IndexOutOfRangeException();
     }
 
     public void WriteString(ReadOnlySpan<char> value)

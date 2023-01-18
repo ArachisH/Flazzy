@@ -58,7 +58,6 @@ public class ASConstantPool : IFlashItem
             UIntegers.Add(input.ReadEncodedUInt());
         }
 
-        // TODO: MemoryMarshal?
         Doubles.Capacity = input.ReadEncodedInt();
         if (Doubles.Capacity > 0) Doubles.Add(double.NaN);
         for (int i = 1; i < Doubles.Capacity; i++)
@@ -195,7 +194,10 @@ public class ASConstantPool : IFlashItem
         }
 
         size += FlashWriter.GetEncodedIntSize(Doubles.Count);
-        size += Doubles.Count * sizeof(double);
+        if (Doubles.Count > 1)
+        {
+            size += (Doubles.Count - 1) * sizeof(double);
+        }
 
         size += FlashWriter.GetEncodedIntSize(Strings.Count);
         for (int i = 1; i < Strings.Count; i++)

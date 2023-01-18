@@ -1,9 +1,14 @@
 ﻿using Flazzy.IO;
 
 using System.Text;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Flazzy.ABC;
 
+/// <summary>
+/// Represents a signature of a single ActionScript method.
+/// </summary>
 public class ASMethod : IFlashItem, IAS3Item
 {
     public ABCFile ABC { get; }
@@ -13,7 +18,7 @@ public class ASMethod : IFlashItem, IAS3Item
 
     public int ReturnTypeIndex { get; set; }
     public ASMultiname ReturnType => ABC.Pool.Multinames[ReturnTypeIndex];
-
+    
     public MethodFlags Flags { get; set; }
     public List<ASParameter> Parameters { get; }
 
@@ -21,8 +26,9 @@ public class ASMethod : IFlashItem, IAS3Item
     public ASMethodBody Body { get; internal set; }
     public bool IsConstructor { get; internal set; }
     public ASContainer Container { get; internal set; }
-    public bool IsAnonymous => Trait == null && !IsConstructor;
 
+    public bool IsAnonymous => Trait == null && !IsConstructor;
+    
     public ASMethod(ABCFile abc)
     {
         ABC = abc;
@@ -36,9 +42,10 @@ public class ASMethod : IFlashItem, IAS3Item
 
         for (int i = 0; i < Parameters.Capacity; i++)
         {
-            var parameter = new ASParameter(this);
-            parameter.TypeIndex = input.ReadEncodedInt();
-            Parameters.Add(parameter);
+            Parameters.Add(new ASParameter(this)
+            {
+                TypeIndex = input.ReadEncodedInt()
+            });
         }
 
         NameIndex = input.ReadEncodedInt();
@@ -47,11 +54,9 @@ public class ASMethod : IFlashItem, IAS3Item
         if (Flags.HasFlag(MethodFlags.HasOptional))
         {
             int optionalParamCount = input.ReadEncodedInt();
-            for (int i = Parameters.Count - optionalParamCount;
-                optionalParamCount > 0;
-                i++, optionalParamCount--)
+            foreach (var parameter in 
+                CollectionsMarshal.AsSpan(Parameters).Slice(Parameters.Count - optionalParamCount))
             {
-                ASParameter parameter = Parameters[i];
                 parameter.IsOptional = true;
                 parameter.ValueIndex = input.ReadEncodedInt();
                 parameter.ValueKind = (ConstantKind)input.ReadByte();
@@ -60,7 +65,7 @@ public class ASMethod : IFlashItem, IAS3Item
 
         if (Flags.HasFlag(MethodFlags.HasParamNames))
         {
-            foreach (ASParameter parameter in Parameters)
+            foreach (var parameter in Parameters)
             {
                 parameter.NameIndex = input.ReadEncodedInt();
             }
@@ -138,7 +143,49 @@ public class ASMethod : IFlashItem, IAS3Item
         int size = 0;
         size += FlashWriter.GetEncodedIntSize(Parameters.Count);
         size += FlashWriter.GetEncodedIntSize(ReturnTypeIndex);
-        throw new NotImplementedException();
+
+        int optionalParamCount = 0;
+        if (Parameters.Count > 0)
+        {
+            foreach (var parameter in Parameters)
+            {
+                size += FlashWriter.GetEncodedIntSize(parameter.TypeIndex);
+
+                // One named parameter is enough to attain this flag.
+                if (!string.IsNullOrWhiteSpace(parameter.Name))
+                {
+                    Flags |= MethodFlags.HasParamNames;
+                }
+
+                // Just one optional parameter is enough to attain this flag.
+                if (parameter.IsOptional)
+                {
+                    optionalParamCount++;
+                    Flags |= MethodFlags.HasOptional;
+                }
+            }
+        }
+
+        size += FlashWriter.GetEncodedIntSize(NameIndex);
+        size += sizeof(byte);
+        if (Flags.HasFlag(MethodFlags.HasOptional))
+        {
+            size += FlashWriter.GetEncodedIntSize(optionalParamCount);
+            foreach (var parameter in CollectionsMarshal.AsSpan(Parameters)
+                .Slice(Parameters.Count - optionalParamCount))
+            {
+                size += FlashWriter.GetEncodedIntSize(parameter.ValueIndex);
+            }
+            size += optionalParamCount * sizeof(byte);
+        }
+
+        if (Flags.HasFlag(MethodFlags.HasParamNames))
+        {
+            foreach (var parameter in Parameters)
+            {
+                size += FlashWriter.GetEncodedIntSize(parameter.NameIndex);
+            }
+        }
         return size;
     }
     public void WriteTo(ref FlashWriter output)
@@ -146,30 +193,24 @@ public class ASMethod : IFlashItem, IAS3Item
         output.WriteEncodedInt(Parameters.Count);
         output.WriteEncodedInt(ReturnTypeIndex);
 
+        // TODO: This logic is pretty fragile.
+        // I think we should make Flags a getter-only and manage/validate the state some other way.
         int optionalParamCount = 0;
-        int optionalParamStartIndex = Parameters.Count - 1;
         if (Parameters.Count > 0)
         {
-            // This flag will be removed if at least a single parameter has no name assigned.
-            Flags |= MethodFlags.HasParamNames;
-            for (int i = 0; i < Parameters.Count; i++)
+            foreach (var parameter in Parameters)
             {
-                ASParameter parameter = Parameters[i];
                 output.WriteEncodedInt(parameter.TypeIndex);
-
-                // This flag should only be present when all parameters are assigned a Name.
-                if (string.IsNullOrWhiteSpace(parameter.Name))
+                
+                // One named parameter is enough to attain this flag.
+                if (!string.IsNullOrWhiteSpace(parameter.Name))
                 {
-                    Flags &= ~MethodFlags.HasParamNames;
+                    Flags |= MethodFlags.HasParamNames;
                 }
 
                 // Just one optional parameter is enough to attain this flag.
                 if (parameter.IsOptional)
                 {
-                    if (i < optionalParamStartIndex)
-                    {
-                        optionalParamStartIndex = i;
-                    }
                     optionalParamCount++;
                     Flags |= MethodFlags.HasOptional;
                 }
@@ -181,9 +222,9 @@ public class ASMethod : IFlashItem, IAS3Item
         if (Flags.HasFlag(MethodFlags.HasOptional))
         {
             output.WriteEncodedInt(optionalParamCount);
-            for (int i = optionalParamStartIndex; i < Parameters.Count; i++)
+            foreach (var parameter in CollectionsMarshal.AsSpan(Parameters)
+                .Slice(Parameters.Count - optionalParamCount))
             {
-                ASParameter parameter = Parameters[i];
                 output.WriteEncodedInt(parameter.ValueIndex);
                 output.Write((byte)parameter.ValueKind);
             }
@@ -191,9 +232,9 @@ public class ASMethod : IFlashItem, IAS3Item
 
         if (Flags.HasFlag(MethodFlags.HasParamNames))
         {
-            for (int i = 0; i < Parameters.Count; i++)
+            foreach (var parameter in Parameters)
             {
-                output.WriteEncodedInt(Parameters[i].NameIndex);
+                output.WriteEncodedInt(parameter.NameIndex);
             }
         }
     }

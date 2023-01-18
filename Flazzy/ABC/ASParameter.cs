@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace Flazzy.ABC;
 
 [DebuggerDisplay("{ToString(),nq}")]
-public class ASParameter
+public sealed class ASParameter
 {
     private readonly ASMethod _method;
 

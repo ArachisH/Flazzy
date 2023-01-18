@@ -207,9 +207,6 @@ public class ABCFile : IFlashItem, IDisposable
         for (int i = 0; i < Instances.Count; i++)
         {
             size += Instances[i].GetSize();
-        }
-        for (int i = 0; i < Classes.Count; i++)
-        {
             size += Classes[i].GetSize();
         }
 
