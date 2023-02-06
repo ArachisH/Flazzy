@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public enum OPCode
+public enum OPCode : byte
 {
     /// <summary>
     /// Add two values.

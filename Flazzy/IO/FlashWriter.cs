@@ -1,8 +1,6 @@
 ﻿using System.Text;
 using System.Numerics;
 using System.Buffers.Binary;
-using System.Runtime.Intrinsics.X86;
-using System.Runtime.Intrinsics.Arm;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
@@ -142,23 +140,11 @@ public ref struct FlashWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetEncodedUIntSize(uint value)
     {
-        // Avoid BitOperation software fallback
-        if (Lzcnt.IsSupported || X86Base.IsSupported || ArmBase.IsSupported)
-        {
-            // bits_to_encode = (data != 0) ? 32 - CLZ(x) : 1  // 32 - CLZ(data | 1) 
-            // bytes = ceil(bits_to_encode / 7.0);             // (6 + bits_to_encode) / 7
-            int x = 6 + 32 - BitOperations.LeadingZeroCount(value | 1);
-            // Division by 7 is done by (x * 37) >> 8 where 37 = ceil(256 / 7).
-            // This works for 0 <= x < 256 / (7 * 37 - 256), i.e. 0 <= x <= 85.
-            return (x * 37) >> 8;
-        }
-        else
-        {
-            if ((value & (~0U << 7)) == 0) return 1;
-            if ((value & (~0U << 14)) == 0) return 2;
-            if ((value & (~0U << 21)) == 0) return 3;
-            if ((value & (~0U << 28)) == 0) return 4;
-            return 5;
-        }
+        // bits = (value != 0) ? 32 - CLZ(value) : 1  <=>  32 - CLZ(value | 1) 
+        // bytes = ceil(bits / 7.0);                  <=>  (6 + bits) / 7
+        int x = 6 + 32 - BitOperations.LeadingZeroCount(value | 1);
+        // Division by 7 is done by (x * 37) >> 8 where 37 = ceil(256 / 7).
+        // This works for 0 <= x < 256 / (7 * 37 - 256), i.e. 0 <= x <= 85.
+        return (x * 37) >> 8;
     }
 }

@@ -249,10 +249,8 @@ public class ASTrait : IFlashItem, IAS3Item, IMethodGSTrait, ISlotConstantTrait,
     }
     public void WriteTo(ref FlashWriter output)
     {
-        byte flags = (byte)(((byte)Attributes << 4) & (byte)Kind);
-
         output.WriteEncodedInt(QNameIndex);
-        output.Write(flags);
+        output.Write((byte)(((byte)Attributes << 4) | (byte)Kind));
         output.WriteEncodedInt(Id);
         switch (Kind)
         {

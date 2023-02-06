@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Buffers.Binary;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 namespace Flazzy.IO;
@@ -22,9 +21,6 @@ public unsafe ref struct FlashReader
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte ReadByte() => _data[Position++];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ref byte UnsafeReadByte() => ref Unsafe.Add(ref MemoryMarshal.GetReference(_data), Position++);
 
     public ReadOnlySpan<byte> ReadBytes(int count)
     {
@@ -91,23 +87,23 @@ public unsafe ref struct FlashReader
 
     public int ReadEncodedInt()
     {
-        int result = UnsafeReadByte();
-        if ((result & 0x00000080) == 0) return result;
-
-        result = (result & 0x0000007f) | (UnsafeReadByte()) << 7;
-        if ((result & 0x00004000) == 0) return result;
-
-        result = (result & 0x00003fff) | (UnsafeReadByte()) << 14;
-        if ((result & 0x00200000) == 0) return result;
-
-        result = (result & 0x001fffff) | (UnsafeReadByte()) << 21;
-        if ((result & 0x10000000) == 0) return result;
-
-        return (result & 0x0fffffff) | (UnsafeReadByte()) << 28;
+        return (int)ReadEncodedUInt();
     }
     public uint ReadEncodedUInt()
     {
-        return (uint)ReadEncodedInt(); //TODO: isn't this cast backwards
+        uint result = ReadByte();
+        if ((result & 0x80) == 0) return result;
+
+        result = (result & 0x7F) | (uint)ReadByte() << 7;
+        if ((result & 0x4000) == 0) return result;
+
+        result = (result & 0x3FFF) | (uint)ReadByte() << 14;
+        if ((result & 0x200000) == 0) return result;
+
+        result = (result & 0x1FFFFF) | (uint)ReadByte() << 21;
+        if ((result & 0x10000000) == 0) return result;
+
+        return (result & 0xFFFFFFF) | (uint)ReadByte() << 28;
     }
 
     public string ReadString()

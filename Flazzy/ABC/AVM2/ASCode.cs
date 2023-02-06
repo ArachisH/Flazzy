@@ -801,11 +801,10 @@ public class ASCode : IFlashItem, IList<ASInstruction>
 
     public int GetSize()
     {
-        // TODO: rewrite logic?
         int size = 0;
-        for (int i = 0; i < _instructions.Count; i++)
+        foreach (ASInstruction instruction in _instructions)
         {
-            size += _instructions[i].GetSize();
+            size += instruction.GetSize();
         }
         return size;
     }
@@ -861,7 +860,7 @@ public class ASCode : IFlashItem, IList<ASInstruction>
                     ASInstruction exit = cases[i];
                     if (exit.OP != OPCode.Label)
                     {
-                        switchCases.Add(exit, (lookUpSwitch, i));
+                        switchCases.TryAdd(exit, (lookUpSwitch, i));
                     }
                     else if (exit.OP == OPCode.Label)
                     {
