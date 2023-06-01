@@ -4,13 +4,8 @@ namespace Flazzy.Tools;
 
 public class ClassFullNameResolver
 {
-    /*
-     * [Flazzy(qname="", namespace="")]
-     */
-
     public int Search(ABCFile abc, bool isAddingMetadata = true)
     {
-        // Is this optimized when compiling?
         int metadataNameIndex = isAddingMetadata ? abc.Pool.AddConstant("Flazzy", false) : 0;
         int previousNamespaceIndex = isAddingMetadata ? abc.Pool.AddConstant("PreviousNamespace", false) : 0;
         int previousQualifiedNameIndex = isAddingMetadata ? abc.Pool.AddConstant("PreviousQualifiedName", false) : 0;
@@ -39,32 +34,22 @@ public class ClassFullNameResolver
                         trait.MetadataIndices.Add(abc.AddMetadata(metadata, false));
                     }
 
-                    if (!upgradedClassQualifiedName.IsEmpty)
-                    {
-                        if (isAddingMetadata)
-                        {
-                            metadata.Items.Add(new ASItemInfo(abc)
-                            {
-                                KeyIndex = previousQualifiedNameIndex,
-                                ValueIndex = @class.QName.NameIndex
-                            });
-                        }
-                        trait.QName.NameIndex = abc.Pool.AddConstant(upgradedClassQualifiedName.ToString());
-                        //abc.Pool.Strings[trait.QName.NameIndex] = upgradedClassQualifiedName.ToString();
-                    }
-
                     if (!upgradedNamespaceName.IsEmpty)
                     {
                         if (isAddingMetadata)
                         {
-                            metadata.Items.Add(new ASItemInfo(abc)
-                            {
-                                KeyIndex = previousNamespaceIndex,
-                                ValueIndex = @class.QName.Namespace.NameIndex
-                            });
+                            metadata.Items.Add(new ASItemInfo(abc, previousNamespaceIndex, @class.QName.Namespace.NameIndex));
                         }
                         trait.QName.Namespace.NameIndex = abc.Pool.AddConstant(upgradedNamespaceName.ToString());
-                        //abc.Pool.Strings[trait.QName.Namespace.NameIndex] = upgradedNamespaceName.ToString();
+                    }
+
+                    if (!upgradedClassQualifiedName.IsEmpty)
+                    {
+                        if (isAddingMetadata)
+                        {
+                            metadata.Items.Add(new ASItemInfo(abc, previousQualifiedNameIndex, @class.QName.NameIndex));
+                        }
+                        trait.QName.NameIndex = abc.Pool.AddConstant(upgradedClassQualifiedName.ToString());
                     }
 
                     if (@class.Instance.Flags.HasFlag(ClassFlags.ProtectedNamespace))
