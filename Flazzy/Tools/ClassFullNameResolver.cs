@@ -25,7 +25,6 @@ public class ClassFullNameResolver
                     ASMetadata metadata = null;
                     if (isAddingMetadata)
                     {
-                        trait.MetadataIndices.Clear();
                         trait.Attributes |= TraitAttributes.Metadata;
 
                         metadata = new ASMetadata(abc);
