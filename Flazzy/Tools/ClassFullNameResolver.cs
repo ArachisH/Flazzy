@@ -1,93 +1,143 @@
-﻿using System.Diagnostics;
-
-using Flazzy.ABC;
+﻿using Flazzy.ABC;
 
 namespace Flazzy.Tools;
 
 public class ClassFullNameResolver
 {
-    public void Process(ABCFile abc)
+    /*
+     * [Flazzy(qname="", namespace="")]
+     */
+
+    public int Search(ABCFile abc, bool isAddingMetadata = true)
     {
-        foreach (ASClass @class in abc.Classes)
+        // Is this optimized when compiling?
+        int metadataNameIndex = isAddingMetadata ? abc.Pool.AddConstant("Flazzy", false) : 0;
+        int previousNamespaceIndex = isAddingMetadata ? abc.Pool.AddConstant("PreviousNamespace", false) : 0;
+        int previousQualifiedNameIndex = isAddingMetadata ? abc.Pool.AddConstant("PreviousQualifiedName", false) : 0;
+
+        int namesUpgraded = 0;
+        ReadOnlySpan<char> upgradedNamespaceName = default;
+        ReadOnlySpan<char> upgradedClassQualifiedName = default;
+        foreach (ASScript script in abc.Scripts)
         {
-            if (!IsSearchingClass(@class)) continue;
-
-            ASInstance instance = @class.Instance;
-            // Do not compare based on the index of the string value in the pool, as it is possible for two equal strings to have different indices.
-            if (instance.QName.Name.Equals(instance.Constructor.Name, StringComparison.OrdinalIgnoreCase)) continue;
-
-            string resolvedNamespaceName = null;
-            string resolvedQualifiedName = null;
-
-            /* -------- Resolve by Instance Constructor -------- */
-            // Check if the constructor name isn't already the same as the class name, and only check the name end of the constructor as it may have a prefix of 'package/*'.
-            string constructorName = @class.Instance.Constructor.Name;
-            if (!string.IsNullOrWhiteSpace(constructorName) && !constructorName.EndsWith(@class.QName.Name, StringComparison.InvariantCultureIgnoreCase))
+            foreach (ASTrait trait in script.Traits)
             {
-                if (@class.Instance.Flags.HasFlag(ClassFlags.ProtectedNamespace))
+                if (trait.Kind != TraitKind.Class) continue;
+
+                ASClass @class = trait.Class;
+                if (SearchClass(@class, ref upgradedNamespaceName, ref upgradedClassQualifiedName))
                 {
-                    Debugger.Break();
+                    ASMetadata metadata = null;
+                    if (isAddingMetadata)
+                    {
+                        trait.MetadataIndices.Clear();
+                        trait.Attributes |= TraitAttributes.Metadata;
+
+                        metadata = new ASMetadata(abc);
+                        metadata.NameIndex = metadataNameIndex;
+
+                        trait.MetadataIndices.Add(abc.AddMetadata(metadata, false));
+                    }
+
+                    if (!upgradedClassQualifiedName.IsEmpty)
+                    {
+                        if (isAddingMetadata)
+                        {
+                            metadata.Items.Add(new ASItemInfo(abc)
+                            {
+                                KeyIndex = previousQualifiedNameIndex,
+                                ValueIndex = @class.QName.NameIndex
+                            });
+                        }
+                        trait.QName.NameIndex = abc.Pool.AddConstant(upgradedClassQualifiedName.ToString());
+                        //abc.Pool.Strings[trait.QName.NameIndex] = upgradedClassQualifiedName.ToString();
+                    }
+
+                    if (!upgradedNamespaceName.IsEmpty)
+                    {
+                        if (isAddingMetadata)
+                        {
+                            metadata.Items.Add(new ASItemInfo(abc)
+                            {
+                                KeyIndex = previousNamespaceIndex,
+                                ValueIndex = @class.QName.Namespace.NameIndex
+                            });
+                        }
+                        trait.QName.Namespace.NameIndex = abc.Pool.AddConstant(upgradedNamespaceName.ToString());
+                        //abc.Pool.Strings[trait.QName.Namespace.NameIndex] = upgradedNamespaceName.ToString();
+                    }
+
+                    if (@class.Instance.Flags.HasFlag(ClassFlags.ProtectedNamespace))
+                    {
+                        abc.Pool.Strings[@class.Instance.ProtectedNamespace.NameIndex] = $"{trait.QName.Namespace.Name}:{trait.QName.Name}";
+                    }
+
+                    namesUpgraded++;
+                    upgradedNamespaceName = default;
+                    upgradedClassQualifiedName = default;
                 }
-
-                // Check for correct namespace on a second pass?
-                resolvedQualifiedName = constructorName;
-            }
-
-            // Was the real qualified name for the class resolved?
-            if (string.IsNullOrWhiteSpace(resolvedQualifiedName))
-            {
-                /* -------- Resolve by Trait(s) -------- */
-                foreach (ASTrait trait in @class.Traits.Concat(@class.Instance.Traits))
-                {
-                    if (ResolveByTrait(@class, trait, out resolvedNamespaceName, out resolvedQualifiedName)) break;
-
-                    ASMethod method = trait.Method ?? trait.Function;
-                    if (method == null || !IsSearchingMethod(@class, trait)) continue; // Trait has no method, or trait not desirable for searching.
-
-                    /* -------- Resolve by Instruction(s) -------- */
-                    if (ResolveByInstruction(@class, method, out resolvedNamespaceName, out resolvedQualifiedName)) break;
-                }
-            }
-
-            // Failed to resolve real qualified class name, continue iterating.
-            if (string.IsNullOrWhiteSpace(resolvedQualifiedName)) continue;
-
-            @class.ABC.Pool.Strings[@class.QName.NameIndex] = resolvedQualifiedName;
-            if (!string.IsNullOrWhiteSpace(resolvedNamespaceName))
-            {
-                @class.ABC.Pool.Strings[@class.QName.Namespace.NameIndex] = resolvedNamespaceName;
-            }
-
-            if (@class.Instance.Flags.HasFlag(ClassFlags.ProtectedNamespace))
-            {
-                @class.ABC.Pool.Strings[@class.Instance.ProtectedNamespace.NameIndex] = $"{@class.QName.Namespace.Name}:{resolvedQualifiedName}";
             }
         }
+        return namesUpgraded;
     }
 
-    protected virtual bool IsSearchingClass(ASClass @class) => true;
-    protected virtual bool IsSearchingMethod(ASClass @class, ASTrait trait) => false;
-
-    protected virtual bool ResolveByTrait(ASClass @class, ASTrait trait, out string resolvedNamespaceName, out string resolvedQualifiedName)
+    private bool SearchClass(ASClass @class, ref ReadOnlySpan<char> upgradedNamespaceName, ref ReadOnlySpan<char> upgradedClassQualifiedName)
     {
-        resolvedQualifiedName = resolvedNamespaceName = null;
-        if (trait.QName.Namespace.Name.StartsWith("http")) return false;
+        ASInstance instance = @class.Instance;
 
-        int separatorIndex = trait.QName.Namespace.Name.IndexOf(':');
+        /* -------- Resolve by Trait(s) -------- */
+        foreach (ASTrait trait in @class.Traits.Concat(instance.Traits))
+        {
+            if (SearchByTrait(@class, trait, ref upgradedNamespaceName, ref upgradedClassQualifiedName))
+                return true;
+
+            ASMethod method = trait.Method ?? trait.Function;
+            if (method == null || !IsSearchingMethod(@class, trait)) continue; // Trait has no method, or trait not desirable for searching.
+
+            /* -------- Resolve by Instruction(s) -------- */
+            if (SearchByInstruction(@class, method, ref upgradedNamespaceName, ref upgradedClassQualifiedName)) return true;
+        }
+
+        /* -------- Resolve by Instance Constructor -------- */
+        // Check if the constructor name isn't already the same as the class name, and only check the name end of the constructor as it may have a prefix of 'package/*'.
+        ReadOnlySpan<char> constructorName = instance.Constructor.Name;
+        if (!constructorName.IsEmpty && !constructorName.EndsWith(instance.QName.Name, StringComparison.OrdinalIgnoreCase))
+        {
+            upgradedClassQualifiedName = constructorName;
+        }
+
+        return !upgradedNamespaceName.IsEmpty || !upgradedClassQualifiedName.IsEmpty;
+    }
+
+    protected virtual bool IsSearchingMethod(ASClass @class, ASTrait trait) => false;
+    protected virtual bool SearchByTrait(ASClass @class, ASTrait trait, ref ReadOnlySpan<char> upgradedNamespaceName, ref ReadOnlySpan<char> upgradedClassQualifiedName)
+    {
+        // '*' ?
+        if (trait.QName.Namespace.Name.Length <= 1) return false;
+        if (trait.QName.Namespace.Kind == NamespaceKind.PackageInternal) return false;
+
+        ReadOnlySpan<char> traitNamespaceName = trait.QName.Namespace.Name;
+        if (traitNamespaceName.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return false;
+
+        int separatorIndex = traitNamespaceName.IndexOf(':');
         if (separatorIndex == -1) return false;
 
-        // Continue iterating through the list of traits until a mismatch is found, as this will usually indicate if a qualified name was scrambled.
-        if (trait.QName.Namespace.Name.Equals($"{@class.QName.Namespace.Name}:{@class.QName.Name}", StringComparison.InvariantCultureIgnoreCase)) return false;
+        ReadOnlySpan<char> traitNamespaceNameLeft = traitNamespaceName.Slice(0, separatorIndex);
+        ReadOnlySpan<char> traitNamespaceNameRight = traitNamespaceName.Slice(separatorIndex + 1);
 
-        if (!trait.QName.Namespace.Name.StartsWith(@class.QName.Namespace.Name))
+        if (!traitNamespaceNameLeft.Equals(@class.QName.Namespace.Name, StringComparison.OrdinalIgnoreCase))
         {
-            resolvedNamespaceName = trait.QName.Namespace.Name.Substring(0, separatorIndex);
+            upgradedNamespaceName = traitNamespaceNameLeft;
         }
-        resolvedQualifiedName = trait.QName.Namespace.Name.Substring(separatorIndex + 1);
 
-        return true;
+        if (!traitNamespaceNameRight.Equals(@class.QName.Name, StringComparison.OrdinalIgnoreCase))
+        {
+            upgradedClassQualifiedName = traitNamespaceNameRight;
+        }
+
+        return !upgradedClassQualifiedName.IsEmpty || !upgradedNamespaceName.IsEmpty;
     }
-    protected virtual bool ResolveByInstruction(ASClass @class, ASMethod method, out string resolvedNamespaceName, out string resolvedQualifiedName)
+    protected virtual bool SearchByInstruction(ASClass @class, ASMethod method, ref ReadOnlySpan<char> upgradedNamespaceName, ref ReadOnlySpan<char> upgradedClassQualifiedName)
     {
         /*
          * As a last resort, if no name has been successfully resolved, we can attempt to extract the fully qualified name from an instruction attempting to resolve the current instance/scope.
@@ -95,7 +145,6 @@ public class ClassFullNameResolver
          * setproperty MultinameL([ !!>>> PrivateNamespace("com.hurlant.util:Hex") <<<!! ,StaticProtectedNs("com.hurlant.util:Hex"),StaticProtectedNs("Object"),PackageNamespace("com.hurlant.util"),PackageInternalNs("com.hurlant.util"),PrivateNamespace("FilePrivateNS:Hex"),PackageNamespace(""),Namespace("http://adobe.com/AS3/2006/builtin")])
          */
 
-        resolvedNamespaceName = resolvedQualifiedName = null;
         return false;
     }
 }
