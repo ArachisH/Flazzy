@@ -4,19 +4,19 @@ namespace Flazzy.Tools;
 
 public class AS3MultinameUpgrader
 {
+    private readonly HashSet<string> _namespacesUpgraded;
     private readonly Dictionary<string, string> _namespaces;
-    private readonly Dictionary<string, string> _namespacesUpgraded;
 
+    private readonly HashSet<string> _qualifiedNamesUpgraded;
     private readonly Dictionary<string, string> _qualifiedNames;
-    private readonly Dictionary<string, string> _qualifiedNamesUpgraded;
 
     public AS3MultinameUpgrader()
     {
+        _namespacesUpgraded = new HashSet<string>();
         _namespaces = new Dictionary<string, string>();
-        _namespacesUpgraded = new Dictionary<string, string>();
 
+        _qualifiedNamesUpgraded = new HashSet<string>();
         _qualifiedNames = new Dictionary<string, string>();
-        _qualifiedNamesUpgraded = new Dictionary<string, string>();
     }
 
     public int Search(ABCFile abc, bool isAddingMetadata = true)
@@ -28,63 +28,104 @@ public class AS3MultinameUpgrader
         int namesUpgraded = 0;
         string upgradedNamespaceName = null;
         string upgradedClassQualifiedName = null;
-        foreach (ASScript script in abc.Scripts)
+        foreach (ASTrait trait in abc.Scripts.SelectMany(s => s.Traits))
         {
-            foreach (ASTrait trait in script.Traits)
+            if (trait.Kind != TraitKind.Class) continue;
+
+            ASClass @class = trait.Class;
+            if (!SearchClass(@class, ref upgradedNamespaceName, ref upgradedClassQualifiedName)) continue;
+
+            namesUpgraded++;
+            ASMetadata metadata = null;
+            if (isAddingMetadata)
             {
-                if (trait.Kind != TraitKind.Class) continue;
+                trait.Attributes |= TraitAttributes.Metadata;
 
-                ASClass @class = trait.Class;
-                if (!SearchClass(@class, ref upgradedNamespaceName, ref upgradedClassQualifiedName)) continue;
+                metadata = new ASMetadata(abc);
+                metadata.NameIndex = metadataNameIndex;
 
-                namesUpgraded++;
-                ASMetadata metadata = null;
+                trait.MetadataIndices.Add(abc.AddMetadata(metadata, false));
+            }
+
+            if (!string.IsNullOrWhiteSpace(upgradedNamespaceName))
+            {
                 if (isAddingMetadata)
                 {
-                    trait.Attributes |= TraitAttributes.Metadata;
-
-                    metadata = new ASMetadata(abc);
-                    metadata.NameIndex = metadataNameIndex;
-
-                    trait.MetadataIndices.Add(abc.AddMetadata(metadata, false));
+                    metadata.Items.Add(new ASItemInfo(abc, previousNamespaceIndex, abc.Pool.AddConstant(@class.QName.Namespace.Name, false)));
                 }
+                abc.Pool.Strings[trait.QName.Namespace.NameIndex] = upgradedNamespaceName;
+            }
 
-                if (!string.IsNullOrWhiteSpace(upgradedNamespaceName))
+            if (!string.IsNullOrWhiteSpace(upgradedClassQualifiedName))
+            {
+                if (isAddingMetadata)
                 {
-                    if (isAddingMetadata)
-                    {
-                        metadata.Items.Add(new ASItemInfo(abc, previousNamespaceIndex, abc.Pool.AddConstant(@class.QName.Namespace.Name, false)));
-                    }
-                    abc.Pool.Strings[trait.QName.Namespace.NameIndex] = upgradedNamespaceName;
+                    metadata.Items.Add(new ASItemInfo(abc, previousQualifiedNameIndex, abc.Pool.AddConstant(@class.QName.Name, false)));
                 }
+                abc.Pool.Strings[trait.QName.NameIndex] = upgradedClassQualifiedName;
+            }
 
-                if (!string.IsNullOrWhiteSpace(upgradedClassQualifiedName))
-                {
-                    if (isAddingMetadata)
-                    {
-                        metadata.Items.Add(new ASItemInfo(abc, previousQualifiedNameIndex, abc.Pool.AddConstant(@class.QName.Name, false)));
-                    }
-                    abc.Pool.Strings[trait.QName.NameIndex] = upgradedClassQualifiedName;
-                }
-
-                if (@class.Instance.Flags.HasFlag(ClassFlags.ProtectedNamespace))
-                {
-                    abc.Pool.Strings[@class.Instance.ProtectedNamespace.NameIndex] = $"{trait.QName.Namespace.Name}:{trait.QName.Name}";
-                }
+            if (@class.Instance.Flags.HasFlag(ClassFlags.ProtectedNamespace))
+            {
+                string protectedNamespaceUpgrade = $"{trait.QName.Namespace.Name}:{trait.QName.Name}";
+                _namespaces.Add(@class.Instance.ProtectedNamespace.Name, protectedNamespaceUpgrade);
+                abc.Pool.Strings[@class.Instance.ProtectedNamespace.NameIndex] = protectedNamespaceUpgrade;
             }
         }
+        SearchMultinames(abc);
         return namesUpgraded;
     }
 
+    private void SearchMultinames(ABCFile abc)
+    {
+        string namespaceUpgrade;
+        string qualifiedNameUpgrade = null;
+        foreach (ASMultiname multiname in abc.Pool.Multinames)
+        {
+            if (multiname == null) continue;
+
+            if (multiname.NamespaceSetIndex != 0)
+            {
+                foreach (ASNamespace @namespace in multiname.NamespaceSet.GetNamespaces())
+                {
+                    if (_namespaces.TryGetValue(@namespace.Name, out namespaceUpgrade))
+                    {
+                        abc.Pool.Strings[@namespace.NameIndex] = namespaceUpgrade;
+                    }
+                    else if (TryParseNamespace(@namespace.Name, out ReadOnlySpan<char> left, out ReadOnlySpan<char> right))
+                    {
+                        // TODO: Come back to avoid string allocations if this feature is implemented https://github.com/dotnet/runtime/issues/27229
+                        string leftPart = left.ToString();
+                        string rightPart = right.ToString();
+
+                        // Check if neither names can be upgraded
+                        if (!_namespaces.TryGetValue(leftPart, out namespaceUpgrade) && !_qualifiedNames.TryGetValue(rightPart, out qualifiedNameUpgrade)) continue;
+
+                        abc.Pool.Strings[@namespace.NameIndex] = $"{namespaceUpgrade ?? leftPart}:{qualifiedNameUpgrade ?? rightPart}";
+                    }
+                }
+            }
+
+            if (multiname.NamespaceIndex != 0 && _namespaces.TryGetValue(multiname.Namespace.Name, out namespaceUpgrade))
+            {
+                abc.Pool.Strings[multiname.Namespace.NameIndex] = namespaceUpgrade;
+            }
+
+            if (multiname.NameIndex != 0 && _qualifiedNames.TryGetValue(multiname.Name, out qualifiedNameUpgrade))
+            {
+                abc.Pool.Strings[multiname.NameIndex] = qualifiedNameUpgrade;
+            }
+        }
+    }
     private bool SearchClass(ASClass @class, ref string namespaceNameUpgrade, ref string qualifiedNameUpgrade)
     {
-        static void UpdateCache(Dictionary<string, string> byPrevious, Dictionary<string, string> byCurrent, string previous, string current, ref bool hasUpgradedFlag)
+        static void UpdateCache(Dictionary<string, string> byPrevious, HashSet<string> byCurrent, string previous, string current, ref bool hasUpgradedFlag)
         {
             // Indicates that the cache has already been updated with the 'current' parameter, or that the 'current' parameter is not valid for caching.
             if (hasUpgradedFlag || string.IsNullOrWhiteSpace(current)) return;
 
+            byCurrent.Add(current);
             byPrevious.Add(previous, current);
-            byCurrent.Add(current, previous);
             hasUpgradedFlag = true;
         }
 
@@ -93,12 +134,12 @@ public class AS3MultinameUpgrader
         bool hasUpgradedQualifiedName = _qualifiedNames.TryGetValue(@class.QName.Name, out qualifiedNameUpgrade);
         if (hasUpgradedNamespace && hasUpgradedQualifiedName) return true;
 
-        if (_namespacesUpgraded.ContainsKey(@class.QName.Namespace.Name))
+        if (_namespacesUpgraded.Contains(@class.QName.Namespace.Name))
         {
             hasUpgradedNamespace = true;
             namespaceNameUpgrade = @class.QName.Namespace.Name;
         }
-        if (_qualifiedNamesUpgraded.ContainsKey(@class.QName.Name))
+        if (_qualifiedNamesUpgraded.Contains(@class.QName.Name))
         {
             hasUpgradedQualifiedName = true;
             qualifiedNameUpgrade = @class.QName.Name;
@@ -144,7 +185,7 @@ public class AS3MultinameUpgrader
         if (!TryParseNamespace(trait.QName.Namespace.Name, out ReadOnlySpan<char> left, out ReadOnlySpan<char> right)) return false;
 
         // Return true only if any names were upgraded from this trait.
-        return TryUpgrade(_namespacesUpgraded, @class.QName.Namespace.Name, left, ref namespaceNameUpgrade) || TryUpgrade(_qualifiedNamesUpgraded, @class.QName.Name, right, ref qualifiedNameUpgrade);
+        return TryUpgrade(@class.QName.Namespace.Name, left, ref namespaceNameUpgrade) || TryUpgrade(@class.QName.Name, right, ref qualifiedNameUpgrade);
     }
 
     protected virtual bool IsSearchingMethod(ASClass @class, ASTrait trait) => false;
@@ -159,6 +200,17 @@ public class AS3MultinameUpgrader
         return false;
     }
 
+    private static bool TryUpgrade(ReadOnlySpan<char> previous, ReadOnlySpan<char> current, ref string nameUpgrade)
+    {
+        // Upgrade has already been applied.
+        if (!string.IsNullOrWhiteSpace(nameUpgrade)) return false;
+
+        // Names already match, nothing to upgrade.
+        if (current.Equals(previous, StringComparison.OrdinalIgnoreCase)) return false;
+
+        nameUpgrade = current.ToString();
+        return true;
+    }
     private static bool TryParseNamespace(ReadOnlySpan<char> fullName, out ReadOnlySpan<char> left, out ReadOnlySpan<char> right)
     {
         left = default;
@@ -175,17 +227,6 @@ public class AS3MultinameUpgrader
 
         left = fullName.Slice(0, separatorIndex);
         right = fullName.Slice(separatorIndex + 1);
-        return true;
-    }
-    private static bool TryUpgrade(Dictionary<string, string> byCurrent, ReadOnlySpan<char> previous, ReadOnlySpan<char> current, ref string nameUpgrade)
-    {
-        // Upgrade has already been applied.
-        if (!string.IsNullOrWhiteSpace(nameUpgrade)) return false;
-
-        // Names already match, nothing to upgrade.
-        if (current.Equals(previous, StringComparison.OrdinalIgnoreCase)) return false;
-
-        nameUpgrade = current.ToString();
         return true;
     }
 }
