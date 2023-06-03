@@ -2,7 +2,7 @@
 
 namespace Flazzy.Tools;
 
-public class ClassFullNameResolver
+public class AS3MultinameUpgrader
 {
     public int Search(ABCFile abc, bool isAddingMetadata = true)
     {
