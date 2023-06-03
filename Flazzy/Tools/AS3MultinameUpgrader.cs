@@ -4,14 +4,20 @@ namespace Flazzy.Tools;
 
 public class AS3MultinameUpgrader
 {
+    private readonly bool _isApplyingMetadata;
+    private readonly bool _isParsingInstructions;
+
     private readonly HashSet<string> _namespacesUpgraded;
     private readonly Dictionary<string, string> _namespaces;
 
     private readonly HashSet<string> _qualifiedNamesUpgraded;
     private readonly Dictionary<string, string> _qualifiedNames;
 
-    public AS3MultinameUpgrader()
+    public AS3MultinameUpgrader(bool isApplyingMetadata, bool isParsingInstructions)
     {
+        _isApplyingMetadata = isApplyingMetadata;
+        _isParsingInstructions = isParsingInstructions;
+
         _namespacesUpgraded = new HashSet<string>();
         _namespaces = new Dictionary<string, string>();
 
@@ -19,11 +25,11 @@ public class AS3MultinameUpgrader
         _qualifiedNames = new Dictionary<string, string>();
     }
 
-    public int Search(ABCFile abc, bool isAddingMetadata = true)
+    public int Search(ABCFile abc)
     {
-        int metadataNameIndex = isAddingMetadata ? abc.Pool.AddConstant("Flazzy", false) : 0;
-        int previousNamespaceIndex = isAddingMetadata ? abc.Pool.AddConstant("PreviousNamespace", false) : 0;
-        int previousQualifiedNameIndex = isAddingMetadata ? abc.Pool.AddConstant("PreviousQualifiedName", false) : 0;
+        int metadataNameIndex = _isApplyingMetadata ? abc.Pool.AddConstant("Flazzy", false) : 0;
+        int previousNamespaceIndex = _isApplyingMetadata ? abc.Pool.AddConstant("PreviousNamespace", false) : 0;
+        int previousQualifiedNameIndex = _isApplyingMetadata ? abc.Pool.AddConstant("PreviousQualifiedName", false) : 0;
 
         int namesUpgraded = 0;
         string upgradedNamespaceName = null;
@@ -37,7 +43,7 @@ public class AS3MultinameUpgrader
 
             namesUpgraded++;
             ASMetadata metadata = null;
-            if (isAddingMetadata)
+            if (_isApplyingMetadata)
             {
                 trait.Attributes |= TraitAttributes.Metadata;
 
@@ -49,7 +55,7 @@ public class AS3MultinameUpgrader
 
             if (!string.IsNullOrWhiteSpace(upgradedNamespaceName))
             {
-                if (isAddingMetadata)
+                if (_isApplyingMetadata)
                 {
                     metadata.Items.Add(new ASItemInfo(abc, previousNamespaceIndex, abc.Pool.AddConstant(@class.QName.Namespace.Name, false)));
                 }
@@ -58,7 +64,7 @@ public class AS3MultinameUpgrader
 
             if (!string.IsNullOrWhiteSpace(upgradedClassQualifiedName))
             {
-                if (isAddingMetadata)
+                if (_isApplyingMetadata)
                 {
                     metadata.Items.Add(new ASItemInfo(abc, previousQualifiedNameIndex, abc.Pool.AddConstant(@class.QName.Name, false)));
                 }
@@ -149,14 +155,14 @@ public class AS3MultinameUpgrader
         /* -------- Resolve by Trait(s) -------- */
         foreach (ASTrait trait in @class.Traits.Concat(instance.Traits))
         {
-            if (SearchTrait(@class, trait, ref namespaceNameUpgrade, ref qualifiedNameUpgrade)) break;
-            // TODO: If only one of the names is found in the trait, should we check the instructions as well for the second name?
+            if (SearchTrait(@class, trait, ref namespaceNameUpgrade, ref qualifiedNameUpgrade) && !_isParsingInstructions) break;
+            if (!string.IsNullOrWhiteSpace(namespaceNameUpgrade) && !string.IsNullOrWhiteSpace(qualifiedNameUpgrade)) break;
 
             ASMethod method = trait.Method ?? trait.Function;
-            if (method == null || !IsSearchingMethod(@class, trait)) continue; // Trait has no method, or trait not desirable for searching.
+            if (method == null || method.Body == null) continue;
 
             /* -------- Resolve by Instruction(s) -------- */
-            if (SearchByInstruction(@class, method, ref namespaceNameUpgrade, ref qualifiedNameUpgrade)) break;
+            if (SearchInstructions(@class, method, ref namespaceNameUpgrade, ref qualifiedNameUpgrade)) break;
         }
 
         /* -------- Resolve by Instance Constructor -------- */
@@ -187,9 +193,7 @@ public class AS3MultinameUpgrader
         // Return true only if any names were upgraded from this trait.
         return TryUpgrade(@class.QName.Namespace.Name, left, ref namespaceNameUpgrade) || TryUpgrade(@class.QName.Name, right, ref qualifiedNameUpgrade);
     }
-
-    protected virtual bool IsSearchingMethod(ASClass @class, ASTrait trait) => false;
-    protected virtual bool SearchByInstruction(ASClass @class, ASMethod method, ref string namespaceNameUpgrade, ref string qualifiedNameUpgrade)
+    protected virtual bool SearchInstructions(ASClass @class, ASMethod method, ref string namespaceNameUpgrade, ref string qualifiedNameUpgrade)
     {
         /*
          * As a last resort, if no name has been successfully resolved, we can attempt to extract the fully qualified name from an instruction attempting to resolve the current instance/scope.
