@@ -1,5 +1,6 @@
 # Flazzy
 [![Build CI](https://github.com/ArachisH/Flazzy/actions/workflows/build.yaml/badge.svg)](https://github.com/ArachisH/Flazzy/actions)
+[![NuGet](https://img.shields.io/nuget/v/Hypo.Flazzy?label=NuGet)](https://www.nuget.org/packages/Hypo.Flazzy)
 ![License](https://img.shields.io/github/license/ArachisH/Flazzy?label=License)
 
 .NET library for [dis]assembling shockwave flash files(swf).
