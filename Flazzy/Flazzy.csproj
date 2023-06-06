@@ -1,9 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
+
+	<PropertyGroup>
+		<Version>0.1.0</Version>
+		<Title>Flazzy</Title>
+		<PackageId>Hypo.$(AssemblyName)</PackageId>
+		<Authors>ArachisH</Authors>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/ArachisH/Flazzy</RepositoryUrl>
+		<Description>.NET library for [dis]assembling shockwave flash files(swf).</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="System.IO.Pipelines" Version="6.0.2" />

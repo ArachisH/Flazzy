@@ -1,0 +1,49 @@
+name: 'Deploy: Production'
+
+on:
+  push:
+    tags:
+      - 'v*'
+      
+env:
+  PACKAGE_OUTPUT: ${{ github.workspace }}/package
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Production
+    
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: .NET Setup
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+        
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0
+      with:
+        versionSpec: '6.x'
+        includePrerelease: true
+
+    - name: Determine Version
+      uses: gittools/actions/gitversion/execute@v0
+      
+    - name: Restoring
+      run: dotnet restore --verbosity normal
+
+    - name: Building
+      run: dotnet build --configuration Release --no-restore --verbosity normal
+
+    - name: Testing
+      run: dotnet test --configuration Release --no-restore --no-build --verbosity normal
+
+    - name: Packing (w/ Symbols)
+      run: dotnet pack --configuration Release --no-restore --no-build --verbosity normal --output ${{ env.PACKAGE_OUTPUT }} -p:Version=${{ env.GitVersion_SemVer }} -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+
+    - name: Pushing
+      run: dotnet nuget push ${{ env.PACKAGE_OUTPUT }}/*.nupkg -k ${{ secrets.REPOSITORY_KEY }} -s ${{ secrets.REPOSITORY_SOURCE }}

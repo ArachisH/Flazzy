@@ -44,6 +44,28 @@ public class ASCode : IFlashItem, IList<ASInstruction>
 
                     exits[i] = value;
                 }
+
+                // Properly replaces the jump instruction with a new one.
+                if (Jumper.IsValid(previous.OP) && Jumper.IsValid(value.OP))
+                {
+                    jumper = (Jumper)value;
+                    var previousJumper = (Jumper)previous;
+
+                    // Use the same offset of the previous jump instruction if the new jump instruction has the default offset '0'.
+                    if (jumper.Offset == default)
+                    {
+                        jumper.Offset = previousJumper.Offset;
+                    }
+
+                    // It is important to link the new jump instruction with an exit instruction, as this will re-determine the offset of the jump if a rebuild is required.
+                    ASInstruction exit = JumpExits[previousJumper];
+                    JumpExits.Remove(previousJumper);
+                    JumpExits.Add(jumper, exit);
+                }
+
+                _indices.Remove(previous);
+                _indices.Add(value, index);
+                _instructions[index] = value;
             }
 
             _indices.Remove(previous);

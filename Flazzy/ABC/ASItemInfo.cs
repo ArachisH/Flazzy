@@ -1,8 +1,6 @@
-﻿using Flazzy.IO;
+﻿namespace Flazzy.ABC;
 
-namespace Flazzy.ABC;
-
-public class ASItemInfo : IFlashItem
+public sealed class ASItemInfo
 {
     private readonly ABCFile _abc;
 
@@ -12,27 +10,13 @@ public class ASItemInfo : IFlashItem
     public int ValueIndex { get; set; }
     public string Value => _abc.Pool.Strings[ValueIndex];
 
-    public ASItemInfo(ABCFile abc)
+    public ASItemInfo(ABCFile abc, int keyIndex, int valueIndex)
     {
         _abc = abc;
-    }
-    public ASItemInfo(ABCFile abc, ref FlashReader input)
-        : this(abc)
-    {
-        KeyIndex = input.ReadEncodedInt();
-        ValueIndex = input.ReadEncodedInt();
+
+        KeyIndex = keyIndex;
+        ValueIndex = valueIndex;
     }
 
-    public int GetSize()
-    {
-        int size = 0;
-        size += FlashWriter.GetEncodedIntSize(KeyIndex);
-        size += FlashWriter.GetEncodedIntSize(ValueIndex);
-        return size;
-    }
-    public void WriteTo(ref FlashWriter output)
-    {
-        output.WriteEncodedInt(KeyIndex);
-        output.WriteEncodedInt(ValueIndex);
-    }
+    public override string ToString() => $"{Key}=\"{Value}\"";
 }

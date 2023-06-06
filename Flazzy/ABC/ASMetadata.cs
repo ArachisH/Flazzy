@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC;
 
-public class ASMetadata : IFlashItem
+public sealed class ASMetadata : IFlashItem
 {
     private readonly ABCFile _abc;
 
@@ -17,25 +17,35 @@ public class ASMetadata : IFlashItem
 
         Items = new List<ASItemInfo>();
     }
-    public ASMetadata(ABCFile abc, ref FlashReader input)
+    public ASMetadata(ABCFile abc, FlashReader input)
         : this(abc)
     {
         NameIndex = input.ReadEncodedInt();
         Items.Capacity = input.ReadEncodedInt();
-        for (int i = 0; i < Items.Capacity; i++)
+        if (Items.Capacity > 0)
         {
-            Items.Add(new ASItemInfo(abc, ref input));
+            // TODO: Avoid potential stackoverflow.
+            Span<int> keys = stackalloc int[Items.Capacity];
+            for (int i = 0; i < Items.Capacity; i++)
+            {
+                keys[i] = input.ReadEncodedInt();
+            }
+            for (int i = 0; i < keys.Length; i++)
+            {
+                Items.Add(new ASItemInfo(abc, keys[i], input.ReadEncodedInt()));
+            }
         }
     }
-
+    
     public int GetSize()
     {
         int size = 0;
         size += FlashWriter.GetEncodedIntSize(NameIndex);
         size += FlashWriter.GetEncodedIntSize(Items.Count);
-        for (int i = 0; i < Items.Count; i++)
+        foreach (var item in Items)
         {
-            size += Items[i].GetSize();
+            size += FlashWriter.GetEncodedIntSize(item.KeyIndex);
+            size += FlashWriter.GetEncodedIntSize(item.ValueIndex);
         }
         return size;
     }
@@ -43,9 +53,13 @@ public class ASMetadata : IFlashItem
     {
         output.WriteEncodedInt(NameIndex);
         output.WriteEncodedInt(Items.Count);
-        foreach (var item in Items)
+        for (int i = 0; i < Items.Count; i++)
         {
-            item.WriteTo(ref output);
+            output.WriteEncodedInt(Items[i].KeyIndex);
+        }
+        for (int i = 0; i < Items.Count; i++)
+        {
+            output.WriteEncodedInt(Items[i].ValueIndex);
         }
     }
 }
