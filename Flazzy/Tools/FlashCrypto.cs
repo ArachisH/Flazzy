@@ -61,27 +61,19 @@ public static class FlashCrypto
             dSum += headerBytes[i];
         }
 
-        int dMod = dSum % GlobalKey.Length;
-        Span<byte> buffer = stackalloc byte[GlobalKey.Length];
+        Span<char> dSumChars = stackalloc char[4]; // Max Digits (255 * 8 = 2,040)
+        dSum.TryFormat(dSumChars, out int charsWritten);
 
+        Span<byte> buffer = stackalloc byte[GlobalKey.Length + SecondaryKey.Length + charsWritten];
+        SecondaryKey.CopyTo(buffer.Slice(GlobalKey.Length));                                                     // Place 'SecondaryKey' at the tail of the buffer.
+        Encoding.Default.GetBytes(dSumChars.Slice(0, charsWritten), buffer.Slice(buffer.Length - charsWritten)); // Place 'dSum' at the tail of the buffer, after 'SecondaryKey'.
+
+        int dMod = dSum % GlobalKey.Length;
         GlobalKey[dMod..].CopyTo(buffer);
         GlobalKey[..dMod].CopyTo(buffer.Slice(GlobalKey.Length - dMod, dMod));
 
         uint key = 0;
         for (int i = 0; i < buffer.Length; i++)
-        {
-            key *= 31;
-            key += buffer[i];
-        }
-
-        Span<char> dSumChars = stackalloc char[4]; // Max Digits (255 * 8 = 2,040)
-        dSum.TryFormat(dSumChars, out int charsWritten);
-
-        SecondaryKey.CopyTo(buffer);
-        int encoded = SecondaryKey.Length;
-
-        encoded += Encoding.Default.GetBytes(dSumChars.Slice(0, charsWritten), buffer.Slice(encoded));
-        for (int i = 0; i < encoded; i++)
         {
             key *= 31;
             key += buffer[i];
