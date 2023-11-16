@@ -6,15 +6,15 @@ namespace Flazzy.Records
     {
         public ushort Rate { get; set; }
         public ushort Count { get; set; }
-        public RectangeRecord Area { get; set; }
+        public RectangleRecord Area { get; set; }
 
         public FrameRecord()
         {
-            Area = new RectangeRecord();
+            Area = new RectangleRecord();
         }
         public FrameRecord(FlashReader input)
         {
-            Area = new RectangeRecord(input);
+            Area = new RectangleRecord(input);
             Rate = (ushort)(input.ReadUInt16() >> 8);
             Count = input.ReadUInt16();
         }

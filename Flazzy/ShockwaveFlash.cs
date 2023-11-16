@@ -55,7 +55,7 @@ namespace Flazzy
             if (isCreatingTemplate)
             {
                 Frame = new FrameRecord();
-                Frame.Area = new RectangeRecord();
+                Frame.Area = new RectangleRecord();
                 Compression = CompressionKind.ZLib;
             }
         }
