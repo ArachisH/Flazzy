@@ -1,9 +1,9 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC
+namespace Flazzy.ABC;
+
+public sealed class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConstant, IQName, IRTQName, IMultiname, IMultinameL
 {
-    public class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConstant, IQName, IRTQName, IMultiname, IMultinameL
-    {
         public MultinameKind Kind { get; set; }
         public ASConstantPool Pool { get; init; }
 
@@ -231,4 +231,3 @@ namespace Flazzy.ABC
             return Equals(obj as ASMultiname);
         }
     }
-}
