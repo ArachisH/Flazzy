@@ -93,7 +93,7 @@ namespace Flazzy.ABC
                         ASMultiname multiname => AddConstant(Multinames, multiname, recycle),
                         ASNamespace @namespace => AddConstant(Namespaces, @namespace, recycle),
                         ASNamespaceSet namespaceSet => AddConstant(NamespaceSets, namespaceSet, recycle),
-                        _ => throw new ArgumentException("The provided value does not belone anywhere in the constant pool.", nameof(value)),
+                        _ => throw new ArgumentException("The provided value does not belong anywhere in the constant pool.", nameof(value)),
                     };
                 }
             }
