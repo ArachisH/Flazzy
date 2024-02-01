@@ -26,18 +26,12 @@ public abstract class ASInstruction : FlashItem, ICloneable
     protected virtual void WriteValuesTo(FlashWriter output)
     { }
 
-    public virtual int GetPopCount()
-    {
-        return 0;
-    }
-    public virtual int GetPushCount()
-    {
-        return 0;
-    }
+    public virtual int GetPopCount() => 0;
+    public virtual int GetPushCount() => 0;
     public virtual void Execute(ASMachine machine)
     { }
 
-    protected int ResolveMultinamePops(ASMultiname multiname)
+    protected static int ResolveMultinamePops(ASMultiname multiname)
     {
         int popCount = 0;
         if (multiname.IsNameNeeded)
@@ -50,7 +44,7 @@ public abstract class ASInstruction : FlashItem, ICloneable
         }
         return popCount;
     }
-    protected void ResolveMultiname(ASMachine machine, ASMultiname multiname)
+    protected static void ResolveMultiname(ASMachine machine, ASMultiname multiname)
     {
         if (multiname.IsNameNeeded)
         {
