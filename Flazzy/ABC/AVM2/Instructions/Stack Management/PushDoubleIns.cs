@@ -1,52 +1,51 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC.AVM2.Instructions
+namespace Flazzy.ABC.AVM2.Instructions;
+
+public class PushDoubleIns : Primitive
 {
-    public class PushDoubleIns : Primitive
+    private double _value;
+    new public double Value
     {
-        private double _value;
-        new public double Value
+        get => _value;
+        set
         {
-            get => _value;
-            set
-            {
-                _value = value;
-                _valueIndex = ABC.Pool.AddConstant(value);
+            _value = value;
+            _valueIndex = ABC.Pool.AddConstant(value);
 
-                base.Value = value;
-            }
+            base.Value = value;
         }
+    }
 
-        private int _valueIndex;
-        public int ValueIndex
+    private int _valueIndex;
+    public int ValueIndex
+    {
+        get => _valueIndex;
+        set
         {
-            get => _valueIndex;
-            set
-            {
-                _valueIndex = value;
-                _value = ABC.Pool.Doubles[value];
+            _valueIndex = value;
+            _value = ABC.Pool.Doubles[value];
 
-                base.Value = _value;
-            }
+            base.Value = _value;
         }
+    }
 
-        public PushDoubleIns(ABCFile abc)
-            : base(OPCode.PushDouble, abc)
-        { }
-        public PushDoubleIns(ABCFile abc, double value)
-            : this(abc)
-        {
-            Value = value;
-        }
-        public PushDoubleIns(ABCFile abc, FlashReader input)
-            : this(abc)
-        {
-            ValueIndex = input.ReadInt30();
-        }
+    public PushDoubleIns(ABCFile abc)
+        : base(OPCode.PushDouble, abc)
+    { }
+    public PushDoubleIns(ABCFile abc, double value)
+        : this(abc)
+    {
+        Value = value;
+    }
+    public PushDoubleIns(ABCFile abc, FlashReader input)
+        : this(abc)
+    {
+        ValueIndex = input.ReadInt30();
+    }
 
-        protected override void WriteValuesTo(FlashWriter output)
-        {
-            output.WriteInt30(ValueIndex);
-        }
+    protected override void WriteValuesTo(FlashWriter output)
+    {
+        output.WriteInt30(ValueIndex);
     }
 }

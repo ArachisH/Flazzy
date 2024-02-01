@@ -1,8 +1,7 @@
-﻿namespace Flazzy.ABC.AVM2.Instructions.Containers
+﻿namespace Flazzy.ABC.AVM2.Instructions.Containers;
+
+public interface IPropertyContainer
 {
-    public interface IPropertyContainer
-    {
-        int PropertyNameIndex { get; set; }
-        ASMultiname PropertyName { get; }
-    }
+    int PropertyNameIndex { get; set; }
+    ASMultiname PropertyName { get; }
 }

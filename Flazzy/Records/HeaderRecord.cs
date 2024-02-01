@@ -1,29 +1,29 @@
 ﻿using Flazzy.IO;
 using Flazzy.Tags;
 
-namespace Flazzy.Records
+namespace Flazzy.Records;
+
+public class HeaderRecord : FlashItem
 {
-    public class HeaderRecord : FlashItem
+    private const int MAX_SHORT_LENGTH = 62;
+
+    private readonly bool _isLongTag;
+    public bool IsLongTag
     {
-        private const int MAX_SHORT_LENGTH = 62;
-
-        private bool _isLongTag;
-        public bool IsLongTag
+        get
         {
-            get
+            switch (Kind)
             {
-                switch (Kind)
-                {
-                    case TagKind.DefineBits:
+                case TagKind.DefineBits:
 
-                    case TagKind.DefineBitsJPEG2:
-                    case TagKind.DefineBitsJPEG3:
-                    case TagKind.DefineBitsJPEG4:
+                case TagKind.DefineBitsJPEG2:
+                case TagKind.DefineBitsJPEG3:
+                case TagKind.DefineBitsJPEG4:
 
-                    case TagKind.DefineBitsLossless:
-                    case TagKind.DefineBitsLossless2:
+                case TagKind.DefineBitsLossless:
+                case TagKind.DefineBitsLossless2:
 
-                    case TagKind.SoundStreamBlock:
+                case TagKind.SoundStreamBlock:
                     {
                         /*
                          * These tags are required to write their length amount in the long format,
@@ -32,45 +32,44 @@ namespace Flazzy.Records
                         return true;
                     }
 
-                    default:
+                default:
                     {
                         return (_isLongTag ||
                             (Length > MAX_SHORT_LENGTH));
                     }
-                }
             }
         }
+    }
 
-        public int Length { get; set; }
-        public TagKind Kind { get; set; }
+    public int Length { get; set; }
+    public TagKind Kind { get; set; }
 
-        public HeaderRecord(TagKind kind)
+    public HeaderRecord(TagKind kind)
+    {
+        Kind = kind;
+    }
+    public HeaderRecord(FlashReader input)
+    {
+        ushort header = header = input.ReadUInt16();
+        Kind = (TagKind)(header >> 6);
+
+        Length = (header & 63);
+        if (Length > MAX_SHORT_LENGTH)
         {
-            Kind = kind;
+            Length = input.ReadInt32();
+            _isLongTag = (Length <= MAX_SHORT_LENGTH);
         }
-        public HeaderRecord(FlashReader input)
+    }
+
+    public override void WriteTo(FlashWriter output)
+    {
+        var header = ((uint)Kind << 6);
+        header |= (IsLongTag ? 63 : (uint)Length);
+
+        output.Write((ushort)header);
+        if (IsLongTag)
         {
-            ushort header = header = input.ReadUInt16();
-            Kind = (TagKind)(header >> 6);
-
-            Length = (header & 63);
-            if (Length > MAX_SHORT_LENGTH)
-            {
-                Length = input.ReadInt32();
-                _isLongTag = (Length <= MAX_SHORT_LENGTH);
-            }
-        }
-
-        public override void WriteTo(FlashWriter output)
-        {
-            var header = ((uint)Kind << 6);
-            header |= (IsLongTag ? 63 : (uint)Length);
-
-            output.Write((ushort)header);
-            if (IsLongTag)
-            {
-                output.Write(Length);
-            }
+            output.Write(Length);
         }
     }
 }

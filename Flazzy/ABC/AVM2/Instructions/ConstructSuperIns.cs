@@ -1,41 +1,40 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC.AVM2.Instructions
+namespace Flazzy.ABC.AVM2.Instructions;
+
+public class ConstructSuperIns : ASInstruction
 {
-    public class ConstructSuperIns : ASInstruction
+    public int ArgCount { get; set; }
+
+    public ConstructSuperIns()
+        : base(OPCode.ConstructSuper)
+    { }
+    public ConstructSuperIns(int argCount)
+        : this()
     {
-        public int ArgCount { get; set; }
+        ArgCount = argCount;
+    }
+    public ConstructSuperIns(FlashReader input)
+        : this()
+    {
+        ArgCount = input.ReadInt30();
+    }
 
-        public ConstructSuperIns()
-            : base(OPCode.ConstructSuper)
-        { }
-        public ConstructSuperIns(int argCount)
-            : this()
+    public override int GetPopCount()
+    {
+        return (ArgCount + 1);
+    }
+    public override void Execute(ASMachine machine)
+    {
+        for (int i = 0; i < ArgCount; i++)
         {
-            ArgCount = argCount;
+            machine.Values.Pop();
         }
-        public ConstructSuperIns(FlashReader input)
-            : this()
-        {
-            ArgCount = input.ReadInt30();
-        }
+        object obj = machine.Values.Pop();
+    }
 
-        public override int GetPopCount()
-        {
-            return (ArgCount + 1);
-        }
-        public override void Execute(ASMachine machine)
-        {
-            for (int i = 0; i < ArgCount; i++)
-            {
-                machine.Values.Pop();
-            }
-            object obj = machine.Values.Pop();
-        }
-
-        protected override void WriteValuesTo(FlashWriter output)
-        {
-            output.WriteInt30(ArgCount);
-        }
+    protected override void WriteValuesTo(FlashWriter output)
+    {
+        output.WriteInt30(ArgCount);
     }
 }

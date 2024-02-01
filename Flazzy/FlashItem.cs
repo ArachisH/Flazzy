@@ -2,23 +2,22 @@
 
 using Flazzy.IO;
 
-namespace Flazzy
-{
-    [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public abstract class FlashItem
-    {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        protected virtual string DebuggerDisplay => "{" + ToString() + "}";
+namespace Flazzy;
 
-        public byte[] ToArray()
+[DebuggerDisplay("{DebuggerDisplay,nq}")]
+public abstract class FlashItem
+{
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    protected virtual string DebuggerDisplay => "{" + ToString() + "}";
+
+    public byte[] ToArray()
+    {
+        using (var outputMem = new MemoryStream())
+        using (var output = new FlashWriter(outputMem))
         {
-            using (var outputMem = new MemoryStream())
-            using (var output = new FlashWriter(outputMem))
-            {
-                WriteTo(output);
-                return outputMem.ToArray();
-            }
+            WriteTo(output);
+            return outputMem.ToArray();
         }
-        public abstract void WriteTo(FlashWriter output);
     }
+    public abstract void WriteTo(FlashWriter output);
 }

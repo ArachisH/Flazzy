@@ -1,527 +1,526 @@
 ﻿using Flazzy.IO;
 
-namespace Flazzy.ABC.AVM2.Instructions
+namespace Flazzy.ABC.AVM2.Instructions;
+
+public abstract class ASInstruction : FlashItem, ICloneable
 {
-    public abstract class ASInstruction : FlashItem, ICloneable
+    public OPCode OP { get; }
+    protected ABCFile ABC { get; }
+    protected override string DebuggerDisplay => OP.ToString();
+
+    public ASInstruction(OPCode op)
     {
-        public OPCode OP { get; }
-        protected ABCFile ABC { get; }
-        protected override string DebuggerDisplay => OP.ToString();
+        OP = op;
+    }
+    protected ASInstruction(OPCode op, ABCFile abc)
+        : this(op)
+    {
+        ABC = abc;
+    }
 
-        public ASInstruction(OPCode op)
-        {
-            OP = op;
-        }
-        protected ASInstruction(OPCode op, ABCFile abc)
-            : this(op)
-        {
-            ABC = abc;
-        }
+    public override void WriteTo(FlashWriter output)
+    {
+        output.Write((byte)OP);
+        WriteValuesTo(output);
+    }
+    protected virtual void WriteValuesTo(FlashWriter output)
+    { }
 
-        public override void WriteTo(FlashWriter output)
-        {
-            output.Write((byte)OP);
-            WriteValuesTo(output);
-        }
-        protected virtual void WriteValuesTo(FlashWriter output)
-        { }
+    public virtual int GetPopCount()
+    {
+        return 0;
+    }
+    public virtual int GetPushCount()
+    {
+        return 0;
+    }
+    public virtual void Execute(ASMachine machine)
+    { }
 
-        public virtual int GetPopCount()
+    protected int ResolveMultinamePops(ASMultiname multiname)
+    {
+        int popCount = 0;
+        if (multiname.IsNameNeeded)
         {
-            return 0;
+            popCount++;
         }
-        public virtual int GetPushCount()
+        if (multiname.IsNamespaceNeeded)
         {
-            return 0;
+            popCount++;
         }
-        public virtual void Execute(ASMachine machine)
-        { }
+        return popCount;
+    }
+    protected void ResolveMultiname(ASMachine machine, ASMultiname multiname)
+    {
+        if (multiname.IsNameNeeded)
+        {
+            object name = machine.Values.Pop();
+        }
+        if (multiname.IsNamespaceNeeded)
+        {
+            object @namespace = machine.Values.Pop();
+        }
+    }
 
-        protected int ResolveMultinamePops(ASMultiname multiname)
+    // TODO: Use source generator to add new items at compile time.
+    public static bool IsPropertyContainer(OPCode op)
+    {
+        switch (op)
         {
-            int popCount = 0;
-            if (multiname.IsNameNeeded)
-            {
-                popCount++;
-            }
-            if (multiname.IsNamespaceNeeded)
-            {
-                popCount++;
-            }
-            return popCount;
+            case OPCode.CallPropVoid:
+            case OPCode.CallProperty:
+            case OPCode.ConstructProp: return true;
+            default: return false;
         }
-        protected void ResolveMultiname(ASMachine machine, ASMultiname multiname)
+    }
+    public static ASInstruction Create(ABCFile abc, FlashReader input)
+    {
+        var op = (OPCode)input.ReadByte();
+        switch (op)
         {
-            if (multiname.IsNameNeeded)
-            {
-                object name = machine.Values.Pop();
-            }
-            if (multiname.IsNamespaceNeeded)
-            {
-                object @namespace = machine.Values.Pop();
-            }
-        }
-
-        // TODO: Use source generator to add new items at compile time.
-        public static bool IsPropertyContainer(OPCode op)
-        {
-            switch (op)
-            {
-                case OPCode.CallPropVoid:
-                case OPCode.CallProperty:
-                case OPCode.ConstructProp: return true;
-                default: return false;
-            }
-        }
-        public static ASInstruction Create(ABCFile abc, FlashReader input)
-        {
-            var op = (OPCode)input.ReadByte();
-            switch (op)
-            {
-                #region Arithmetic
-                case OPCode.Add_i:
+            #region Arithmetic
+            case OPCode.Add_i:
                 return new AddIIns();
 
-                case OPCode.Add:
+            case OPCode.Add:
                 return new AddIns();
 
-                case OPCode.Decrement_i:
+            case OPCode.Decrement_i:
                 return new DecrementIIns();
 
-                case OPCode.Decrement:
+            case OPCode.Decrement:
                 return new DecrementIns();
 
-                case OPCode.Divide:
+            case OPCode.Divide:
                 return new DivideIns();
 
-                case OPCode.Equals:
+            case OPCode.Equals:
                 return new EqualsIns();
 
-                case OPCode.GreaterEquals:
+            case OPCode.GreaterEquals:
                 return new GreaterEqualsIns();
 
-                case OPCode.GreaterThan:
+            case OPCode.GreaterThan:
                 return new GreaterThanIns();
 
-                case OPCode.Increment_i:
+            case OPCode.Increment_i:
                 return new IncrementIIns();
 
-                case OPCode.Increment:
+            case OPCode.Increment:
                 return new IncrementIns();
 
-                case OPCode.In:
+            case OPCode.In:
                 return new InIns();
 
-                case OPCode.IsTypeLate:
+            case OPCode.IsTypeLate:
                 return new IsTypeLateIns();
 
-                case OPCode.LessEquals:
+            case OPCode.LessEquals:
                 return new LessEqualsIns();
 
-                case OPCode.LessThan:
+            case OPCode.LessThan:
                 return new LessThanIns();
 
-                case OPCode.Modulo:
+            case OPCode.Modulo:
                 return new ModuloIns();
 
-                case OPCode.Multiply_i:
+            case OPCode.Multiply_i:
                 return new MultiplyIIns();
 
-                case OPCode.Multiply:
+            case OPCode.Multiply:
                 return new MultiplyIns();
 
-                case OPCode.Negate_i:
+            case OPCode.Negate_i:
                 return new NegateIIns();
 
-                case OPCode.Negate:
+            case OPCode.Negate:
                 return new NegateIns();
 
-                case OPCode.StrictEquals:
+            case OPCode.StrictEquals:
                 return new StrictEqualsIns();
 
-                case OPCode.Subtract_i:
+            case OPCode.Subtract_i:
                 return new SubtractIIns();
 
-                case OPCode.Subtract:
+            case OPCode.Subtract:
                 return new SubtractIns();
-                #endregion
+            #endregion
 
-                #region Bit Manipulation
-                case OPCode.BitAnd:
+            #region Bit Manipulation
+            case OPCode.BitAnd:
                 return new BitAndIns();
 
-                case OPCode.BitNot:
+            case OPCode.BitNot:
                 return new BitNotIns();
 
-                case OPCode.BitOr:
+            case OPCode.BitOr:
                 return new BitOrIns();
 
-                case OPCode.BitXor:
+            case OPCode.BitXor:
                 return new BitXorIns();
 
-                case OPCode.LShift:
+            case OPCode.LShift:
                 return new LShiftIns();
 
-                case OPCode.RShift:
+            case OPCode.RShift:
                 return new RShiftIns();
 
-                case OPCode.URShift:
+            case OPCode.URShift:
                 return new URShiftIns();
-                #endregion
+            #endregion
 
-                #region Control Transfer
-                case OPCode.IfEq:
+            #region Control Transfer
+            case OPCode.IfEq:
                 return new IfEqualIns(input);
 
-                case OPCode.IfFalse:
+            case OPCode.IfFalse:
                 return new IfFalseIns(input);
 
-                case OPCode.IfGe:
+            case OPCode.IfGe:
                 return new IfGreaterEqualIns(input);
 
-                case OPCode.IfGt:
+            case OPCode.IfGt:
                 return new IfGreaterThanIns(input);
 
-                case OPCode.IfLe:
+            case OPCode.IfLe:
                 return new IfLessEqualIns(input);
 
-                case OPCode.IfLt:
+            case OPCode.IfLt:
                 return new IfLessThanIns(input);
 
-                case OPCode.IfNe:
+            case OPCode.IfNe:
                 return new IfNotEqualIns(input);
 
-                case OPCode.IfNGe:
+            case OPCode.IfNGe:
                 return new IfNotGreaterEqualIns(input);
 
-                case OPCode.IfNGt:
+            case OPCode.IfNGt:
                 return new IfNotGreaterThanIns(input);
 
-                case OPCode.IfNLe:
+            case OPCode.IfNLe:
                 return new IfNotLessEqualIns(input);
 
-                case OPCode.IfNLt:
+            case OPCode.IfNLt:
                 return new IfNotLessThanIns(input);
 
-                case OPCode.IfStrictEq:
+            case OPCode.IfStrictEq:
                 return new IfStrictEqualIns(input);
 
-                case OPCode.IfStrictNE:
+            case OPCode.IfStrictNE:
                 return new IfStrictNotEqualIns(input);
 
-                case OPCode.IfTrue:
+            case OPCode.IfTrue:
                 return new IfTrueIns(input);
 
-                case OPCode.Jump:
+            case OPCode.Jump:
                 return new JumpIns(input);
-                #endregion
+            #endregion
 
-                #region Register Management
-                case OPCode.DecLocal_i:
+            #region Register Management
+            case OPCode.DecLocal_i:
                 return new DecLocalIIns(input);
 
-                case OPCode.DecLocal:
+            case OPCode.DecLocal:
                 return new DecLocalIns(input);
 
-                case OPCode.GetLocal_0:
+            case OPCode.GetLocal_0:
                 return new GetLocal0Ins();
 
-                case OPCode.GetLocal_1:
+            case OPCode.GetLocal_1:
                 return new GetLocal1Ins();
 
-                case OPCode.GetLocal_2:
+            case OPCode.GetLocal_2:
                 return new GetLocal2Ins();
 
-                case OPCode.GetLocal_3:
+            case OPCode.GetLocal_3:
                 return new GetLocal3Ins();
 
-                case OPCode.GetLocal:
+            case OPCode.GetLocal:
                 return new GetLocalIns(input);
 
-                case OPCode.IncLocal_i:
+            case OPCode.IncLocal_i:
                 return new IncLocalIIns(input);
 
-                case OPCode.IncLocal:
+            case OPCode.IncLocal:
                 return new IncLocalIns(input);
 
-                case OPCode.Kill:
+            case OPCode.Kill:
                 return new KillIns(input);
 
-                case OPCode.SetLocal_0:
+            case OPCode.SetLocal_0:
                 return new SetLocal0Ins();
 
-                case OPCode.SetLocal_1:
+            case OPCode.SetLocal_1:
                 return new SetLocal1Ins();
 
-                case OPCode.SetLocal_2:
+            case OPCode.SetLocal_2:
                 return new SetLocal2Ins();
 
-                case OPCode.SetLocal_3:
+            case OPCode.SetLocal_3:
                 return new SetLocal3Ins();
 
-                case OPCode.SetLocal:
+            case OPCode.SetLocal:
                 return new SetLocalIns(input);
-                #endregion
+            #endregion
 
-                #region Stack Management
-                case OPCode.PushByte:
+            #region Stack Management
+            case OPCode.PushByte:
                 return new PushByteIns(input);
 
-                case OPCode.PushDouble:
+            case OPCode.PushDouble:
                 return new PushDoubleIns(abc, input);
 
-                case OPCode.PushFalse:
+            case OPCode.PushFalse:
                 return new PushFalseIns();
 
-                case OPCode.PushInt:
+            case OPCode.PushInt:
                 return new PushIntIns(abc, input);
 
-                case OPCode.PushNan:
+            case OPCode.PushNan:
                 return new PushNaNIns();
 
-                case OPCode.PushNull:
+            case OPCode.PushNull:
                 return new PushNullIns();
 
-                case OPCode.PushShort:
+            case OPCode.PushShort:
                 return new PushShortIns(input);
 
-                case OPCode.PushString:
+            case OPCode.PushString:
                 return new PushStringIns(abc, input);
 
-                case OPCode.PushTrue:
+            case OPCode.PushTrue:
                 return new PushTrueIns();
 
-                case OPCode.PushUInt:
+            case OPCode.PushUInt:
                 return new PushUIntIns(abc, input);
-                #endregion
+            #endregion
 
-                #region Type Conversion
-                case OPCode.Coerce_a:
+            #region Type Conversion
+            case OPCode.Coerce_a:
                 return new CoerceAIns();
 
-                case OPCode.Coerce:
+            case OPCode.Coerce:
                 return new CoerceIns(abc, input);
 
-                case OPCode.Coerce_s:
+            case OPCode.Coerce_s:
                 return new CoerceSIns();
 
-                case OPCode.Convert_b:
+            case OPCode.Convert_b:
                 return new ConvertBIns();
 
-                case OPCode.Convert_d:
+            case OPCode.Convert_d:
                 return new ConvertDIns();
 
-                case OPCode.Convert_i:
+            case OPCode.Convert_i:
                 return new ConvertIIns();
 
-                case OPCode.Convert_o:
+            case OPCode.Convert_o:
                 return new ConvertOIns();
 
-                case OPCode.Convert_s:
+            case OPCode.Convert_s:
                 return new ConvertSIns();
 
-                case OPCode.Convert_u:
+            case OPCode.Convert_u:
                 return new ConvertUIns();
-                #endregion
+            #endregion
 
-                #region Miscellaneous
-                case OPCode.ApplyType:
+            #region Miscellaneous
+            case OPCode.ApplyType:
                 return new ApplyTypeIns(input);
 
-                case OPCode.AsType:
+            case OPCode.AsType:
                 return new AsTypeIns(abc, input);
 
-                case OPCode.AsTypeLate:
+            case OPCode.AsTypeLate:
                 return new AsTypeLateIns();
 
-                case OPCode.Call:
+            case OPCode.Call:
                 return new CallIns(input);
 
-                case OPCode.CallMethod:
+            case OPCode.CallMethod:
                 return new CallMethodIns(abc, input);
 
-                case OPCode.CallProperty:
+            case OPCode.CallProperty:
                 return new CallPropertyIns(abc, input);
 
-                case OPCode.CallPropLex:
+            case OPCode.CallPropLex:
                 return new CallPropLexIns(abc, input);
 
-                case OPCode.CallPropVoid:
+            case OPCode.CallPropVoid:
                 return new CallPropVoidIns(abc, input);
 
-                case OPCode.CallStatic:
+            case OPCode.CallStatic:
                 return new CallStaticIns(abc, input);
 
-                case OPCode.CallSuper:
+            case OPCode.CallSuper:
                 return new CallSuperIns(abc, input);
 
-                case OPCode.CallSuperVoid:
+            case OPCode.CallSuperVoid:
                 return new CallSuperVoidIns(abc, input);
 
-                case OPCode.CheckFilter:
+            case OPCode.CheckFilter:
                 return new CheckFilterIns();
 
-                case OPCode.Construct:
+            case OPCode.Construct:
                 return new ConstructIns(input);
 
-                case OPCode.ConstructProp:
+            case OPCode.ConstructProp:
                 return new ConstructPropIns(abc, input);
 
-                case OPCode.ConstructSuper:
+            case OPCode.ConstructSuper:
                 return new ConstructSuperIns(input);
 
-                case OPCode.DebugFile:
+            case OPCode.DebugFile:
                 return new DebugFileIns(abc, input);
 
-                case OPCode.Debug:
+            case OPCode.Debug:
                 return new DebugIns(abc, input);
 
-                case OPCode.DebugLine:
+            case OPCode.DebugLine:
                 return new DebugLineIns(input);
 
-                case OPCode.DeleteProperty:
+            case OPCode.DeleteProperty:
                 return new DeletePropertyIns(abc, input);
 
-                case OPCode.Dup:
+            case OPCode.Dup:
                 return new DupIns();
 
-                case OPCode.Dxns:
+            case OPCode.Dxns:
                 return new DxnsIns(abc, input);
 
-                case OPCode.DxnsLate:
+            case OPCode.DxnsLate:
                 return new DxnsLateIns();
 
-                case OPCode.Esc_XElem:
+            case OPCode.Esc_XElem:
                 return new EscXElemIns();
 
-                case OPCode.Esc_XAttr:
+            case OPCode.Esc_XAttr:
                 return new EscXAttrIns();
 
-                case OPCode.FindProperty:
+            case OPCode.FindProperty:
                 return new FindPropertyIns(abc, input);
 
-                case OPCode.FindPropStrict:
+            case OPCode.FindPropStrict:
                 return new FindPropStrictIns(abc, input);
 
-                case OPCode.GetDescendants:
+            case OPCode.GetDescendants:
                 return new GetDescendantsIns(abc, input);
 
-                case OPCode.GetGlobalScope:
+            case OPCode.GetGlobalScope:
                 return new GetGlobalScopeIns();
 
-                case OPCode.GetLex:
+            case OPCode.GetLex:
                 return new GetLexIns(abc, input);
 
-                case OPCode.GetProperty:
+            case OPCode.GetProperty:
                 return new GetPropertyIns(abc, input);
 
-                case OPCode.GetScopeObject:
+            case OPCode.GetScopeObject:
                 return new GetScopeObjectIns(input);
 
-                case OPCode.GetSlot:
+            case OPCode.GetSlot:
                 return new GetSlotIns(input);
 
-                case OPCode.GetSuper:
+            case OPCode.GetSuper:
                 return new GetSuperIns(abc, input);
 
-                case OPCode.HasNext2:
+            case OPCode.HasNext2:
                 return new HasNext2Ins(input);
 
-                case OPCode.HasNext:
+            case OPCode.HasNext:
                 return new HasNextIns();
 
-                case OPCode.InitProperty:
+            case OPCode.InitProperty:
                 return new InitPropertyIns(abc, input);
 
-                case OPCode.InstanceOf:
+            case OPCode.InstanceOf:
                 return new InstanceOfIns();
 
-                case OPCode.Label:
+            case OPCode.Label:
                 return new LabelIns();
 
-                case OPCode.LookUpSwitch:
+            case OPCode.LookUpSwitch:
                 return new LookUpSwitchIns(input);
 
-                case OPCode.NewActivation:
+            case OPCode.NewActivation:
                 return new NewActivationIns();
 
-                case OPCode.NewArray:
+            case OPCode.NewArray:
                 return new NewArrayIns(input);
 
-                case OPCode.NewCatch:
+            case OPCode.NewCatch:
                 return new NewCatchIns(input);
 
-                case OPCode.NewClass:
+            case OPCode.NewClass:
                 return new NewClassIns(abc, input);
 
-                case OPCode.NewFunction:
+            case OPCode.NewFunction:
                 return new NewFunctionIns(abc, input);
 
-                case OPCode.NewObject:
+            case OPCode.NewObject:
                 return new NewObjectIns(input);
 
-                case OPCode.NextName:
+            case OPCode.NextName:
                 return new NextNameIns();
 
-                case OPCode.NextValue:
+            case OPCode.NextValue:
                 return new NextValueIns();
 
-                case OPCode.Nop:
+            case OPCode.Nop:
                 return new NopIns();
 
-                case OPCode.Not:
+            case OPCode.Not:
                 return new NotIns();
 
-                case OPCode.Pop:
+            case OPCode.Pop:
                 return new PopIns();
 
-                case OPCode.PopScope:
+            case OPCode.PopScope:
                 return new PopScopeIns();
 
-                case OPCode.PushScope:
+            case OPCode.PushScope:
                 return new PushScopeIns();
 
-                case OPCode.PushUndefined:
+            case OPCode.PushUndefined:
                 return new PushUndefinedIns();
 
-                case OPCode.PushWith:
+            case OPCode.PushWith:
                 return new PushWithIns();
 
-                case OPCode.ReturnValue:
+            case OPCode.ReturnValue:
                 return new ReturnValueIns();
 
-                case OPCode.ReturnVoid:
+            case OPCode.ReturnVoid:
                 return new ReturnVoidIns();
 
-                case OPCode.SetProperty:
+            case OPCode.SetProperty:
                 return new SetPropertyIns(abc, input);
 
-                case OPCode.SetSlot:
+            case OPCode.SetSlot:
                 return new SetSlotIns(input);
 
-                case OPCode.SetSuper:
+            case OPCode.SetSuper:
                 return new SetSuperIns(abc, input);
 
-                case OPCode.Swap:
+            case OPCode.Swap:
                 return new SwapIns();
 
-                case OPCode.Throw:
+            case OPCode.Throw:
                 return new ThrowIns();
 
-                case OPCode.TypeOf:
+            case OPCode.TypeOf:
                 return new TypeOfIns();
                 #endregion
-            }
-            throw new Exception("Unhandled OPCode: " + op);
         }
+        throw new Exception("Unhandled OPCode: " + op);
+    }
 
-        object ICloneable.Clone()
-        {
-            return Clone();
-        }
-        public ASInstruction Clone()
-        {
-            return (ASInstruction)MemberwiseClone();
-        }
+    object ICloneable.Clone()
+    {
+        return Clone();
+    }
+    public ASInstruction Clone()
+    {
+        return (ASInstruction)MemberwiseClone();
     }
 }

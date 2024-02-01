@@ -1,10 +1,9 @@
-﻿namespace Flazzy.Tags
+﻿namespace Flazzy.Tags;
+
+public enum FlashProduct
 {
-    public enum FlashProduct
-    {
-        Unknown = 0,
-        MacromediaFlexJ2EE = 1,
-        MacromediaFlexNET = 2,
-        AdobeFlex = 3
-    }
+    Unknown = 0,
+    MacromediaFlexJ2EE = 1,
+    MacromediaFlexNET = 2,
+    AdobeFlex = 3
 }

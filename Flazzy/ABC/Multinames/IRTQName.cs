@@ -1,8 +1,7 @@
-﻿namespace Flazzy.ABC
+﻿namespace Flazzy.ABC;
+
+public interface IRTQName
 {
-    public interface IRTQName
-    {
-        string Name { get; }
-        int NameIndex { get; set; }
-    }
+    string Name { get; }
+    int NameIndex { get; set; }
 }

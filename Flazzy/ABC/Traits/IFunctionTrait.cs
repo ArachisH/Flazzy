@@ -1,8 +1,7 @@
-﻿namespace Flazzy.ABC
+﻿namespace Flazzy.ABC;
+
+public interface IFunctionTrait
 {
-    public interface IFunctionTrait
-    {
-        ASMethod Function { get; }
-        int FunctionIndex { get; set; }
-    }
+    ASMethod Function { get; }
+    int FunctionIndex { get; set; }
 }

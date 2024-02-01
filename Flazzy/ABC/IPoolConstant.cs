@@ -1,7 +1,6 @@
-﻿namespace Flazzy.ABC
+﻿namespace Flazzy.ABC;
+
+public interface IPoolConstant
 {
-    public interface IPoolConstant
-    {
-        public ASConstantPool Pool { get; init; }
-    }
+    public ASConstantPool Pool { get; init; }
 }
