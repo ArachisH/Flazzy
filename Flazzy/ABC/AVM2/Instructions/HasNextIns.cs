@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class HasNextIns : ASInstruction
+public sealed class HasNextIns : ASInstruction
 {
     public HasNextIns()
         : base(OPCode.HasNext)

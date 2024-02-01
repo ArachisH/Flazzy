@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class DebugLineIns : ASInstruction
+public sealed class DebugLineIns : ASInstruction
 {
     public int LineNumber { get; set; }
 

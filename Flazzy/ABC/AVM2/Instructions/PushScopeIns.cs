@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class PushScopeIns : ASInstruction
+public sealed class PushScopeIns : ASInstruction
 {
     public PushScopeIns()
         : base(OPCode.PushScope)

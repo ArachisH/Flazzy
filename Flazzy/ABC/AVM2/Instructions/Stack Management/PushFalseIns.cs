@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class PushFalseIns : Primitive
+public sealed class PushFalseIns : Primitive
 {
     public override object Value
     {

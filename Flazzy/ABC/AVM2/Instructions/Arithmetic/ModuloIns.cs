@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class ModuloIns : Computation
+public sealed class ModuloIns : Computation
 {
     public ModuloIns()
         : base(OPCode.Modulo)

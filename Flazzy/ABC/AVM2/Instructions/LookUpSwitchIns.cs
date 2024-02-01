@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class LookUpSwitchIns : ASInstruction
+public sealed class LookUpSwitchIns : ASInstruction
 {
     public List<uint> CaseOffsets { get; }
     public uint DefaultOffset { get; set; }

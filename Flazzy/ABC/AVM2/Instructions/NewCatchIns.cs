@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class NewCatchIns : ASInstruction
+public sealed class NewCatchIns : ASInstruction
 {
     public int ExceptionIndex { get; set; }
 

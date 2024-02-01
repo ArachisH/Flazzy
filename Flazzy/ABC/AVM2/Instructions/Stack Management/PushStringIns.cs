@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class PushStringIns : Primitive
+public sealed class PushStringIns : Primitive
 {
     private string _value;
     new public string Value

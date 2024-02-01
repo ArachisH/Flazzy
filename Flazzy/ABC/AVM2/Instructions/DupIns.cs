@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class DupIns : ASInstruction
+public sealed class DupIns : ASInstruction
 {
     public DupIns()
         : base(OPCode.Dup)

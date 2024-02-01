@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class LessThanIns : Computation
+public sealed class LessThanIns : Computation
 {
     public LessThanIns()
         : base(OPCode.LessThan)

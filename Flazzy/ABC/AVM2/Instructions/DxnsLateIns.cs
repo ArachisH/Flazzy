@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class DxnsLateIns : ASInstruction
+public sealed class DxnsLateIns : ASInstruction
 {
     public DxnsLateIns()
         : base(OPCode.DxnsLate)

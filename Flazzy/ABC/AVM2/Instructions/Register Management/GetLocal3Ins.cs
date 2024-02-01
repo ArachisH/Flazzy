@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class GetLocal3Ins : Local
+public sealed class GetLocal3Ins : Local
 {
     public override int Register
     {

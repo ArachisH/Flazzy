@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class AddIns : Computation
+public sealed class AddIns : Computation
 {
     public AddIns()
         : base(OPCode.Add)

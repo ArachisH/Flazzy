@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class IncLocalIIns : Local
+public sealed class IncLocalIIns : Local
 {
     public IncLocalIIns(int register)
         : base(OPCode.IncLocal_i, register)

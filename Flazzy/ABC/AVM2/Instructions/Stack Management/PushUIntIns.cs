@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class PushUIntIns : Primitive
+public sealed class PushUIntIns : Primitive
 {
     private uint _value;
     new public uint Value

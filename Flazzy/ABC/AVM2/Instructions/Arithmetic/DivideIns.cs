@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class DivideIns : Computation
+public sealed class DivideIns : Computation
 {
     public DivideIns()
         : base(OPCode.Divide)

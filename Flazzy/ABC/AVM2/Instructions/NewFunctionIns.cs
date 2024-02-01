@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class NewFunctionIns : ASInstruction
+public sealed class NewFunctionIns : ASInstruction
 {
     public int MethodIndex { get; set; }
     public ASMethod Method => ABC.Methods[MethodIndex];

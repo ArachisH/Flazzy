@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class GetScopeObjectIns : ASInstruction
+public sealed class GetScopeObjectIns : ASInstruction
 {
     public byte ScopeIndex { get; set; }
 

@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class SwapIns : ASInstruction
+public sealed class SwapIns : ASInstruction
 {
     public SwapIns()
         : base(OPCode.Swap)

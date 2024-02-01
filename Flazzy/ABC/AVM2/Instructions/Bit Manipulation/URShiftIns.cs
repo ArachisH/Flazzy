@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class URShiftIns : ASInstruction
+public sealed class URShiftIns : ASInstruction
 {
     public URShiftIns()
         : base(OPCode.URShift)

@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class GreaterEqualsIns : Computation
+public sealed class GreaterEqualsIns : Computation
 {
     public GreaterEqualsIns()
         : base(OPCode.GreaterEquals)

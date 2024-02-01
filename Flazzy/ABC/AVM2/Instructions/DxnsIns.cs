@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class DxnsIns : ASInstruction
+public sealed class DxnsIns : ASInstruction
 {
     public int UriIndex { get; set; }
     public string Uri => ABC.Pool.Strings[UriIndex];

@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class JumpIns : Jumper
+public sealed class JumpIns : Jumper
 {
     public JumpIns()
         : base(OPCode.Jump)

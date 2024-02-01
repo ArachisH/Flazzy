@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class CallMethodIns : ASInstruction
+public sealed class CallMethodIns : ASInstruction
 {
     public int MethodIndex { get; set; }
     public int ArgCount { get; set; }

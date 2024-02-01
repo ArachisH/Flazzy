@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class HasNext2Ins : ASInstruction
+public sealed class HasNext2Ins : ASInstruction
 {
     public int ObjectIndex { get; set; }
     public int RegisterIndex { get; set; }

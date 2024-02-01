@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class InitPropertyIns : ASInstruction
+public sealed class InitPropertyIns : ASInstruction
 {
     public int PropertyNameIndex { get; set; }
     public ASMultiname PropertyName => ABC.Pool.Multinames[PropertyNameIndex];

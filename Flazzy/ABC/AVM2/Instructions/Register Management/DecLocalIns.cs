@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class DecLocalIns : Local
+public sealed class DecLocalIns : Local
 {
     public DecLocalIns(int register)
         : base(OPCode.DecLocal, register)

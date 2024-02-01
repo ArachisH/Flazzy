@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC.AVM2.Instructions;
 
-public class EqualsIns : Computation
+public sealed class EqualsIns : Computation
 {
     public EqualsIns()
         : base(OPCode.Equals)
