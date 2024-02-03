@@ -29,7 +29,7 @@ public abstract class ASInstruction : FlashItem, ICloneable
     { }
 
     public int GetSize() => sizeof(OPCode) + GetBodySize();
-    public void WriteTo(ref SpanFlashWriter output) 
+    public void WriteTo(ref SpanFlashWriter output)
     {
         output.Write((byte)OP);
         WriteValuesTo(ref output);
@@ -40,10 +40,10 @@ public abstract class ASInstruction : FlashItem, ICloneable
     public override void WriteTo(FlashWriter output)
     {
         Span<byte> buffer = stackalloc byte[64].Slice(0, GetSize());
-        
+
         var outputWriter = new SpanFlashWriter(buffer);
         WriteTo(ref outputWriter);
-        
+
         output.Write(buffer);
     }
 
@@ -101,7 +101,7 @@ public abstract class ASInstruction : FlashItem, ICloneable
             OPCode.StrictEquals => new StrictEqualsIns(),
             OPCode.Subtract_i => new SubtractIIns(),
             OPCode.Subtract => new SubtractIns(),
-            
+
             // Bit manipulation
             OPCode.BitAnd => new BitAndIns(),
             OPCode.BitNot => new BitNotIns(),
@@ -110,7 +110,7 @@ public abstract class ASInstruction : FlashItem, ICloneable
             OPCode.LShift => new LShiftIns(),
             OPCode.RShift => new RShiftIns(),
             OPCode.URShift => new URShiftIns(),
-            
+
             // Control transfer
             OPCode.IfEq => new IfEqualIns(ref input),
             OPCode.IfGe => new IfGreaterEqualIns(ref input),
@@ -130,7 +130,7 @@ public abstract class ASInstruction : FlashItem, ICloneable
 
             OPCode.Label => new LabelIns(),
             OPCode.LookUpSwitch => new LookUpSwitchIns(ref input),
-            
+
             // Register management
             OPCode.DecLocal_i => new DecLocalIIns(ref input),
             OPCode.DecLocal => new DecLocalIns(ref input),
@@ -169,7 +169,7 @@ public abstract class ASInstruction : FlashItem, ICloneable
             OPCode.PopScope => new PopScopeIns(),
             OPCode.PushWith => new PushWithIns(),
             OPCode.PushScope => new PushScopeIns(),
-            
+
             // Type conversion
             OPCode.Coerce_a => new CoerceAIns(),
             OPCode.Coerce => new CoerceIns(abc, ref input),
@@ -245,7 +245,7 @@ public abstract class ASInstruction : FlashItem, ICloneable
             OPCode.SetSuper => new SetSuperIns(abc, ref input),
             OPCode.Throw => new ThrowIns(),
             OPCode.TypeOf => new TypeOfIns(),
-            
+
             _ => throw new Exception("Unhandled OPCode: " + op)
         };
     }
