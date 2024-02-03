@@ -7,8 +7,8 @@ public sealed class DecLocalIns : Local
     public DecLocalIns(int register)
         : base(OPCode.DecLocal, register)
     { }
-    public DecLocalIns(FlashReader input)
-        : base(OPCode.DecLocal, input)
+    public DecLocalIns(ref SpanFlashReader input)
+        : base(OPCode.DecLocal, ref input)
     { }
 
     public override void Execute(ASMachine machine)
@@ -16,7 +16,7 @@ public sealed class DecLocalIns : Local
         object value = machine.Registers[Register];
         if (value != null)
         {
-            value = (Convert.ToDouble(value) - 1);
+            value = Convert.ToDouble(value) - 1;
         }
         machine.Registers[Register] = value;
     }

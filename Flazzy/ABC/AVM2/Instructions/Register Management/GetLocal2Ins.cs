@@ -2,11 +2,7 @@
 
 public sealed class GetLocal2Ins : Local
 {
-    public override int Register
-    {
-        get => 2;
-        set => throw new NotSupportedException();
-    }
+    public override int Register => 2;
 
     public GetLocal2Ins()
         : base(OPCode.GetLocal_2)

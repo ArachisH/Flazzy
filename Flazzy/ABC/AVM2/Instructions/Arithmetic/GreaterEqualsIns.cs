@@ -6,8 +6,5 @@ public sealed class GreaterEqualsIns : Computation
         : base(OPCode.GreaterEquals)
     { }
 
-    protected override object Execute(dynamic left, dynamic right)
-    {
-        return (left >= right);
-    }
+    protected override object Execute(dynamic left, dynamic right) => left >= right;
 }

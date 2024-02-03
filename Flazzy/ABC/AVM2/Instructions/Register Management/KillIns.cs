@@ -7,8 +7,8 @@ public sealed class KillIns : Local
     public KillIns(int register)
         : base(OPCode.Kill, register)
     { }
-    public KillIns(FlashReader input)
-        : base(OPCode.Kill, input)
+    public KillIns(ref SpanFlashReader input)
+        : base(OPCode.Kill, ref input)
     { }
 
     public override void Execute(ASMachine machine)

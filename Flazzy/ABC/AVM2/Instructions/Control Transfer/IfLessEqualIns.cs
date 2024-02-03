@@ -7,8 +7,8 @@ public sealed class IfLessEqualIns : Jumper
     public IfLessEqualIns()
         : base(OPCode.IfLe)
     { }
-    public IfLessEqualIns(FlashReader input)
-        : base(OPCode.IfLe, input)
+    public IfLessEqualIns(ref SpanFlashReader input)
+        : base(OPCode.IfLe, ref input)
     { }
 
     public override bool? RunCondition(ASMachine machine)
@@ -17,6 +17,6 @@ public sealed class IfLessEqualIns : Jumper
         var left = machine.Values.Pop();
         if (left == null || right == null) return null;
 
-        return (Convert.ToDouble(left) <= Convert.ToDouble(right));
+        return Convert.ToDouble(left) <= Convert.ToDouble(right);
     }
 }

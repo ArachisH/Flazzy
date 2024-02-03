@@ -15,28 +15,26 @@ public sealed class CoerceIns : ASInstruction
     {
         TypeNameIndex = typeNameIndex;
     }
-    public CoerceIns(ABCFile abc, FlashReader input)
+    public CoerceIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        TypeNameIndex = input.ReadInt30();
+        TypeNameIndex = input.ReadEncodedInt();
     }
 
-    public override int GetPopCount()
-    {
-        return 1;
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 1;
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         object value = machine.Values.Pop();
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(TypeNameIndex);
+        return SpanFlashWriter.GetEncodedIntSize(TypeNameIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(TypeNameIndex);
     }
 }

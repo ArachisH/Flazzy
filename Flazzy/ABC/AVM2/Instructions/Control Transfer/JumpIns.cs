@@ -7,12 +7,9 @@ public sealed class JumpIns : Jumper
     public JumpIns()
         : base(OPCode.Jump)
     { }
-    public JumpIns(FlashReader input)
-        : base(OPCode.Jump, input)
+    public JumpIns(ref SpanFlashReader input)
+        : base(OPCode.Jump, ref input)
     { }
 
-    public override bool? RunCondition(ASMachine machine)
-    {
-        return true;
-    }
+    public override bool? RunCondition(ASMachine machine) => true;
 }

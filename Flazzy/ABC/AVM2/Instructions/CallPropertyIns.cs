@@ -13,11 +13,11 @@ public sealed class CallPropertyIns : ASInstruction, IPropertyContainer
     public CallPropertyIns(ABCFile abc)
         : base(OPCode.CallProperty, abc)
     { }
-    public CallPropertyIns(ABCFile abc, FlashReader input)
+    public CallPropertyIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        PropertyNameIndex = input.ReadInt30();
-        ArgCount = input.ReadInt30();
+        PropertyNameIndex = input.ReadEncodedInt();
+        ArgCount = input.ReadEncodedInt();
     }
     public CallPropertyIns(ABCFile abc, int propertyNameIndex)
         : this(abc)
@@ -33,12 +33,9 @@ public sealed class CallPropertyIns : ASInstruction, IPropertyContainer
 
     public override int GetPopCount()
     {
-        return (ArgCount + ResolveMultinamePops(PropertyName) + 1);
+        return ArgCount + ResolveMultinamePops(PropertyName) + 1;
     }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         for (int i = 0; i < ArgCount; i++)
@@ -50,9 +47,16 @@ public sealed class CallPropertyIns : ASInstruction, IPropertyContainer
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(PropertyNameIndex);
-        output.WriteInt30(ArgCount);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(PropertyNameIndex);
+        size += SpanFlashWriter.GetEncodedIntSize(ArgCount);
+        return size;
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(PropertyNameIndex);
+        output.WriteEncodedInt(ArgCount);
     }
 }

@@ -10,10 +10,10 @@ public sealed class GetDescendantsIns : ASInstruction
     public GetDescendantsIns(ABCFile abc)
         : base(OPCode.GetDescendants, abc)
     { }
-    public GetDescendantsIns(ABCFile abc, FlashReader input)
+    public GetDescendantsIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        DescendantIndex = input.ReadInt30();
+        DescendantIndex = input.ReadEncodedInt();
     }
     public GetDescendantsIns(ABCFile abc, int descendantIndex)
         : this(abc)
@@ -23,12 +23,9 @@ public sealed class GetDescendantsIns : ASInstruction
 
     public override int GetPopCount()
     {
-        return (ResolveMultinamePops(Descendant) + 1);
+        return ResolveMultinamePops(Descendant) + 1;
     }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         ResolveMultiname(machine, Descendant);
@@ -36,8 +33,12 @@ public sealed class GetDescendantsIns : ASInstruction
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(DescendantIndex);
+        return SpanFlashWriter.GetEncodedIntSize(DescendantIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(DescendantIndex);
     }
 }

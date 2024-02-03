@@ -6,14 +6,8 @@ public sealed class RShiftIns : ASInstruction
         : base(OPCode.RShift)
     { }
 
-    public override int GetPopCount()
-    {
-        return 2;
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 2;
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         object result = null;
@@ -22,8 +16,8 @@ public sealed class RShiftIns : ASInstruction
         if (right != null && left != null)
         {
             int iLeft = Convert.ToInt32(left);
-            int iRight = (Convert.ToInt32(right) & 0x1F);
-            result = (iLeft >> iRight);
+            int iRight = Convert.ToInt32(right) & 0x1F;
+            result = iLeft >> iRight;
         }
         machine.Values.Push(result);
     }

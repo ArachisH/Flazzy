@@ -15,28 +15,26 @@ public sealed class NewClassIns : ASInstruction
     {
         ClassIndex = classIndex;
     }
-    public NewClassIns(ABCFile abc, FlashReader input)
+    public NewClassIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        ClassIndex = input.ReadInt30();
+        ClassIndex = input.ReadEncodedInt();
     }
 
-    public override int GetPopCount()
-    {
-        return 1;
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 1;
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         object baseType = machine.Values.Pop();
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(ClassIndex);
+        return SpanFlashWriter.GetEncodedIntSize(ClassIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(ClassIndex);
     }
 }

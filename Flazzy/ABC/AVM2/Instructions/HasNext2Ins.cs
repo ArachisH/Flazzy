@@ -10,11 +10,11 @@ public sealed class HasNext2Ins : ASInstruction
     public HasNext2Ins()
         : base(OPCode.HasNext2)
     { }
-    public HasNext2Ins(FlashReader input)
+    public HasNext2Ins(ref SpanFlashReader input)
         : this()
     {
-        ObjectIndex = input.ReadInt30();
-        RegisterIndex = input.ReadInt30();
+        ObjectIndex = input.ReadEncodedInt();
+        RegisterIndex = input.ReadEncodedInt();
     }
     public HasNext2Ins(int objectIndex, int registerIndex)
         : this()
@@ -23,18 +23,22 @@ public sealed class HasNext2Ins : ASInstruction
         RegisterIndex = registerIndex;
     }
 
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(ObjectIndex);
-        output.WriteInt30(RegisterIndex);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(ObjectIndex);
+        size += SpanFlashWriter.GetEncodedIntSize(RegisterIndex);
+        return size;
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(ObjectIndex);
+        output.WriteEncodedInt(RegisterIndex);
     }
 }

@@ -7,8 +7,8 @@ public sealed class IfNotLessEqualIns : Jumper
     public IfNotLessEqualIns()
         : base(OPCode.IfNLe)
     { }
-    public IfNotLessEqualIns(FlashReader input)
-        : base(OPCode.IfNLe, input)
+    public IfNotLessEqualIns(ref SpanFlashReader input)
+        : base(OPCode.IfNLe, ref input)
     { }
 
     public override bool? RunCondition(ASMachine machine)

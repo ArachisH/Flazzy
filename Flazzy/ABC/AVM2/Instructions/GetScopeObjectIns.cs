@@ -14,22 +14,23 @@ public sealed class GetScopeObjectIns : ASInstruction
     {
         ScopeIndex = scopeIndex;
     }
-    public GetScopeObjectIns(FlashReader input)
+    public GetScopeObjectIns(ref SpanFlashReader input)
         : this()
     {
         ScopeIndex = input.ReadByte();
     }
 
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
+    {
+        return SpanFlashWriter.GetEncodedIntSize(ScopeIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
     {
         output.Write(ScopeIndex);
     }

@@ -15,23 +15,24 @@ public sealed class NewFunctionIns : ASInstruction
     {
         MethodIndex = methodIndex;
     }
-    public NewFunctionIns(ABCFile abc, FlashReader input)
+    public NewFunctionIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        MethodIndex = input.ReadInt30();
+        MethodIndex = input.ReadEncodedInt();
     }
 
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(MethodIndex);
+        return SpanFlashWriter.GetEncodedIntSize(MethodIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(MethodIndex);
     }
 }

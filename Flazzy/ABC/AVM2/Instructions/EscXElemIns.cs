@@ -6,14 +6,8 @@ public sealed class EscXElemIns : ASInstruction
         : base(OPCode.Esc_XElem)
     { }
 
-    public override int GetPopCount()
-    {
-        return 1;
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 1;
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         object value = machine.Values.Pop();

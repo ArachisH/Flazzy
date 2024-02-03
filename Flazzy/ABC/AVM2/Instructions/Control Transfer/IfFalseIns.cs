@@ -7,15 +7,15 @@ public sealed class IfFalseIns : Jumper
     public IfFalseIns()
         : base(OPCode.IfFalse)
     { }
-    public IfFalseIns(FlashReader input)
-        : base(OPCode.IfFalse, input)
+    public IfFalseIns(ref SpanFlashReader input)
+        : base(OPCode.IfFalse, ref input)
     { }
 
     public override bool? RunCondition(ASMachine machine)
     {
-        var value = (machine.Values.Pop() as bool?);
+        var value = machine.Values.Pop() as bool?;
         if (value == null) return null;
 
-        return (value == false);
+        return value == false;
     }
 }

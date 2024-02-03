@@ -2,11 +2,7 @@
 
 public sealed class SetLocal3Ins : Local
 {
-    public override int Register
-    {
-        get => 3;
-        set => throw new NotSupportedException();
-    }
+    public override int Register => 3;
 
     public SetLocal3Ins()
         : base(OPCode.SetLocal_3)

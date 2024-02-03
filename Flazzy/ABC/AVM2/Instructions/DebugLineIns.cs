@@ -14,14 +14,18 @@ public sealed class DebugLineIns : ASInstruction
     {
         LineNumber = lineNumber;
     }
-    public DebugLineIns(FlashReader input)
+    public DebugLineIns(ref SpanFlashReader input)
         : this()
     {
-        LineNumber = input.ReadInt30();
+        LineNumber = input.ReadEncodedInt();
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(LineNumber);
+        return SpanFlashWriter.GetEncodedIntSize(LineNumber);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(LineNumber);
     }
 }

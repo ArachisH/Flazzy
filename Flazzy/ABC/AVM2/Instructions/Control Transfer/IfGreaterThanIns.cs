@@ -7,8 +7,8 @@ public sealed class IfGreaterThanIns : Jumper
     public IfGreaterThanIns()
         : base(OPCode.IfGt)
     { }
-    public IfGreaterThanIns(FlashReader input)
-        : base(OPCode.IfGt, input)
+    public IfGreaterThanIns(ref SpanFlashReader input)
+        : base(OPCode.IfGt, ref input)
     { }
 
     public override bool? RunCondition(ASMachine machine)
@@ -17,6 +17,6 @@ public sealed class IfGreaterThanIns : Jumper
         var left = machine.Values.Pop();
         if (left == null || right == null) return null;
 
-        return (Convert.ToDouble(left) > Convert.ToDouble(right));
+        return Convert.ToDouble(left) > Convert.ToDouble(right);
     }
 }

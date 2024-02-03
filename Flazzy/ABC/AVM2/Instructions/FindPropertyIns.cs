@@ -10,10 +10,10 @@ public sealed class FindPropertyIns : ASInstruction
     public FindPropertyIns(ABCFile abc)
         : base(OPCode.FindProperty, abc)
     { }
-    public FindPropertyIns(ABCFile abc, FlashReader input)
+    public FindPropertyIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        PropertyNameIndex = input.ReadInt30();
+        PropertyNameIndex = input.ReadEncodedInt();
     }
     public FindPropertyIns(ABCFile abc, int propertyNameIndex)
         : this(abc)
@@ -25,18 +25,19 @@ public sealed class FindPropertyIns : ASInstruction
     {
         return ResolveMultinamePops(PropertyName);
     }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         ResolveMultiname(machine, PropertyName);
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(PropertyNameIndex);
+        return SpanFlashWriter.GetEncodedIntSize(PropertyNameIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(PropertyNameIndex);
     }
 }

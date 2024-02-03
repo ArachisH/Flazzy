@@ -14,6 +14,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/ArachisH/Flazzy</RepositoryUrl>
 		<Description>.NET library for [dis]assembling shockwave flash files(swf).</Description>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>

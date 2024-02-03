@@ -6,10 +6,7 @@ public sealed class ThrowIns : ASInstruction
         : base(OPCode.Throw)
     { }
 
-    public override int GetPopCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 1;
     public override void Execute(ASMachine machine)
     {
         object value = machine.Values.Pop();

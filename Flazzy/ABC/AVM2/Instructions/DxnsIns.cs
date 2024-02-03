@@ -10,9 +10,18 @@ public sealed class DxnsIns : ASInstruction
     public DxnsIns(ABCFile abc)
         : base(OPCode.Dxns, abc)
     { }
-    public DxnsIns(ABCFile abc, FlashReader input)
+    public DxnsIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        UriIndex = input.ReadInt30();
+        UriIndex = input.ReadEncodedInt();
+    }
+
+    protected override int GetBodySize()
+    {
+        return SpanFlashWriter.GetEncodedIntSize(UriIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(UriIndex);
     }
 }

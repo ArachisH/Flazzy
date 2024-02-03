@@ -10,10 +10,10 @@ public sealed class SetPropertyIns : ASInstruction
     public SetPropertyIns(ABCFile abc)
         : base(OPCode.SetProperty, abc)
     { }
-    public SetPropertyIns(ABCFile abc, FlashReader input)
+    public SetPropertyIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        PropertyNameIndex = input.ReadInt30();
+        PropertyNameIndex = input.ReadEncodedInt();
     }
     public SetPropertyIns(ABCFile abc, int propertyNameIndex)
         : this(abc)
@@ -23,7 +23,7 @@ public sealed class SetPropertyIns : ASInstruction
 
     public override int GetPopCount()
     {
-        return (2 + ResolveMultinamePops(PropertyName));
+        return 2 + ResolveMultinamePops(PropertyName);
     }
     public override void Execute(ASMachine machine)
     {
@@ -32,8 +32,12 @@ public sealed class SetPropertyIns : ASInstruction
         object obj = machine.Values.Pop();
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(PropertyNameIndex);
+        return SpanFlashWriter.GetEncodedIntSize(PropertyNameIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(PropertyNameIndex);
     }
 }

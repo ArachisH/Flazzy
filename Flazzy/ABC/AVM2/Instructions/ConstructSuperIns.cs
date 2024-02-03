@@ -14,16 +14,13 @@ public sealed class ConstructSuperIns : ASInstruction
     {
         ArgCount = argCount;
     }
-    public ConstructSuperIns(FlashReader input)
+    public ConstructSuperIns(ref SpanFlashReader input)
         : this()
     {
-        ArgCount = input.ReadInt30();
+        ArgCount = input.ReadEncodedInt();
     }
 
-    public override int GetPopCount()
-    {
-        return (ArgCount + 1);
-    }
+    public override int GetPopCount() => ArgCount + 1;
     public override void Execute(ASMachine machine)
     {
         for (int i = 0; i < ArgCount; i++)
@@ -33,8 +30,12 @@ public sealed class ConstructSuperIns : ASInstruction
         object obj = machine.Values.Pop();
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(ArgCount);
+        return SpanFlashWriter.GetEncodedIntSize(ArgCount);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(ArgCount);
     }
 }

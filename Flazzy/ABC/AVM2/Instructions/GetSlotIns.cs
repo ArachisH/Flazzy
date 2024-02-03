@@ -14,28 +14,26 @@ public sealed class GetSlotIns : ASInstruction
     {
         SlotIndex = slotIndex;
     }
-    public GetSlotIns(FlashReader input)
+    public GetSlotIns(ref SpanFlashReader input)
         : this()
     {
-        SlotIndex = input.ReadInt30();
+        SlotIndex = input.ReadEncodedInt();
     }
 
-    public override int GetPopCount()
-    {
-        return 1;
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 1;
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         object obj = machine.Values.Pop();
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(SlotIndex);
+        return SpanFlashWriter.GetEncodedIntSize(SlotIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(SlotIndex);
     }
 }

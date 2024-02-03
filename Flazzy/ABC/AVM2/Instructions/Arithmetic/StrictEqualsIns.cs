@@ -8,10 +8,9 @@ public sealed class StrictEqualsIns : Computation
 
     protected override object Execute(object left, object right)
     {
-        var cLeft = (left as IComparable);
-        var cRight = (right as IComparable);
-        if (cLeft == null || cRight == null) return null;
+        if (left is not IComparable cLeft ||
+            right is not IComparable cRight) return null;
 
-        return (cLeft.CompareTo(cRight) == 0);
+        return cLeft.CompareTo(cRight) == 0;
     }
 }

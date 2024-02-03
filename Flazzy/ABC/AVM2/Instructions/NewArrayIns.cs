@@ -14,20 +14,14 @@ public sealed class NewArrayIns : ASInstruction
     {
         ArgCount = argCount;
     }
-    public NewArrayIns(FlashReader input)
+    public NewArrayIns(ref SpanFlashReader input)
         : this()
     {
-        ArgCount = input.ReadInt30();
+        ArgCount = input.ReadEncodedInt();
     }
 
-    public override int GetPopCount()
-    {
-        return ArgCount;
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => ArgCount;
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         var newarray = new object[ArgCount];
@@ -38,8 +32,12 @@ public sealed class NewArrayIns : ASInstruction
         machine.Values.Push(newarray);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(ArgCount);
+        return SpanFlashWriter.GetEncodedIntSize(ArgCount);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(ArgCount);
     }
 }

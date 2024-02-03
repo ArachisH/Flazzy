@@ -12,11 +12,11 @@ public sealed class LookUpSwitchIns : ASInstruction
     {
         CaseOffsets = new List<uint>();
     }
-    public LookUpSwitchIns(FlashReader input)
+    public LookUpSwitchIns(ref SpanFlashReader input)
         : this()
     {
         DefaultOffset = input.ReadUInt24();
-        CaseOffsets.Capacity = (input.ReadInt30() + 1);
+        CaseOffsets.Capacity = input.ReadEncodedInt() + 1;
         for (int i = 0; i < CaseOffsets.Capacity; i++)
         {
             CaseOffsets.Add(input.ReadUInt24());
@@ -31,23 +31,27 @@ public sealed class LookUpSwitchIns : ASInstruction
         CaseOffsets.Add(DefaultOffset);
     }
 
-    public override int GetPopCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 1;
     public override void Execute(ASMachine machine)
     {
         machine.Values.Pop();
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
+    {
+        int size = 0;
+        size += 3;
+        size += SpanFlashWriter.GetEncodedIntSize(CaseOffsets.Count - 1);
+        size += CaseOffsets.Count * 3;
+        return size;
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
     {
         output.WriteUInt24(DefaultOffset);
-        output.WriteInt30(CaseOffsets.Count - 1);
+        output.WriteEncodedInt(CaseOffsets.Count - 1);
         for (int i = 0; i < CaseOffsets.Count; i++)
         {
-            uint offset = CaseOffsets[i];
-            output.WriteUInt24(offset);
+            output.WriteUInt24(CaseOffsets[i]);
         }
     }
 }

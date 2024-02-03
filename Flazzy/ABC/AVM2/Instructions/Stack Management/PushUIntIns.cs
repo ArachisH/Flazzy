@@ -38,14 +38,18 @@ public sealed class PushUIntIns : Primitive
     {
         Value = value;
     }
-    public PushUIntIns(ABCFile abc, FlashReader input)
+    public PushUIntIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        ValueIndex = input.ReadInt30();
+        ValueIndex = input.ReadEncodedInt();
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(ValueIndex);
+        return SpanFlashWriter.GetEncodedIntSize(ValueIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(ValueIndex);
     }
 }

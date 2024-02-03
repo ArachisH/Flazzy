@@ -10,10 +10,10 @@ public sealed class DebugFileIns : ASInstruction
     public DebugFileIns(ABCFile abc)
         : base(OPCode.DebugFile, abc)
     { }
-    public DebugFileIns(ABCFile abc, FlashReader input)
+    public DebugFileIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        FileNameIndex = input.ReadInt30();
+        FileNameIndex = input.ReadEncodedInt();
     }
     public DebugFileIns(ABCFile abc, int fileNameIndex)
         : this(abc)
@@ -21,8 +21,12 @@ public sealed class DebugFileIns : ASInstruction
         FileNameIndex = fileNameIndex;
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(FileNameIndex);
+        return SpanFlashWriter.GetEncodedIntSize(FileNameIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(FileNameIndex);
     }
 }

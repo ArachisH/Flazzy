@@ -6,10 +6,7 @@ public sealed class PushWithIns : ASInstruction
         : base(OPCode.PushWith)
     { }
 
-    public override int GetPopCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 1;
     public override void Execute(ASMachine machine)
     {
         object scopeObj = machine.Values.Pop();

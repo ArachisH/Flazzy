@@ -7,8 +7,8 @@ public sealed class IfStrictEqualIns : Jumper
     public IfStrictEqualIns()
         : base(OPCode.IfStrictEq)
     { }
-    public IfStrictEqualIns(FlashReader input)
-        : base(OPCode.IfStrictEq, input)
+    public IfStrictEqualIns(ref SpanFlashReader input)
+        : base(OPCode.IfStrictEq, ref input)
     { }
 
     public override bool? RunCondition(ASMachine machine)

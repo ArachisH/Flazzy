@@ -3,7 +3,7 @@ using Flazzy.IO;
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public class ConstructPropIns : ASInstruction, IPropertyContainer
+public sealed class ConstructPropIns : ASInstruction, IPropertyContainer
 {
     public int PropertyNameIndex { get; set; }
     public ASMultiname PropertyName => ABC.Pool.Multinames[PropertyNameIndex];
@@ -13,11 +13,11 @@ public class ConstructPropIns : ASInstruction, IPropertyContainer
     public ConstructPropIns(ABCFile abc)
         : base(OPCode.ConstructProp, abc)
     { }
-    public ConstructPropIns(ABCFile abc, FlashReader input)
+    public ConstructPropIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        PropertyNameIndex = input.ReadInt30();
-        ArgCount = input.ReadInt30();
+        PropertyNameIndex = input.ReadEncodedInt();
+        ArgCount = input.ReadEncodedInt();
     }
     public ConstructPropIns(ABCFile abc, int propertyNameIndex)
         : this(abc)
@@ -33,12 +33,9 @@ public class ConstructPropIns : ASInstruction, IPropertyContainer
 
     public override int GetPopCount()
     {
-        return (ArgCount + ResolveMultinamePops(PropertyName) + 1);
+        return ArgCount + ResolveMultinamePops(PropertyName) + 1;
     }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         for (int i = 0; i < ArgCount; i++)
@@ -50,9 +47,16 @@ public class ConstructPropIns : ASInstruction, IPropertyContainer
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(PropertyNameIndex);
-        output.WriteInt30(ArgCount);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(PropertyNameIndex);
+        size += SpanFlashWriter.GetEncodedIntSize(ArgCount);
+        return size;
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(PropertyNameIndex);
+        output.WriteEncodedInt(ArgCount);
     }
 }

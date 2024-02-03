@@ -14,20 +14,14 @@ public sealed class ConstructIns : ASInstruction
     {
         ArgCount = argCount;
     }
-    public ConstructIns(FlashReader input)
+    public ConstructIns(ref SpanFlashReader input)
         : this()
     {
-        ArgCount = input.ReadInt30();
+        ArgCount = input.ReadEncodedInt();
     }
 
-    public override int GetPopCount()
-    {
-        return (ArgCount + 1);
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => ArgCount + 1;
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         for (int i = 0; i < ArgCount; i++)
@@ -38,8 +32,12 @@ public sealed class ConstructIns : ASInstruction
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(ArgCount);
+        return SpanFlashWriter.GetEncodedIntSize(ArgCount);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(ArgCount);
     }
 }

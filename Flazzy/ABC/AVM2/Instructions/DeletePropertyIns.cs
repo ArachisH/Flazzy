@@ -10,10 +10,10 @@ public sealed class DeletePropertyIns : ASInstruction
     public DeletePropertyIns(ABCFile abc)
         : base(OPCode.DeleteProperty, abc)
     { }
-    public DeletePropertyIns(ABCFile abc, FlashReader input)
+    public DeletePropertyIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        PropertyNameIndex = input.ReadInt30();
+        PropertyNameIndex = input.ReadEncodedInt();
     }
     public DeletePropertyIns(ABCFile abc, int propertyNameIndex)
         : this(abc)
@@ -23,12 +23,9 @@ public sealed class DeletePropertyIns : ASInstruction
 
     public override int GetPopCount()
     {
-        return (ResolveMultinamePops(PropertyName) + 1);
+        return ResolveMultinamePops(PropertyName) + 1;
     }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         ResolveMultiname(machine, PropertyName);
@@ -36,8 +33,12 @@ public sealed class DeletePropertyIns : ASInstruction
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(PropertyNameIndex);
+        return SpanFlashWriter.GetEncodedIntSize(PropertyNameIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(PropertyNameIndex);
     }
 }

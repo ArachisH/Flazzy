@@ -6,8 +6,5 @@ public sealed class DivideIns : Computation
         : base(OPCode.Divide)
     { }
 
-    protected override object Execute(dynamic left, dynamic right)
-    {
-        return (left / right);
-    }
+    protected override object Execute(dynamic left, dynamic right) => left / right;
 }

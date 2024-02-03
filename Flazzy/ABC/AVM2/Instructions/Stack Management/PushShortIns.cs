@@ -23,14 +23,18 @@ public sealed class PushShortIns : Primitive
     {
         Value = value;
     }
-    public PushShortIns(FlashReader input)
+    public PushShortIns(ref SpanFlashReader input)
         : this()
     {
-        Value = input.ReadInt30();
+        Value = input.ReadEncodedInt();
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(Value);
+        return SpanFlashWriter.GetEncodedIntSize(Value);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(Value);
     }
 }

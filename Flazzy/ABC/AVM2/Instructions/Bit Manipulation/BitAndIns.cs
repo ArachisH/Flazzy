@@ -6,14 +6,8 @@ public sealed class BitAndIns : ASInstruction
         : base(OPCode.BitAnd)
     { }
 
-    public override int GetPopCount()
-    {
-        return 2;
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 2;
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         object result = null;
@@ -23,7 +17,7 @@ public sealed class BitAndIns : ASInstruction
         {
             var iLeft = (int)Convert.ToDouble(left);
             var iRight = (int)Convert.ToDouble(right);
-            result = (iLeft & iRight);
+            result = iLeft & iRight;
         }
         machine.Values.Push(result);
     }

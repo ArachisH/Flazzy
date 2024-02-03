@@ -12,11 +12,11 @@ public sealed class CallSuperVoidIns : ASInstruction
     public CallSuperVoidIns(ABCFile abc)
         : base(OPCode.CallSuperVoid, abc)
     { }
-    public CallSuperVoidIns(ABCFile abc, FlashReader input)
+    public CallSuperVoidIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        MethodNameIndex = input.ReadInt30();
-        ArgCount = input.ReadInt30();
+        MethodNameIndex = input.ReadEncodedInt();
+        ArgCount = input.ReadEncodedInt();
     }
     public CallSuperVoidIns(ABCFile abc, int methodNameIndex)
         : this(abc)
@@ -32,12 +32,9 @@ public sealed class CallSuperVoidIns : ASInstruction
 
     public override int GetPopCount()
     {
-        return (ArgCount + ResolveMultinamePops(MethodName) + 1);
+        return ArgCount + ResolveMultinamePops(MethodName) + 1;
     }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         for (int i = 0; i < ArgCount; i++)
@@ -49,9 +46,16 @@ public sealed class CallSuperVoidIns : ASInstruction
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(MethodNameIndex);
-        output.WriteInt30(ArgCount);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(MethodNameIndex);
+        size += SpanFlashWriter.GetEncodedIntSize(ArgCount);
+        return size;
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(MethodNameIndex);
+        output.WriteEncodedInt(ArgCount);
     }
 }

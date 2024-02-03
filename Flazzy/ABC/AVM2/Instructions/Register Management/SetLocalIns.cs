@@ -7,7 +7,7 @@ public sealed class SetLocalIns : Local
     public SetLocalIns(int register)
         : base(OPCode.SetLocal, register)
     { }
-    public SetLocalIns(FlashReader input)
-        : base(OPCode.SetLocal, input)
+    public SetLocalIns(ref SpanFlashReader input)
+        : base(OPCode.SetLocal, ref input)
     { }
 }

@@ -14,30 +14,21 @@ public abstract class Jumper : ASInstruction
     {
         Offset = offset;
     }
-    public Jumper(OPCode op, FlashReader input)
+    public Jumper(OPCode op, ref SpanFlashReader input)
         : this(op)
     {
         Offset = input.ReadUInt24();
     }
 
-    public override int GetPopCount()
+    public override int GetPopCount() => OP switch
     {
-        switch (OP)
-        {
-            case OPCode.Jump:
-                return 0;
+        OPCode.Jump => 0,
+        OPCode.IfTrue or OPCode.IfFalse => 1,
 
-            case OPCode.IfTrue:
-            case OPCode.IfFalse:
-                return 1;
+        _ => 2,
+    };
+    public override int GetPushCount() => 0;
 
-            default: return 2;
-        }
-    }
-    public override int GetPushCount()
-    {
-        return 0;
-    }
     public override void Execute(ASMachine machine)
     {
         int popCount = GetPopCount();
@@ -48,33 +39,30 @@ public abstract class Jumper : ASInstruction
     }
     public abstract bool? RunCondition(ASMachine machine);
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize() => 3;
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
     {
         output.WriteUInt24(Offset);
     }
 
-    public static bool IsValid(OPCode op)
+    public static bool IsValid(OPCode op) => op switch
     {
-        switch (op)
-        {
-            case OPCode.IfEq:
-            case OPCode.IfGe:
-            case OPCode.IfGt:
-            case OPCode.IfLe:
-            case OPCode.IfLt:
-            case OPCode.Jump:
-            case OPCode.IfNe:
-            case OPCode.IfNGe:
-            case OPCode.IfNGt:
-            case OPCode.IfNLe:
-            case OPCode.IfNLt:
-            case OPCode.IfTrue:
-            case OPCode.IfFalse:
-            case OPCode.IfStrictEq:
-            case OPCode.IfStrictNE:
-                return true;
+        OPCode.IfEq or
+        OPCode.IfGe or
+        OPCode.IfGt or
+        OPCode.IfLe or
+        OPCode.IfLt or
+        OPCode.Jump or
+        OPCode.IfNe or
+        OPCode.IfNGe or
+        OPCode.IfNGt or
+        OPCode.IfNLe or
+        OPCode.IfNLt or
+        OPCode.IfTrue or
+        OPCode.IfFalse or
+        OPCode.IfStrictEq or
+        OPCode.IfStrictNE => true,
 
-            default: return false;
-        }
-    }
+        _ => false,
+    };
 }

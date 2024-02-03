@@ -10,10 +10,10 @@ public sealed class GetLexIns : ASInstruction
     public GetLexIns(ABCFile abc)
         : base(OPCode.GetLex, abc)
     { }
-    public GetLexIns(ABCFile abc, FlashReader input)
+    public GetLexIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        TypeNameIndex = input.ReadInt30();
+        TypeNameIndex = input.ReadEncodedInt();
     }
     public GetLexIns(ABCFile abc, int typeNameIndex)
         : this(abc)
@@ -21,17 +21,18 @@ public sealed class GetLexIns : ASInstruction
         TypeNameIndex = typeNameIndex;
     }
 
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(TypeNameIndex);
+        return SpanFlashWriter.GetEncodedIntSize(TypeNameIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(TypeNameIndex);
     }
 }

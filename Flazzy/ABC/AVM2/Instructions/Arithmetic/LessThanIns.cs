@@ -6,8 +6,5 @@ public sealed class LessThanIns : Computation
         : base(OPCode.LessThan)
     { }
 
-    protected override object Execute(dynamic left, dynamic right)
-    {
-        return (left < right);
-    }
+    protected override object Execute(dynamic left, dynamic right) => left < right;
 }

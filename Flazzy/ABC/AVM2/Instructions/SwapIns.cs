@@ -6,14 +6,8 @@ public sealed class SwapIns : ASInstruction
         : base(OPCode.Swap)
     { }
 
-    public override int GetPopCount()
-    {
-        return 2;
-    }
-    public override int GetPushCount()
-    {
-        return 2;
-    }
+    public override int GetPopCount() => 2;
+    public override int GetPushCount() => 2;
     public override void Execute(ASMachine machine)
     {
         object value2 = machine.Values.Pop();

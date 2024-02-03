@@ -43,14 +43,18 @@ public sealed class PushStringIns : Primitive
     {
         ValueIndex = valueIndex;
     }
-    public PushStringIns(ABCFile abc, FlashReader input)
+    public PushStringIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        ValueIndex = input.ReadInt30();
+        ValueIndex = input.ReadEncodedInt();
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(ValueIndex);
+        return SpanFlashWriter.GetEncodedIntSize(ValueIndex);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(ValueIndex);
     }
 }

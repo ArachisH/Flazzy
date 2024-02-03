@@ -7,8 +7,8 @@ public sealed class IncLocalIns : Local
     public IncLocalIns(int register)
         : base(OPCode.IncLocal, register)
     { }
-    public IncLocalIns(FlashReader input)
-        : base(OPCode.IncLocal, input)
+    public IncLocalIns(ref SpanFlashReader input)
+        : base(OPCode.IncLocal, ref input)
     { }
 
     public override void Execute(ASMachine machine)
@@ -16,7 +16,7 @@ public sealed class IncLocalIns : Local
         object value = machine.Registers[Register];
         if (value != null)
         {
-            value = (Convert.ToDouble(value) + 1);
+            value = Convert.ToDouble(value) + 1;
         }
         machine.Registers[Register] = value;
     }

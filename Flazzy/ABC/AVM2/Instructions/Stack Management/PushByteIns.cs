@@ -23,13 +23,14 @@ public sealed class PushByteIns : Primitive
     {
         Value = value;
     }
-    public PushByteIns(FlashReader input)
+    public PushByteIns(ref SpanFlashReader input)
         : this()
     {
         Value = input.ReadByte();
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize() => sizeof(byte);
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
     {
         output.Write(Value);
     }

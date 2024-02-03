@@ -6,8 +6,5 @@ public sealed class LessEqualsIns : Computation
         : base(OPCode.LessEquals)
     { }
 
-    protected override object Execute(dynamic left, dynamic right)
-    {
-        return (left <= right);
-    }
+    protected override object Execute(dynamic left, dynamic right) => left <= right;
 }

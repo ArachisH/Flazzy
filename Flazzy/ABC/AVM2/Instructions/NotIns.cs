@@ -6,22 +6,16 @@ public sealed class NotIns : ASInstruction
         : base(OPCode.Not)
     { }
 
-    public override int GetPopCount()
-    {
-        return 1;
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => 1;
+    public override int GetPushCount() => 1;
     public override void Execute(ASMachine machine)
     {
         object value = machine.Values.Pop();
         if (value != null)
         {
-            if (value is string)
+            if (value is string @string)
             {
-                value = !string.IsNullOrEmpty((string)value);
+                value = !string.IsNullOrEmpty(@string);
             }
             else value = !Convert.ToBoolean(value);
         }

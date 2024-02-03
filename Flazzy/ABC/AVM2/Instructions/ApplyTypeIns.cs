@@ -14,14 +14,18 @@ public sealed class ApplyTypeIns : ASInstruction
     {
         ParamCount = paramCount;
     }
-    public ApplyTypeIns(FlashReader input)
+    public ApplyTypeIns(ref SpanFlashReader input)
         : this()
     {
-        ParamCount = input.ReadInt30();
+        ParamCount = input.ReadEncodedInt();
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(ParamCount);
+        return SpanFlashWriter.GetEncodedIntSize(ParamCount);
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(ParamCount);
     }
 }

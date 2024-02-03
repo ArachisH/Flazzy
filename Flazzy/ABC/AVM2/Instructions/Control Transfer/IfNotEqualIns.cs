@@ -7,8 +7,8 @@ public sealed class IfNotEqualIns : Jumper
     public IfNotEqualIns()
         : base(OPCode.IfNe)
     { }
-    public IfNotEqualIns(FlashReader input)
-        : base(OPCode.IfNe, input)
+    public IfNotEqualIns(ref SpanFlashReader input)
+        : base(OPCode.IfNe, ref input)
     { }
 
     public override bool? RunCondition(ASMachine machine)
@@ -17,6 +17,6 @@ public sealed class IfNotEqualIns : Jumper
         dynamic left = machine.Values.Pop();
         if (left == null || right == null) return null;
 
-        return (left != right);
+        return left != right;
     }
 }

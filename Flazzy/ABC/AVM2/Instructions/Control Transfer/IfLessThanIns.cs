@@ -7,8 +7,8 @@ public sealed class IfLessThanIns : Jumper
     public IfLessThanIns()
         : base(OPCode.IfLt)
     { }
-    public IfLessThanIns(FlashReader input)
-        : base(OPCode.IfLt, input)
+    public IfLessThanIns(ref SpanFlashReader input)
+        : base(OPCode.IfLt, ref input)
     { }
 
     public override bool? RunCondition(ASMachine machine)

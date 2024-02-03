@@ -12,11 +12,11 @@ public sealed class CallStaticIns : ASInstruction
     public CallStaticIns(ABCFile abc)
         : base(OPCode.CallStatic, abc)
     { }
-    public CallStaticIns(ABCFile abc, FlashReader input)
+    public CallStaticIns(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        MethodIndex = input.ReadInt30();
-        ArgCount = input.ReadInt30();
+        MethodIndex = input.ReadEncodedInt();
+        ArgCount = input.ReadEncodedInt();
     }
     public CallStaticIns(ABCFile abc, int methodIndex)
         : this(abc)
@@ -30,14 +30,9 @@ public sealed class CallStaticIns : ASInstruction
         ArgCount = argCount;
     }
 
-    public override int GetPopCount()
-    {
-        return ArgCount + 1;
-    }
-    public override int GetPushCount()
-    {
-        return 1;
-    }
+    public override int GetPopCount() => ArgCount + 1;
+    public override int GetPushCount() => 1;
+
     public override void Execute(ASMachine machine)
     {
         for (int i = 0; i < ArgCount; i++)
@@ -48,9 +43,16 @@ public sealed class CallStaticIns : ASInstruction
         machine.Values.Push(null);
     }
 
-    protected override void WriteValuesTo(FlashWriter output)
+    protected override int GetBodySize()
     {
-        output.WriteInt30(MethodIndex);
-        output.WriteInt30(ArgCount);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(MethodIndex);
+        size += SpanFlashWriter.GetEncodedIntSize(ArgCount);
+        return size;
+    }
+    protected override void WriteValuesTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(MethodIndex);
+        output.WriteEncodedInt(ArgCount);
     }
 }
