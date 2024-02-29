@@ -1,11 +1,14 @@
-﻿using System.Text;
+﻿using System.Runtime.InteropServices;
+using System.Text;
 
 using Flazzy.IO;
 
 namespace Flazzy.ABC;
 
-public class ASMethod : AS3Item
+public class ASMethod : IFlashItem, IAS3Item
 {
+    public ABCFile ABC { get; set; }
+
     public int NameIndex { get; set; }
     public string Name => ABC.Pool.Strings[NameIndex];
 
@@ -21,54 +24,151 @@ public class ASMethod : AS3Item
     public ASContainer Container { get; internal set; }
     public bool IsAnonymous => Trait == null && !IsConstructor;
 
-    protected override string DebuggerDisplay => ToAS3();
-
     public ASMethod(ABCFile abc)
-        : base(abc)
     {
+        ABC = abc;
         Parameters = new List<ASParameter>();
     }
-    public ASMethod(ABCFile abc, FlashReader input)
+    public ASMethod(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        Parameters.Capacity = input.ReadInt30();
-        ReturnTypeIndex = input.ReadInt30();
+        Parameters.Capacity = input.ReadEncodedInt();
+        ReturnTypeIndex = input.ReadEncodedInt();
 
         for (int i = 0; i < Parameters.Capacity; i++)
         {
-            var parameter = new ASParameter(this);
-            parameter.TypeIndex = input.ReadInt30();
-            Parameters.Add(parameter);
+            Parameters.Add(new ASParameter(this)
+            {
+                TypeIndex = input.ReadEncodedInt()
+            });
         }
 
-        NameIndex = input.ReadInt30();
+        NameIndex = input.ReadEncodedInt();
         Flags = (MethodFlags)input.ReadByte();
 
         if (Flags.HasFlag(MethodFlags.HasOptional))
         {
-            int optionalParamCount = input.ReadInt30();
-            for (int i = Parameters.Count - optionalParamCount;
-                optionalParamCount > 0;
-                i++, optionalParamCount--)
+            int optionalParamCount = input.ReadEncodedInt();
+            foreach (var parameter in CollectionsMarshal.AsSpan(Parameters)
+                .Slice(Parameters.Count - optionalParamCount))
             {
-                ASParameter parameter = Parameters[i];
                 parameter.IsOptional = true;
-                parameter.ValueIndex = input.ReadInt30();
+                parameter.ValueIndex = input.ReadEncodedInt();
                 parameter.ValueKind = (ConstantKind)input.ReadByte();
             }
         }
 
         if (Flags.HasFlag(MethodFlags.HasParamNames))
         {
-            for (int i = 0; i < Parameters.Count; i++)
+            foreach (var parameter in Parameters)
             {
-                ASParameter parameter = Parameters[i];
-                parameter.NameIndex = input.ReadInt30();
+                parameter.NameIndex = input.ReadEncodedInt();
             }
         }
     }
 
-    public override string ToAS3()
+    public int GetSize()
+    {
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(Parameters.Count);
+        size += SpanFlashWriter.GetEncodedIntSize(ReturnTypeIndex);
+
+        int optionalParamCount = 0;
+        if (Parameters.Count > 0)
+        {
+            foreach (var parameter in Parameters)
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(parameter.TypeIndex);
+
+                // One named parameter is enough to attain this flag.
+                if (!string.IsNullOrWhiteSpace(parameter.Name))
+                {
+                    Flags |= MethodFlags.HasParamNames;
+                }
+
+                // Just one optional parameter is enough to attain this flag.
+                if (parameter.IsOptional)
+                {
+                    optionalParamCount++;
+                    Flags |= MethodFlags.HasOptional;
+                }
+            }
+        }
+
+        size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
+        size += sizeof(byte);
+        if (Flags.HasFlag(MethodFlags.HasOptional))
+        {
+            size += SpanFlashWriter.GetEncodedIntSize(optionalParamCount);
+            foreach (var parameter in CollectionsMarshal.AsSpan(Parameters)
+                .Slice(Parameters.Count - optionalParamCount))
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(parameter.ValueIndex);
+            }
+            size += optionalParamCount * sizeof(byte);
+        }
+
+        if (Flags.HasFlag(MethodFlags.HasParamNames))
+        {
+            foreach (var parameter in Parameters)
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(parameter.NameIndex);
+            }
+        }
+        return size;
+    }
+    public void WriteTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(Parameters.Count);
+        output.WriteEncodedInt(ReturnTypeIndex);
+
+        // TODO: This logic is pretty fragile.
+        // I think we should make Flags a getter-only and manage/validate the state some other way.
+        int optionalParamCount = 0;
+        if (Parameters.Count > 0)
+        {
+            foreach (var parameter in Parameters)
+            {
+                output.WriteEncodedInt(parameter.TypeIndex);
+
+                // One named parameter is enough to attain this flag.
+                if (!string.IsNullOrWhiteSpace(parameter.Name))
+                {
+                    Flags |= MethodFlags.HasParamNames;
+                }
+
+                // Just one optional parameter is enough to attain this flag.
+                if (parameter.IsOptional)
+                {
+                    optionalParamCount++;
+                    Flags |= MethodFlags.HasOptional;
+                }
+            }
+        }
+
+        output.WriteEncodedInt(NameIndex);
+        output.Write((byte)Flags);
+        if (Flags.HasFlag(MethodFlags.HasOptional))
+        {
+            output.WriteEncodedInt(optionalParamCount);
+            foreach (var parameter in CollectionsMarshal.AsSpan(Parameters)
+                .Slice(Parameters.Count - optionalParamCount))
+            {
+                output.WriteEncodedInt(parameter.ValueIndex);
+                output.Write((byte)parameter.ValueKind);
+            }
+        }
+
+        if (Flags.HasFlag(MethodFlags.HasParamNames))
+        {
+            foreach (var parameter in Parameters)
+            {
+                output.WriteEncodedInt(parameter.NameIndex);
+            }
+        }
+    }
+
+    public string ToAS3()
     {
         var builder = new StringBuilder();
 
@@ -133,61 +233,5 @@ public class ASMethod : AS3Item
         return builder.ToString();
     }
 
-    public override void WriteTo(FlashWriter output)
-    {
-        output.WriteInt30(Parameters.Count);
-        output.WriteInt30(ReturnTypeIndex);
-
-        int optionalParamCount = 0;
-        int optionalParamStartIndex = (Parameters.Count - 1);
-        if (Parameters.Count > 0)
-        {
-            // This flag will be removed if at least a single parameter has no name assigned.
-            Flags |= MethodFlags.HasParamNames;
-            for (int i = 0; i < Parameters.Count; i++)
-            {
-                ASParameter parameter = Parameters[i];
-                output.WriteInt30(parameter.TypeIndex);
-
-                // This flag should only be present when all parameters are assigned a Name.
-                if (string.IsNullOrWhiteSpace(parameter.Name))
-                {
-                    Flags &= ~MethodFlags.HasParamNames;
-                }
-
-                // Just one optional parameter is enough to attain this flag.
-                if (parameter.IsOptional)
-                {
-                    if (i < optionalParamStartIndex)
-                    {
-                        optionalParamStartIndex = i;
-                    }
-                    optionalParamCount++;
-                    Flags |= MethodFlags.HasOptional;
-                }
-            }
-        }
-
-        output.WriteInt30(NameIndex);
-        output.Write((byte)Flags);
-        if (Flags.HasFlag(MethodFlags.HasOptional))
-        {
-            output.WriteInt30(optionalParamCount);
-            for (int i = optionalParamStartIndex; i < Parameters.Count; i++)
-            {
-                ASParameter parameter = Parameters[i];
-                output.WriteInt30(parameter.ValueIndex);
-                output.Write((byte)parameter.ValueKind);
-            }
-        }
-
-        if (Flags.HasFlag(MethodFlags.HasParamNames))
-        {
-            for (int i = 0; i < Parameters.Count; i++)
-            {
-                ASParameter parameter = Parameters[i];
-                output.WriteInt30(parameter.NameIndex);
-            }
-        }
-    }
+    public override string ToString() => ToAS3();
 }

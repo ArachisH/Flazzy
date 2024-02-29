@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC;
 
-public sealed class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConstant, IQName, IRTQName, IMultiname, IMultinameL
+public sealed class ASMultiname : IFlashItem, IEquatable<ASMultiname>, IPoolConstant, IQName, IRTQName, IMultiname, IMultinameL
 {
     public MultinameKind Kind { get; set; }
     public ASConstantPool Pool { get; init; }
@@ -54,23 +54,13 @@ public sealed class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConst
     public ASNamespaceSet NamespaceSet => Pool.NamespaceSets[NamespaceSetIndex];
 
     public List<int> TypeIndices { get; }
-    protected override string DebuggerDisplay => $"{Kind}: \"{Namespace.Name}.{Name}\"";
-
-    public static bool operator ==(ASMultiname left, ASMultiname right)
-    {
-        return EqualityComparer<ASMultiname>.Default.Equals(left, right);
-    }
-    public static bool operator !=(ASMultiname left, ASMultiname right)
-    {
-        return !(left == right);
-    }
 
     public ASMultiname(ASConstantPool pool)
     {
         Pool = pool;
         TypeIndices = new List<int>();
     }
-    public ASMultiname(ASConstantPool pool, FlashReader input)
+    public ASMultiname(ASConstantPool pool, ref SpanFlashReader input)
         : this(pool)
     {
         Kind = (MultinameKind)input.ReadByte();
@@ -79,15 +69,15 @@ public sealed class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConst
             case MultinameKind.QName:
             case MultinameKind.QNameA:
                 {
-                    NamespaceIndex = input.ReadInt30();
-                    NameIndex = input.ReadInt30();
+                    NamespaceIndex = input.ReadEncodedInt();
+                    NameIndex = input.ReadEncodedInt();
                     break;
                 }
 
             case MultinameKind.RTQName:
             case MultinameKind.RTQNameA:
                 {
-                    NameIndex = input.ReadInt30();
+                    NameIndex = input.ReadEncodedInt();
                     break;
                 }
 
@@ -101,25 +91,25 @@ public sealed class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConst
             case MultinameKind.Multiname:
             case MultinameKind.MultinameA:
                 {
-                    NameIndex = input.ReadInt30();
-                    NamespaceSetIndex = input.ReadInt30();
+                    NameIndex = input.ReadEncodedInt();
+                    NamespaceSetIndex = input.ReadEncodedInt();
                     break;
                 }
 
             case MultinameKind.MultinameL:
             case MultinameKind.MultinameLA:
                 {
-                    NamespaceSetIndex = input.ReadInt30();
+                    NamespaceSetIndex = input.ReadEncodedInt();
                     break;
                 }
 
             case MultinameKind.TypeName:
                 {
-                    QNameIndex = input.ReadInt30();
-                    TypeIndices.Capacity = input.ReadInt30();
+                    QNameIndex = input.ReadEncodedInt();
+                    TypeIndices.Capacity = input.ReadEncodedInt();
                     for (int i = 0; i < TypeIndices.Capacity; i++)
                     {
-                        int typeIndex = input.ReadInt30();
+                        int typeIndex = input.ReadEncodedInt();
                         TypeIndices.Add(typeIndex);
                     }
                     break;
@@ -134,7 +124,57 @@ public sealed class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConst
             yield return Pool.Multinames[TypeIndices[i]];
         }
     }
-    public override void WriteTo(FlashWriter output)
+
+    public int GetSize()
+    {
+        int size = 0;
+        size += sizeof(byte);
+        switch (Kind)
+        {
+            case MultinameKind.QName:
+            case MultinameKind.QNameA:
+                {
+                    size += SpanFlashWriter.GetEncodedIntSize(NamespaceIndex);
+                    size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
+                    break;
+                }
+
+            case MultinameKind.RTQName:
+            case MultinameKind.RTQNameA:
+                {
+                    size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
+                    break;
+                }
+
+            case MultinameKind.Multiname:
+            case MultinameKind.MultinameA:
+                {
+                    size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
+                    size += SpanFlashWriter.GetEncodedIntSize(NamespaceSetIndex);
+                    break;
+                }
+
+            case MultinameKind.MultinameL:
+            case MultinameKind.MultinameLA:
+                {
+                    size += SpanFlashWriter.GetEncodedIntSize(NamespaceSetIndex);
+                    break;
+                }
+
+            case MultinameKind.TypeName:
+                {
+                    size += SpanFlashWriter.GetEncodedIntSize(QNameIndex);
+                    size += SpanFlashWriter.GetEncodedIntSize(TypeIndices.Count);
+                    for (int i = 0; i < TypeIndices.Count; i++)
+                    {
+                        size += SpanFlashWriter.GetEncodedIntSize(TypeIndices[i]);
+                    }
+                    break;
+                }
+        }
+        return size;
+    }
+    public void WriteTo(ref SpanFlashWriter output)
     {
         output.Write((byte)Kind);
         switch (Kind)
@@ -142,15 +182,15 @@ public sealed class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConst
             case MultinameKind.QName:
             case MultinameKind.QNameA:
                 {
-                    output.WriteInt30(NamespaceIndex);
-                    output.WriteInt30(NameIndex);
+                    output.WriteEncodedInt(NamespaceIndex);
+                    output.WriteEncodedInt(NameIndex);
                     break;
                 }
 
             case MultinameKind.RTQName:
             case MultinameKind.RTQNameA:
                 {
-                    output.WriteInt30(NameIndex);
+                    output.WriteEncodedInt(NameIndex);
                     break;
                 }
 
@@ -164,26 +204,26 @@ public sealed class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConst
             case MultinameKind.Multiname:
             case MultinameKind.MultinameA:
                 {
-                    output.WriteInt30(NameIndex);
-                    output.WriteInt30(NamespaceSetIndex);
+                    output.WriteEncodedInt(NameIndex);
+                    output.WriteEncodedInt(NamespaceSetIndex);
                     break;
                 }
 
             case MultinameKind.MultinameL:
             case MultinameKind.MultinameLA:
                 {
-                    output.WriteInt30(NamespaceSetIndex);
+                    output.WriteEncodedInt(NamespaceSetIndex);
                     break;
                 }
 
             case MultinameKind.TypeName:
                 {
-                    output.WriteInt30(QNameIndex);
-                    output.WriteInt30(TypeIndices.Count);
+                    output.WriteEncodedInt(QNameIndex);
+                    output.WriteEncodedInt(TypeIndices.Count);
                     for (int i = 0; i < TypeIndices.Count; i++)
                     {
                         int typeIndex = TypeIndices[i];
-                        output.WriteInt30(typeIndex);
+                        output.WriteEncodedInt(typeIndex);
                     }
                     break;
                 }
@@ -227,7 +267,16 @@ public sealed class ASMultiname : FlashItem, IEquatable<ASMultiname>, IPoolConst
         return true;
     }
     public override bool Equals(object obj)
+        => obj is ASMultiname multiname && Equals(multiname);
+    
+    public static bool operator ==(ASMultiname left, ASMultiname right)
     {
-        return Equals(obj as ASMultiname);
+        return EqualityComparer<ASMultiname>.Default.Equals(left, right);
     }
+    public static bool operator !=(ASMultiname left, ASMultiname right)
+    {
+        return !(left == right);
+    }
+
+    public override string ToString() => $"{Kind}: \"{Namespace.Name}.{Name}\"";
 }

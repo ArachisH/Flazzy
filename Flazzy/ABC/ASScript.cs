@@ -12,16 +12,20 @@ public class ASScript : ASContainer // TODO: Check QName usages
     public ASScript(ABCFile abc)
         : base(abc)
     { }
-    public ASScript(ABCFile abc, FlashReader input)
+    public ASScript(ABCFile abc, ref SpanFlashReader input)
         : base(abc)
     {
-        InitializerIndex = input.ReadInt30();
-        PopulateTraits(input);
+        InitializerIndex = input.ReadEncodedInt();
+        PopulateTraits(ref input);
     }
 
-    public override void WriteTo(FlashWriter output)
+    public override int GetSize()
     {
-        output.WriteInt30(InitializerIndex);
-        base.WriteTo(output);
+        return SpanFlashWriter.GetEncodedIntSize(InitializerIndex) +  base.GetSize();
+    }
+    public override void WriteTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(InitializerIndex);
+        base.WriteTo(ref output);
     }
 }

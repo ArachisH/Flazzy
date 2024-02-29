@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC;
 
-public enum TraitKind
+public enum TraitKind : byte
 {
     Slot = 0,
     Method = 1,

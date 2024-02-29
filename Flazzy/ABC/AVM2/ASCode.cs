@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using System.Buffers;
+using System.Collections;
 using System.Diagnostics;
 
-using Flazzy.ABC.AVM2.Instructions;
 using Flazzy.IO;
+using Flazzy.ABC.AVM2.Instructions;
 
 namespace Flazzy.ABC.AVM2;
 
@@ -674,7 +675,7 @@ public class ASCode : FlashItem, IList<ASInstruction>
         long currentPosition = output.Position;
         output.Position = position;
 
-        instruction.WriteTo(output);
+        instruction.WriteTo(output.BaseStream);
         output.Position = currentPosition;
     }
     private bool IsRelyingOnLocals(ASInstruction instruction, Dictionary<ASInstruction, List<Local>> conversions) => conversions.GetValueOrDefault(instruction) != null;
@@ -823,11 +824,13 @@ public class ASCode : FlashItem, IList<ASInstruction>
         var marks = new Dictionary<ASInstruction, long>();
         var sharedExits = new Dictionary<ASInstruction, List<ASInstruction>>();
         var switchCases = new Dictionary<ASInstruction, (LookUpSwitchIns, int)>();
+
         foreach (ASInstruction instruction in _instructions)
         {
             long previousPosition = output.Position;
             marks.Add(instruction, previousPosition);
-            instruction.WriteTo(output);
+
+            instruction.WriteTo(output.BaseStream);
 
             if (sharedExits.TryGetValue(instruction, out List<ASInstruction> jumpers))
             {

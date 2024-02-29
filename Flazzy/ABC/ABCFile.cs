@@ -2,9 +2,8 @@
 
 namespace Flazzy.ABC;
 
-public class ABCFile : FlashItem, IDisposable
+public class ABCFile : IFlashItem, IDisposable
 {
-    private readonly FlashReader _input;
     private readonly Dictionary<ASMultiname, List<ASClass>> _classByQNameCache;
     private readonly Dictionary<string, ASInstance> _instanceByConstructorCache;
 
@@ -18,8 +17,6 @@ public class ABCFile : FlashItem, IDisposable
     public ASConstantPool Pool { get; }
     public Version Version { get; set; }
 
-    protected override string DebuggerDisplay => "Version: " + Version;
-
     public ABCFile()
     {
         _classByQNameCache = new Dictionary<ASMultiname, List<ASClass>>();
@@ -32,28 +29,60 @@ public class ABCFile : FlashItem, IDisposable
         Scripts = new List<ASScript>();
         MethodBodies = new List<ASMethodBody>();
     }
-    public ABCFile(byte[] data)
-        : this(new FlashReader(data))
-    { }
-    public ABCFile(FlashReader input)
+    public ABCFile(ReadOnlySpan<byte> data)
         : this()
     {
-        _input = input;
+        var input = new SpanFlashReader(data);
 
-        ushort minor = input.ReadUInt16();
-        ushort major = input.ReadUInt16();
-        Version = new Version(major, minor);
-        Pool = new ASConstantPool(this, input);
+        Version = new Version(
+             minor: input.ReadUInt16(),
+             major: input.ReadUInt16());
 
-        PopulateList(Methods, ReadMethod);
-        PopulateList(Metadata, ReadMetadata);
-        PopulateList(Instances, ReadInstance);
+        Pool = new ASConstantPool(this, ref input);
+
+        Methods.Capacity = input.ReadEncodedInt();
+        for (int i = 0; i < Methods.Capacity; i++)
+        {
+            Methods.Add(new ASMethod(this, ref input));
+        }
+
+        Metadata.Capacity = input.ReadEncodedInt();
+        for (int i = 0; i < Metadata.Capacity; i++)
+        {
+            Metadata.Add(new ASMetadata(this, ref input));
+        }
+
+        Instances.Capacity = input.ReadEncodedInt();
+        for (int i = 0; i < Instances.Capacity; i++)
+        {
+            Instances.Add(new ASInstance(this, ref input));
+        }
+
         _classByQNameCache.EnsureCapacity(Instances.Count);
         _instanceByConstructorCache.EnsureCapacity(Instances.Count);
 
-        PopulateList(Classes, ReadClass, Instances.Count);
-        PopulateList(Scripts, ReadScript);
-        PopulateList(MethodBodies, ReadMethodBody);
+        Classes.Capacity = Instances.Count;
+        for (int i = 0; i < Classes.Capacity; i++)
+        {
+            var @class = new ASClass(this, ref input)
+            {
+                InstanceIndex = i
+            };
+            CacheByNaming(@class);
+            Classes.Add(@class);
+        }
+
+        Scripts.Capacity = input.ReadEncodedInt();
+        for (int i = 0; i < Scripts.Capacity; i++)
+        {
+            Scripts.Add(new ASScript(this, ref input));
+        }
+
+        MethodBodies.Capacity = input.ReadEncodedInt();
+        for (int i = 0; i < MethodBodies.Capacity; i++)
+        {
+            MethodBodies.Add(new ASMethodBody(this, ref input));
+        }
 
         _classByQNameCache.TrimExcess();
         _instanceByConstructorCache.TrimExcess();
@@ -147,21 +176,6 @@ public class ABCFile : FlashItem, IDisposable
 
     public ASInstance GetInstanceByConstructor(string constructorName) => _instanceByConstructorCache.GetValueOrDefault(constructorName);
 
-    private ASMethod ReadMethod(int index) => new(this, _input);
-    private ASMetadata ReadMetadata(int index) => new(this, _input);
-    private ASInstance ReadInstance(int index) => new(this, _input);
-    private ASClass ReadClass(int index)
-    {
-        var @class = new ASClass(this, _input)
-        {
-            InstanceIndex = index
-        };
-        CacheByNaming(@class);
-        return @class;
-    }
-    private ASScript ReadScript(int index) => new(this, _input);
-    private ASMethodBody ReadMethodBody(int index) => new(this, _input);
-
     private ASMultiname GetMultiname(string qualifiedName)
     {
         foreach (ASMultiname multiname in Pool.GetMultinames(qualifiedName))
@@ -170,42 +184,59 @@ public class ABCFile : FlashItem, IDisposable
         }
         return null;
     }
-    private void PopulateList<T>(List<T> list, Func<int, T> reader, int count = -1)
-    {
-        list.Capacity = count < 0 ? _input.ReadInt30() : count;
-        for (int i = 0; i < list.Capacity; i++)
-        {
-            T value = reader(i);
-            list.Add(value);
-        }
-    }
 
-    public override void WriteTo(FlashWriter output)
+    public int GetSize()
+    {
+        int size = 0;
+        size += sizeof(ushort);
+        size += sizeof(ushort);
+        size += Pool.GetSize();
+
+        size += SpanFlashWriter.GetEncodedIntSize(Methods.Count);
+        for (int i = 0; i < Methods.Count; i++)
+        {
+            size += Methods[i].GetSize();
+        }
+
+        size += SpanFlashWriter.GetEncodedIntSize(Metadata.Count);
+        for (int i = 0; i < Metadata.Count; i++)
+        {
+            size += Metadata[i].GetSize();
+        }
+
+        size += SpanFlashWriter.GetEncodedIntSize(Instances.Count);
+        for (int i = 0; i < Instances.Count; i++)
+        {
+            size += Instances[i].GetSize();
+            size += Classes[i].GetSize();
+        }
+
+        size += SpanFlashWriter.GetEncodedIntSize(Scripts.Count);
+        for (int i = 0; i < Scripts.Count; i++)
+        {
+            size += Scripts[i].GetSize();
+        }
+
+        size += SpanFlashWriter.GetEncodedIntSize(MethodBodies.Count);
+        for (int i = 0; i < MethodBodies.Count; i++)
+        {
+            size += MethodBodies[i].GetSize();
+        }
+        return size;
+    }
+    public void WriteTo(ref SpanFlashWriter output)
     {
         output.Write((ushort)Version.Minor);
         output.Write((ushort)Version.Major);
 
-        Pool.WriteTo(output);
+        Pool.WriteTo(ref output);
 
-        WriteTo(output, Methods);
-        WriteTo(output, Metadata);
-        WriteTo(output, Instances);
-        WriteTo(output, Classes, false);
-        WriteTo(output, Scripts);
-        WriteTo(output, MethodBodies);
-    }
-    private void WriteTo<T>(FlashWriter output, List<T> list, bool writeCount = true)
-        where T : FlashItem
-    {
-        if (writeCount)
-        {
-            output.WriteInt30(list.Count);
-        }
-        for (int i = 0; i < list.Count; i++)
-        {
-            FlashItem item = list[i];
-            item.WriteTo(output);
-        }
+        WriteTo(ref output, Methods);
+        WriteTo(ref output, Metadata);
+        WriteTo(ref output, Instances);
+        WriteTo(ref output, Classes, false);
+        WriteTo(ref output, Scripts);
+        WriteTo(ref output, MethodBodies);
     }
 
     public void Dispose()
@@ -216,7 +247,6 @@ public class ABCFile : FlashItem, IDisposable
     {
         if (disposing)
         {
-            _input.Dispose();
             _classByQNameCache.Clear();
             _instanceByConstructorCache.Clear();
 
@@ -234,6 +264,21 @@ public class ABCFile : FlashItem, IDisposable
             Pool.Namespaces.Clear();
             Pool.NamespaceSets.Clear();
             Pool.Multinames.Clear();
+        }
+    }
+
+    public override string ToString() => "Version: " + Version;
+
+    private static void WriteTo<T>(ref SpanFlashWriter output, List<T> list, bool writeCount = true)
+        where T : IFlashItem
+    {
+        if (writeCount)
+        {
+            output.WriteEncodedInt(list.Count);
+        }
+        for (int i = 0; i < list.Count; i++)
+        {
+            list[i].WriteTo(ref output);
         }
     }
 }

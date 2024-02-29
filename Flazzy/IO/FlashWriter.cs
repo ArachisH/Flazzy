@@ -47,34 +47,11 @@ public class FlashWriter : BinaryWriter
     {
         item.WriteTo(this);
     }
-
-    public void WriteInt30(int value)
+    public void WriteItem(IFlashItem item)
     {
-        Align();
-        Write7BitEncodedInt(value);
+        item.WriteTo(BaseStream);
     }
-    public void WriteUInt24(uint value)
-    {
-        Align();
 
-        var byteValue = (byte)(value & 0xff);
-        Write(byteValue);
-
-        value >>= 8;
-
-        byteValue = (byte)(value & 0xff);
-        Write(byteValue);
-
-        value >>= 8;
-
-        byteValue = (byte)(value & 0xff);
-        Write(byteValue);
-    }
-    public void WriteUInt30(uint value)
-    {
-        Align();
-        Write7BitEncodedInt((int)value);
-    }
     public void WriteBits(int maxBits, long value)
     {
         for (int i = 0; i < maxBits; i++)

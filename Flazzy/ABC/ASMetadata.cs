@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC;
 
-public sealed class ASMetadata : FlashItem
+public sealed class ASMetadata : IFlashItem
 {
     private readonly ABCFile _abc;
 
@@ -17,36 +17,48 @@ public sealed class ASMetadata : FlashItem
 
         Items = new List<ASItemInfo>();
     }
-    public ASMetadata(ABCFile abc, FlashReader input)
+    public ASMetadata(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        NameIndex = input.ReadInt30();
-        Items.Capacity = input.ReadInt30();
+        NameIndex = input.ReadEncodedInt();
+        Items.Capacity = input.ReadEncodedInt();
         if (Items.Capacity > 0)
         {
             Span<int> keys = stackalloc int[Items.Capacity];
             for (int i = 0; i < Items.Capacity; i++)
             {
-                keys[i] = input.ReadInt30();
+                keys[i] = input.ReadEncodedInt();
             }
             for (int i = 0; i < keys.Length; i++)
             {
-                Items.Add(new ASItemInfo(abc, keys[i], input.ReadInt30()));
+                Items.Add(new ASItemInfo(abc, keys[i], input.ReadEncodedInt()));
             }
         }
     }
 
-    public override void WriteTo(FlashWriter output)
+    public int GetSize()
     {
-        output.WriteInt30(NameIndex);
-        output.WriteInt30(Items.Count);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
+        size += SpanFlashWriter.GetEncodedIntSize(Items.Count);
         for (int i = 0; i < Items.Count; i++)
         {
-            output.WriteInt30(Items[i].KeyIndex);
+            size += SpanFlashWriter.GetEncodedIntSize(Items[i].KeyIndex);
+            size += SpanFlashWriter.GetEncodedIntSize(Items[i].ValueIndex);
+        }
+        return size;
+    }
+    public void WriteTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(NameIndex);
+        output.WriteEncodedInt(Items.Count);
+        for (int i = 0; i < Items.Count; i++)
+        {
+            output.WriteEncodedInt(Items[i].KeyIndex);
         }
         for (int i = 0; i < Items.Count; i++)
         {
-            output.WriteInt30(Items[i].ValueIndex);
+            output.WriteEncodedInt(Items[i].ValueIndex);
         }
     }
 }

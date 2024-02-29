@@ -1,11 +1,14 @@
-﻿using Flazzy.IO;
+﻿using System.Diagnostics;
+
+using Flazzy.IO;
 
 namespace Flazzy.ABC;
 
 /// <summary>
 /// Represents a namespace in the bytecode.
 /// </summary>
-public class ASNamespace : FlashItem, IEquatable<ASNamespace>, IPoolConstant
+[DebuggerDisplay("{Kind}: \"{Name}\"")]
+public class ASNamespace : IFlashItem, IEquatable<ASNamespace>, IPoolConstant
 {
     public ASConstantPool Pool { get; init; }
 
@@ -24,22 +27,11 @@ public class ASNamespace : FlashItem, IEquatable<ASNamespace>, IPoolConstant
     /// </summary>
     public NamespaceKind Kind { get; set; }
 
-    protected override string DebuggerDisplay => $"{Kind}: \"{Name}\"";
-
-    public static bool operator ==(ASNamespace left, ASNamespace right)
-    {
-        return EqualityComparer<ASNamespace>.Default.Equals(left, right);
-    }
-    public static bool operator !=(ASNamespace left, ASNamespace right)
-    {
-        return !(left == right);
-    }
-
     public ASNamespace(ASConstantPool pool)
     {
         Pool = pool;
     }
-    public ASNamespace(ASConstantPool pool, FlashReader input)
+    public ASNamespace(ASConstantPool pool, ref SpanFlashReader input)
         : this(pool)
     {
         Kind = (NamespaceKind)input.ReadByte();
@@ -47,7 +39,7 @@ public class ASNamespace : FlashItem, IEquatable<ASNamespace>, IPoolConstant
         {
             throw new InvalidCastException($"Invalid namespace kind for value {Kind:0x00}.");
         }
-        NameIndex = input.ReadInt30();
+        NameIndex = input.ReadEncodedInt();
     }
 
     public string GetAS3Modifiers() => Kind switch
@@ -58,16 +50,15 @@ public class ASNamespace : FlashItem, IEquatable<ASNamespace>, IPoolConstant
         NamespaceKind.StaticProtected or NamespaceKind.Protected => "protected",
         _ => string.Empty,
     };
-    public override void WriteTo(FlashWriter output)
+
+    public int GetSize() => sizeof(byte) + SpanFlashWriter.GetEncodedIntSize(NameIndex);
+    public void WriteTo(ref SpanFlashWriter output)
     {
         output.Write((byte)Kind);
-        output.WriteInt30(NameIndex);
+        output.WriteEncodedInt(NameIndex);
     }
 
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Name, Kind);
-    }
+    public override int GetHashCode() => HashCode.Combine(Name, Kind);
     public bool Equals(ASNamespace other)
     {
         if (other == null) return false;
@@ -82,4 +73,15 @@ public class ASNamespace : FlashItem, IEquatable<ASNamespace>, IPoolConstant
     {
         return Equals(obj as ASNamespace);
     }
+
+    public static bool operator ==(ASNamespace left, ASNamespace right)
+    {
+        return EqualityComparer<ASNamespace>.Default.Equals(left, right);
+    }
+    public static bool operator !=(ASNamespace left, ASNamespace right)
+    {
+        return !(left == right);
+    }
+
+    public override string ToString() => $"{Kind}: \"{Name}\"";
 }

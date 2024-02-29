@@ -17,58 +17,75 @@ public class ASMethodBody : ASContainer
     public List<ASException> Exceptions { get; }
 
     public override ASMultiname QName => Method.Trait?.QName;
-    protected override string DebuggerDisplay => $"LocalCount: {LocalCount:n0}, MaxStack: {MaxStack:n0}";
 
     public ASMethodBody(ABCFile abc)
         : base(abc)
     {
         Exceptions = new List<ASException>();
     }
-    public ASMethodBody(ABCFile abc, FlashReader input)
+    public ASMethodBody(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        MethodIndex = input.ReadInt30();
+        MethodIndex = input.ReadEncodedInt();
         Method.Body = this;
 
-        MaxStack = input.ReadInt30();
-        LocalCount = input.ReadInt30();
-        InitialScopeDepth = input.ReadInt30();
-        MaxScopeDepth = input.ReadInt30();
+        MaxStack = input.ReadEncodedInt();
+        LocalCount = input.ReadEncodedInt();
+        InitialScopeDepth = input.ReadEncodedInt();
+        MaxScopeDepth = input.ReadEncodedInt();
 
-        int codeLength = input.ReadInt30();
-        Code = input.ReadBytes(codeLength);
+        int codeLength = input.ReadEncodedInt();
+        Code = input.ReadBytes(codeLength).ToArray();
 
-        Exceptions.Capacity = input.ReadInt30();
+        Exceptions.Capacity = input.ReadEncodedInt();
         for (int i = 0; i < Exceptions.Capacity; i++)
         {
-            var exception = new ASException(abc, input);
-            Exceptions.Add(exception);
+            Exceptions.Add(new ASException(abc, ref input));
         }
-        PopulateTraits(input);
+        PopulateTraits(ref input);
     }
 
-    public ASCode ParseCode()
+    public ASCode ParseCode() => new(ABC, this);
+
+    public override int GetSize()
     {
-        return new ASCode(ABC, this);
-    }
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(MethodIndex);
+        size += SpanFlashWriter.GetEncodedIntSize(MaxStack);
+        size += SpanFlashWriter.GetEncodedIntSize(LocalCount);
+        size += SpanFlashWriter.GetEncodedIntSize(InitialScopeDepth);
+        size += SpanFlashWriter.GetEncodedIntSize(MaxScopeDepth);
 
-    public override void WriteTo(FlashWriter output)
-    {
-        output.WriteInt30(MethodIndex);
-        output.WriteInt30(MaxStack);
-        output.WriteInt30(LocalCount);
-        output.WriteInt30(InitialScopeDepth);
-        output.WriteInt30(MaxScopeDepth);
+        size += SpanFlashWriter.GetEncodedIntSize(Code.Length);
+        size += Code.Length;
 
-        output.WriteInt30(Code.Length);
-        output.Write(Code);
-
-        output.WriteInt30(Exceptions.Count);
+        size += SpanFlashWriter.GetEncodedIntSize(Exceptions.Count);
         for (int i = 0; i < Exceptions.Count; i++)
         {
-            ASException exception = Exceptions[i];
-            exception.WriteTo(output);
+            size += Exceptions[i].GetSize();
         }
-        base.WriteTo(output);
+
+        size += base.GetSize();
+        return size;
     }
+    public override void WriteTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(MethodIndex);
+        output.WriteEncodedInt(MaxStack);
+        output.WriteEncodedInt(LocalCount);
+        output.WriteEncodedInt(InitialScopeDepth);
+        output.WriteEncodedInt(MaxScopeDepth);
+
+        output.WriteEncodedInt(Code.Length);
+        output.Write(Code);
+
+        output.WriteEncodedInt(Exceptions.Count);
+        for (int i = 0; i < Exceptions.Count; i++)
+        {
+            Exceptions[i].WriteTo(ref output);
+        }
+        base.WriteTo(ref output);
+    }
+
+    public override string ToString() => $"LocalCount: {LocalCount:n0}, MaxStack: {MaxStack:n0}";
 }

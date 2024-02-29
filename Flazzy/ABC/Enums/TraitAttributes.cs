@@ -1,7 +1,7 @@
 ﻿namespace Flazzy.ABC;
 
 [Flags]
-public enum TraitAttributes
+public enum TraitAttributes : byte
 {
     None = 0x00,
     Final = 0x01,

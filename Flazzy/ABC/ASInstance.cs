@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC;
 
-public class ASInstance : ASContainer
+public class ASInstance : ASContainer, IAS3Item
 {
     public ClassFlags Flags { get; set; }
     public bool IsInterface => Flags.HasFlag(ClassFlags.Interface);
@@ -19,8 +19,6 @@ public class ASInstance : ASContainer
     public int ProtectedNamespaceIndex { get; set; }
     public ASNamespace ProtectedNamespace => ABC.Pool.Namespaces[ProtectedNamespaceIndex];
 
-    protected override string DebuggerDisplay => ToAS3();
-
     public List<int> InterfaceIndices { get; }
 
     public ASInstance(ABCFile abc)
@@ -28,39 +26,36 @@ public class ASInstance : ASContainer
     {
         InterfaceIndices = new List<int>();
     }
-    public ASInstance(ABCFile abc, FlashReader input)
+    public ASInstance(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        QNameIndex = input.ReadInt30();
-        SuperIndex = input.ReadInt30();
+        QNameIndex = input.ReadEncodedInt();
+        SuperIndex = input.ReadEncodedInt();
         Flags = (ClassFlags)input.ReadByte();
 
         if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
         {
-            ProtectedNamespaceIndex = input.ReadInt30();
+            ProtectedNamespaceIndex = input.ReadEncodedInt();
         }
 
-        InterfaceIndices.Capacity = input.ReadInt30();
+        InterfaceIndices.Capacity = input.ReadEncodedInt();
         for (int i = 0; i < InterfaceIndices.Capacity; i++)
         {
-            int interfaceIndex = input.ReadInt30();
-            InterfaceIndices.Add(interfaceIndex);
+            InterfaceIndices.Add(input.ReadEncodedInt());
         }
 
-        ConstructorIndex = input.ReadInt30();
+        ConstructorIndex = input.ReadEncodedInt();
         Constructor.IsConstructor = true;
         Constructor.Container = this;
 
-        PopulateTraits(input);
+        PopulateTraits(ref input);
     }
 
     public IEnumerable<ASMultiname> GetInterfaces()
     {
         for (int i = 0; i < InterfaceIndices.Count; i++)
         {
-            int interfaceIndex = InterfaceIndices[i];
-            ASMultiname @interface = ABC.Pool.Multinames[interfaceIndex];
-            yield return @interface;
+            yield return ABC.Pool.Multinames[InterfaceIndices[i]];
         }
     }
     public bool ContainsInterface(string qualifiedName)
@@ -81,7 +76,7 @@ public class ASInstance : ASContainer
         return false;
     }
 
-    public override string ToAS3()
+    public string ToAS3()
     {
         string as3 = QName.Namespace.GetAS3Modifiers();
         bool isInterface = Flags.HasFlag(ClassFlags.Interface);
@@ -114,25 +109,48 @@ public class ASInstance : ASContainer
 
         return as3;
     }
-    public override void WriteTo(FlashWriter output)
+
+    public override int GetSize()
     {
-        output.WriteInt30(QNameIndex);
-        output.WriteInt30(SuperIndex);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(QNameIndex);
+        size += SpanFlashWriter.GetEncodedIntSize(SuperIndex);
+        size += sizeof(byte);
+
+        if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
+        {
+            size += SpanFlashWriter.GetEncodedIntSize(ProtectedNamespaceIndex);
+        }
+
+        size += SpanFlashWriter.GetEncodedIntSize(InterfaceIndices.Count);
+        for (int i = 0; i < InterfaceIndices.Count; i++)
+        {
+            size += SpanFlashWriter.GetEncodedIntSize(InterfaceIndices[i]);
+        }
+
+        size += SpanFlashWriter.GetEncodedIntSize(ConstructorIndex);
+        return size + base.GetSize();
+    }
+    public override void WriteTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(QNameIndex);
+        output.WriteEncodedInt(SuperIndex);
         output.Write((byte)Flags);
 
         if (Flags.HasFlag(ClassFlags.ProtectedNamespace))
         {
-            output.WriteInt30(ProtectedNamespaceIndex);
+            output.WriteEncodedInt(ProtectedNamespaceIndex);
         }
 
-        output.WriteInt30(InterfaceIndices.Count);
+        output.WriteEncodedInt(InterfaceIndices.Count);
         for (int i = 0; i < InterfaceIndices.Count; i++)
         {
-            int interfaceIndex = InterfaceIndices[i];
-            output.WriteInt30(interfaceIndex);
+            output.WriteEncodedInt(InterfaceIndices[i]);
         }
 
-        output.WriteInt30(ConstructorIndex);
-        base.WriteTo(output);
+        output.WriteEncodedInt(ConstructorIndex);
+        base.WriteTo(ref output);
     }
+
+    public override string ToString() => ToAS3();
 }

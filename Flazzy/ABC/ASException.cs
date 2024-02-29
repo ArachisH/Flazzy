@@ -2,8 +2,10 @@
 
 namespace Flazzy.ABC;
 
-public class ASException : AS3Item
+public class ASException : IFlashItem
 {
+    public ABCFile ABC { get; }
+
     public int To { get; set; }
     public int From { get; set; }
     public int Target { get; set; }
@@ -15,24 +17,35 @@ public class ASException : AS3Item
     public ASMultiname ExceptionType => ABC.Pool.Multinames[ExceptionTypeIndex];
 
     public ASException(ABCFile abc)
-        : base(abc)
-    { }
-    public ASException(ABCFile abc, FlashReader input)
-        : base(abc)
     {
-        From = input.ReadInt30();
-        To = input.ReadInt30();
-        Target = input.ReadInt30();
-        ExceptionTypeIndex = input.ReadInt30();
-        VariableNameIndex = input.ReadInt30();
+        ABC = abc;
+    }
+    public ASException(ABCFile abc, ref SpanFlashReader input)
+        : this(abc)
+    {
+        From = input.ReadEncodedInt();
+        To = input.ReadEncodedInt();
+        Target = input.ReadEncodedInt();
+        ExceptionTypeIndex = input.ReadEncodedInt();
+        VariableNameIndex = input.ReadEncodedInt();
     }
 
-    public override void WriteTo(FlashWriter output)
+    public int GetSize()
     {
-        output.WriteInt30(From);
-        output.WriteInt30(To);
-        output.WriteInt30(Target);
-        output.WriteInt30(ExceptionTypeIndex);
-        output.WriteInt30(VariableNameIndex);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(From);
+        size += SpanFlashWriter.GetEncodedIntSize(To);
+        size += SpanFlashWriter.GetEncodedIntSize(Target);
+        size += SpanFlashWriter.GetEncodedIntSize(ExceptionTypeIndex);
+        size += SpanFlashWriter.GetEncodedIntSize(VariableNameIndex);
+        return size;
+    }
+    public void WriteTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(From);
+        output.WriteEncodedInt(To);
+        output.WriteEncodedInt(Target);
+        output.WriteEncodedInt(ExceptionTypeIndex);
+        output.WriteEncodedInt(VariableNameIndex);
     }
 }

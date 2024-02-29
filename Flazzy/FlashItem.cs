@@ -4,6 +4,7 @@ using Flazzy.IO;
 
 namespace Flazzy;
 
+// TODO: Remove abstract FlashItem and move to composition with IFlashItem
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 public abstract class FlashItem
 {
@@ -20,4 +21,13 @@ public abstract class FlashItem
         }
     }
     public abstract void WriteTo(FlashWriter output);
+}
+
+/// <summary>
+/// Represents a serializable structure in the Shockwave Flash file.
+/// </summary>
+public interface IFlashItem
+{
+    int GetSize();
+    void WriteTo(ref SpanFlashWriter output);
 }

@@ -2,7 +2,7 @@
 
 namespace Flazzy.ABC;
 
-public class ASClass : ASContainer
+public class ASClass : ASContainer, IAS3Item
 {
     internal int InstanceIndex { get; set; }
     public ASInstance Instance => ABC.Instances[InstanceIndex];
@@ -12,28 +12,30 @@ public class ASClass : ASContainer
 
     public override bool IsStatic => true;
     public override ASMultiname QName => Instance.QName;
-    protected override string DebuggerDisplay => ToAS3();
 
     public ASClass(ABCFile abc)
         : base(abc)
     { }
-    public ASClass(ABCFile abc, FlashReader input)
+    public ASClass(ABCFile abc, ref SpanFlashReader input)
         : base(abc)
     {
-        ConstructorIndex = input.ReadInt30();
+        ConstructorIndex = input.ReadEncodedInt();
         Constructor.IsConstructor = true;
         Constructor.Container = this;
 
-        PopulateTraits(input);
+        PopulateTraits(ref input);
     }
 
-    public override string ToAS3()
+    public override int GetSize()
     {
-        return Instance.ToAS3();
+        return SpanFlashWriter.GetEncodedIntSize(ConstructorIndex) + base.GetSize();
     }
-    public override void WriteTo(FlashWriter output)
+    public override void WriteTo(ref SpanFlashWriter output)
     {
-        output.WriteInt30(ConstructorIndex);
-        base.WriteTo(output);
+        output.WriteEncodedInt(ConstructorIndex);
+        base.WriteTo(ref output);
     }
+
+    public string ToAS3() => Instance.ToAS3();
+    public override string ToString() => ToAS3();
 }

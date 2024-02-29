@@ -4,8 +4,10 @@ using Flazzy.IO;
 
 namespace Flazzy.ABC;
 
-public class ASTrait : AS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait, IFunctionTrait
+public class ASTrait : IFlashItem, IAS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait, IFunctionTrait
 {
+    public ABCFile ABC { get; }
+
     public int QNameIndex { get; set; }
     public ASMultiname QName => ABC.Pool.Multinames[QNameIndex];
 
@@ -42,30 +44,28 @@ public class ASTrait : AS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait,
     public TraitKind Kind { get; set; }
     public TraitAttributes Attributes { get; set; }
 
-    protected override string DebuggerDisplay => (Kind + ": " + QName.Name);
-
     public ASTrait(ABCFile abc)
-        : base(abc)
     {
+        ABC = abc;
         MetadataIndices = new List<int>();
     }
-    public ASTrait(ABCFile abc, FlashReader input)
+    public ASTrait(ABCFile abc, ref SpanFlashReader input)
         : this(abc)
     {
-        QNameIndex = input.ReadInt30();
+        QNameIndex = input.ReadEncodedInt();
 
         byte bitContainer = input.ReadByte();
         Kind = (TraitKind)(bitContainer & 0x0F);
         Attributes = (TraitAttributes)(bitContainer >> 4);
 
-        Id = input.ReadInt30();
+        Id = input.ReadEncodedInt();
         switch (Kind)
         {
             case TraitKind.Slot:
             case TraitKind.Constant:
                 {
-                    TypeIndex = input.ReadInt30();
-                    ValueIndex = input.ReadInt30();
+                    TypeIndex = input.ReadEncodedInt();
+                    ValueIndex = input.ReadEncodedInt();
                     if (ValueIndex != 0)
                     {
                         ValueKind = (ConstantKind)input.ReadByte();
@@ -77,31 +77,30 @@ public class ASTrait : AS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait,
             case TraitKind.Getter:
             case TraitKind.Setter:
                 {
-                    MethodIndex = input.ReadInt30();
+                    MethodIndex = input.ReadEncodedInt();
                     Method.Trait = this;
                     break;
                 }
 
             case TraitKind.Class:
                 {
-                    ClassIndex = input.ReadInt30();
+                    ClassIndex = input.ReadEncodedInt();
                     break;
                 }
 
             case TraitKind.Function:
                 {
-                    FunctionIndex = input.ReadInt30();
+                    FunctionIndex = input.ReadEncodedInt();
                     break;
                 }
         }
 
         if (Attributes.HasFlag(TraitAttributes.Metadata))
         {
-            MetadataIndices.Capacity = input.ReadInt30();
+            MetadataIndices.Capacity = input.ReadEncodedInt();
             for (int i = 0; i < MetadataIndices.Capacity; i++)
             {
-                int metadatumIndex = input.ReadInt30();
-                MetadataIndices.Add(metadatumIndex);
+                MetadataIndices.Add(input.ReadEncodedInt());
             }
         }
     }
@@ -116,74 +115,117 @@ public class ASTrait : AS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait,
         }
     }
 
-    public override string ToAS3()
+    public string ToAS3()
     {
+        if (Kind is TraitKind.Constant or TraitKind.Slot)
+        {
+            StringBuilder builder = new();
+            if (Attributes.HasFlag(TraitAttributes.Override))
+            {
+                builder.Append("override ");
+            }
+            var modifiers = QName.Namespace.GetAS3Modifiers();
+            if (!string.IsNullOrEmpty(modifiers))
+            {
+                builder.Append(modifiers);
+                builder.Append(' ');
+            }
+            if (IsStatic)
+            {
+                builder.Append("static ");
+            }
+            builder.Append(Kind == TraitKind.Constant ? "const " : "var ");
+            builder.Append(QName.Name);
+            if (Type != null)
+            {
+                builder.Append(':');
+                builder.Append(Type.Name ?? Type.QName.Name);
+                if (Type.Kind == MultinameKind.TypeName)
+                {
+                    builder.Append(".<");
+                    builder.Append(string.Join(',', Type.TypeIndices.Select(i => ABC.Pool.Multinames[i].Name)));
+                    builder.Append('>');
+                }
+            }
+            if (!string.IsNullOrEmpty(Value?.ToString()))
+            {
+                builder.Append(" = ");
+                if (ValueKind == ConstantKind.String)
+                {
+                    builder.Append('"');
+                    builder.Append(Value.ToString());
+                    builder.Append('"');
+                }
+                else builder.Append(Value.ToString().ToLower());
+            }
+            builder.Append(';');
+            return builder.ToString();
+        }
+        else return string.Empty;
+    }
+    public int GetSize()
+    {
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(QNameIndex);
+        size += sizeof(byte);
+        size += SpanFlashWriter.GetEncodedIntSize(Id);
         switch (Kind)
         {
-            case TraitKind.Constant:
             case TraitKind.Slot:
+            case TraitKind.Constant:
                 {
-                    StringBuilder builder = new();
-                    if (Attributes.HasFlag(TraitAttributes.Override))
+                    size += SpanFlashWriter.GetEncodedIntSize(TypeIndex);
+                    size += SpanFlashWriter.GetEncodedIntSize(ValueIndex);
+                    if (ValueIndex != 0)
                     {
-                        builder.Append("override ");
+                        size += sizeof(byte);
                     }
-                    var modifiers = QName.Namespace.GetAS3Modifiers();
-                    if (!string.IsNullOrEmpty(modifiers))
-                    {
-                        builder.Append(modifiers);
-                        builder.Append(' ');
-                    }
-                    if (IsStatic)
-                    {
-                        builder.Append("static ");
-                    }
-                    builder.Append(Kind == TraitKind.Constant ? "const " : "var ");
-                    builder.Append(QName.Name);
-                    if (Type != null)
-                    {
-                        builder.Append(':');
-                        builder.Append(Type.Name ?? Type.QName.Name);
-                        if (Type.Kind == MultinameKind.TypeName)
-                        {
-                            builder.Append(".<");
-                            builder.Append(string.Join(',', Type.TypeIndices.Select(i => ABC.Pool.Multinames[i].Name)));
-                            builder.Append('>');
-                        }
-                    }
-                    if (!string.IsNullOrEmpty(Value?.ToString()))
-                    {
-                        builder.Append(" = ");
-                        if (ValueKind == ConstantKind.String)
-                        {
-                            builder.Append('"');
-                            builder.Append(Value.ToString());
-                            builder.Append('"');
-                        }
-                        else builder.Append(Value.ToString().ToLower());
-                    }
-                    builder.Append(';');
-                    return builder.ToString();
+                    break;
+                }
+
+            case TraitKind.Method:
+            case TraitKind.Getter:
+            case TraitKind.Setter:
+                {
+                    size += SpanFlashWriter.GetEncodedIntSize(MethodIndex);
+                    break;
+                }
+
+            case TraitKind.Class:
+                {
+                    size += SpanFlashWriter.GetEncodedIntSize(ClassIndex);
+                    break;
+                }
+
+            case TraitKind.Function:
+                {
+                    size += SpanFlashWriter.GetEncodedIntSize(FunctionIndex);
+                    break;
                 }
         }
-        return string.Empty;
+
+        if (Attributes.HasFlag(TraitAttributes.Metadata))
+        {
+            size += SpanFlashWriter.GetEncodedIntSize(MetadataIndices.Count);
+            for (int i = 0; i < MetadataIndices.Count; i++)
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(MetadataIndices[i]);
+            }
+        }
+        return size;
     }
-
-    public override void WriteTo(FlashWriter output)
+    public void WriteTo(ref SpanFlashWriter output)
     {
-        var bitContainer = (byte)(
-            ((byte)Attributes << 4) + (byte)Kind);
-
-        output.WriteInt30(QNameIndex);
-        output.Write(bitContainer);
-        output.WriteInt30(Id);
+        output.WriteEncodedInt(QNameIndex);
+        output.Write((byte)(((byte)Attributes << 4) + (byte)Kind));
+        output.WriteEncodedInt(Id);
         switch (Kind)
         {
             case TraitKind.Slot:
             case TraitKind.Constant:
                 {
-                    output.WriteInt30(TypeIndex);
-                    output.WriteInt30(ValueIndex);
+                    output.WriteEncodedInt(TypeIndex);
+                    output.WriteEncodedInt(ValueIndex);
                     if (ValueIndex != 0)
                     {
                         output.Write((byte)ValueKind);
@@ -195,31 +237,33 @@ public class ASTrait : AS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait,
             case TraitKind.Getter:
             case TraitKind.Setter:
                 {
-                    output.WriteInt30(MethodIndex);
+                    output.WriteEncodedInt(MethodIndex);
                     break;
                 }
 
             case TraitKind.Class:
                 {
-                    output.WriteInt30(ClassIndex);
+                    output.WriteEncodedInt(ClassIndex);
                     break;
                 }
 
             case TraitKind.Function:
                 {
-                    output.WriteInt30(FunctionIndex);
+                    output.WriteEncodedInt(FunctionIndex);
                     break;
                 }
         }
 
         if (Attributes.HasFlag(TraitAttributes.Metadata))
         {
-            output.WriteInt30(MetadataIndices.Count);
+            output.WriteEncodedInt(MetadataIndices.Count);
             for (int i = 0; i < MetadataIndices.Count; i++)
             {
                 int metadatumIndex = MetadataIndices[i];
-                output.WriteInt30(metadatumIndex);
+                output.WriteEncodedInt(metadatumIndex);
             }
         }
     }
+
+    public override string ToString() => (Kind + ": " + QName.Name);
 }

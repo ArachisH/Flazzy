@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC;
 
-public enum ConstantKind
+public enum ConstantKind : byte
 {
     Null = 0x0C,
     Undefined = 0x00,

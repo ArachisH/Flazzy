@@ -2,35 +2,23 @@
 
 namespace Flazzy.ABC;
 
-public class ASNamespaceSet : FlashItem, IEquatable<ASNamespaceSet>, IPoolConstant
+public class ASNamespaceSet : IFlashItem, IEquatable<ASNamespaceSet>, IPoolConstant
 {
     public ASConstantPool Pool { get; init; }
     public List<int> NamespaceIndices { get; }
-
-    protected override string DebuggerDisplay => $"Namespaces: {NamespaceIndices.Count:n0}";
-
-    public static bool operator ==(ASNamespaceSet left, ASNamespaceSet right)
-    {
-        return EqualityComparer<ASNamespaceSet>.Default.Equals(left, right);
-    }
-    public static bool operator !=(ASNamespaceSet left, ASNamespaceSet right)
-    {
-        return !(left == right);
-    }
 
     public ASNamespaceSet(ASConstantPool pool)
     {
         Pool = pool;
         NamespaceIndices = new List<int>();
     }
-    public ASNamespaceSet(ASConstantPool pool, FlashReader input)
+    public ASNamespaceSet(ASConstantPool pool, ref SpanFlashReader input)
         : this(pool)
     {
-        NamespaceIndices.Capacity = input.ReadInt30();
+        NamespaceIndices.Capacity = input.ReadEncodedInt();
         for (int i = 0; i < NamespaceIndices.Capacity; i++)
         {
-            int namespaceIndex = input.ReadInt30();
-            NamespaceIndices.Add(namespaceIndex);
+            NamespaceIndices.Add(input.ReadEncodedInt());
         }
     }
 
@@ -68,14 +56,34 @@ public class ASNamespaceSet : FlashItem, IEquatable<ASNamespaceSet>, IPoolConsta
             yield return Pool.Namespaces[NamespaceIndices[i]];
         }
     }
-    public override void WriteTo(FlashWriter output)
+
+    public int GetSize()
     {
-        output.WriteInt30(NamespaceIndices.Count);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(NamespaceIndices.Count);
         for (int i = 0; i < NamespaceIndices.Count; i++)
         {
-            int namespaceIndex = NamespaceIndices[i];
-            output.WriteInt30(namespaceIndex);
+            size += SpanFlashWriter.GetEncodedIntSize(NamespaceIndices[i]);
+        }
+        return size;
+    }
+    public void WriteTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(NamespaceIndices.Count);
+        for (int i = 0; i < NamespaceIndices.Count; i++)
+        {
+            output.WriteEncodedInt(NamespaceIndices[i]);
         }
     }
 
+    public static bool operator ==(ASNamespaceSet left, ASNamespaceSet right)
+    {
+        return EqualityComparer<ASNamespaceSet>.Default.Equals(left, right);
+    }
+    public static bool operator !=(ASNamespaceSet left, ASNamespaceSet right)
+    {
+        return !(left == right);
+    }
+
+    public override string ToString() => $"Namespaces: {NamespaceIndices.Count:n0}";
 }

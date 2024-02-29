@@ -1,10 +1,8 @@
-﻿using System.Runtime.CompilerServices;
-
-using Flazzy.IO;
+﻿using Flazzy.IO;
 
 namespace Flazzy.ABC.AVM2.Instructions;
 
-public abstract class ASInstruction : FlashItem, ICloneable
+public abstract class ASInstruction : IFlashItem, ICloneable
 {
     public OPCode OP { get; }
     protected ABCFile ABC { get; }
@@ -33,18 +31,6 @@ public abstract class ASInstruction : FlashItem, ICloneable
     {
         output.Write((byte)OP);
         WriteValuesTo(ref output);
-    }
-
-    [SkipLocalsInit]
-    // Temporary hack stackalloc until rest of the IO is "spanified".
-    public override void WriteTo(FlashWriter output)
-    {
-        Span<byte> buffer = stackalloc byte[64].Slice(0, GetSize());
-
-        var outputWriter = new SpanFlashWriter(buffer);
-        WriteTo(ref outputWriter);
-
-        output.Write(buffer);
     }
 
     protected static int ResolveMultinamePops(ASMultiname multiname)

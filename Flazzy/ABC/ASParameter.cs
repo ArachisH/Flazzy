@@ -4,7 +4,7 @@ using System.Text;
 namespace Flazzy.ABC;
 
 [DebuggerDisplay("{ToString(),nq}")]
-public class ASParameter
+public class ASParameter : IAS3Item
 {
     private readonly ASMethod _method;
 
@@ -25,7 +25,7 @@ public class ASParameter
         _method = method;
     }
 
-    public override string ToString()
+    public string ToAS3()
     {
         var builder = new StringBuilder();
         Append(builder);
@@ -83,4 +83,5 @@ public class ASParameter
             }
         }
     }
+    public override string ToString() => ToAS3();
 }

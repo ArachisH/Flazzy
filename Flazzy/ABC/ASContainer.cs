@@ -2,29 +2,18 @@
 
 namespace Flazzy.ABC;
 
-public abstract class ASContainer : AS3Item
+public abstract class ASContainer : IFlashItem
 {
+    public ABCFile ABC { get; }
+
     public List<ASTrait> Traits { get; }
 
     public virtual bool IsStatic { get; }
     public abstract ASMultiname QName { get; }
-    protected override string DebuggerDisplay
-    {
-        get
-        {
-            int methodCount = Traits.Count(
-                t => t.Kind is TraitKind.Method or TraitKind.Getter or TraitKind.Setter);
-
-            int slotCount = Traits.Count(t => t.Kind is TraitKind.Slot);
-            int constantCount = Traits.Count(t => t.Kind is TraitKind.Constant);
-
-            return $"{QName}, Traits: {Traits.Count}";
-        }
-    }
 
     public ASContainer(ABCFile abc)
-        : base(abc)
     {
+        ABC = abc;
         Traits = new List<ASTrait>();
     }
 
@@ -148,13 +137,15 @@ public abstract class ASContainer : AS3Item
         return ABC.Pool.AddConstant(qName);
     }
 
-    protected void PopulateTraits(FlashReader input)
+    protected void PopulateTraits(ref SpanFlashReader input)
     {
-        Traits.Capacity = input.ReadInt30();
+        Traits.Capacity = input.ReadEncodedInt();
         for (int i = 0; i < Traits.Capacity; i++)
         {
-            var trait = new ASTrait(ABC, input);
-            trait.IsStatic = IsStatic;
+            var trait = new ASTrait(ABC, ref input)
+            {
+                IsStatic = IsStatic
+            };
 
             if (trait.Kind is TraitKind.Method or TraitKind.Getter or TraitKind.Setter)
             {
@@ -164,13 +155,33 @@ public abstract class ASContainer : AS3Item
             Traits.Add(trait);
         }
     }
-    public override void WriteTo(FlashWriter output)
+    public virtual int GetSize()
     {
-        output.WriteInt30(Traits.Count);
+        int size = 0;
+        size += SpanFlashWriter.GetEncodedIntSize(Traits.Count);
         for (int i = 0; i < Traits.Count; i++)
         {
-            ASTrait trait = Traits[i];
-            trait.WriteTo(output);
+            size += Traits[i].GetSize();
         }
+        return size;
+    }
+    public virtual void WriteTo(ref SpanFlashWriter output)
+    {
+        output.WriteEncodedInt(Traits.Count);
+        for (int i = 0; i < Traits.Count; i++)
+        {
+            Traits[i].WriteTo(ref output);
+        }
+    }
+
+    public override string ToString()
+    {
+        int methodCount = Traits.Count(
+            t => t.Kind is TraitKind.Method or TraitKind.Getter or TraitKind.Setter);
+
+        int slotCount = Traits.Count(t => t.Kind is TraitKind.Slot);
+        int constantCount = Traits.Count(t => t.Kind is TraitKind.Constant);
+
+        return $"{QName}, Traits: {Traits.Count}";
     }
 }

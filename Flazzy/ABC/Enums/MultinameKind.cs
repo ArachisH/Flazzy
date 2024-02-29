@@ -1,6 +1,6 @@
 ﻿namespace Flazzy.ABC;
 
-public enum MultinameKind
+public enum MultinameKind : byte
 {
     QName = 0x07,
     QNameA = 0x0D,

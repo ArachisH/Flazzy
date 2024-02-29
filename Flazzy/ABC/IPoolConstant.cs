@@ -2,5 +2,5 @@
 
 public interface IPoolConstant
 {
-    public ASConstantPool Pool { get; init; }
+    ASConstantPool Pool { get; init; }
 }

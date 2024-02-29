@@ -92,23 +92,9 @@ public ref struct SpanFlashWriter
         }
         else
         {
-            // Execute bounds-check.
-            if (_data.Length - Position < values.Length * sizeof(double))
-                ThrowOutOfRange();
-
-            ref byte destinationPtr = ref Unsafe.Add(
-                ref MemoryMarshal.GetReference(_data), (nint)(uint)Position);
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                // Reverse the binary representation of the double and blit it to the output
-                Unsafe.WriteUnaligned(ref destinationPtr,
-                    BinaryPrimitives.ReverseEndianness(
-                        BitConverter.DoubleToUInt64Bits(values[i])));
-
-                // Bump the destination pointer by element size.
-                destinationPtr = Unsafe.Add(ref destinationPtr, sizeof(double));
-            }
+            BinaryPrimitives.ReverseEndianness(
+                source: MemoryMarshal.Cast<double, ulong>(values), 
+                destination: MemoryMarshal.Cast<byte, ulong>(_data));
         }
 
         Position += values.Length * sizeof(double);
