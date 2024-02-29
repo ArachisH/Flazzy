@@ -9,54 +9,25 @@ public class ASTrait : AS3Item, IMethodGSTrait, ISlotConstantTrait, IClassTrait,
     public int QNameIndex { get; set; }
     public ASMultiname QName => ABC.Pool.Multinames[QNameIndex];
 
-    public ASMultiname Type
-    {
-        get
-        {
-            if (Kind == TraitKind.Slot ||
-                Kind == TraitKind.Constant)
-            {
-                return ABC.Pool.Multinames[TypeIndex];
-            }
-            return null;
-        }
-    }
     public int TypeIndex { get; set; }
-
-    public ASMethod Method
+    public ASMultiname Type => Kind switch
     {
-        get
-        {
-            if (Kind == TraitKind.Method ||
-                Kind == TraitKind.Getter ||
-                Kind == TraitKind.Setter)
-            {
-                return ABC.Methods[MethodIndex];
-            }
-            return null;
-        }
-    }
+        TraitKind.Slot or TraitKind.Constant => ABC.Pool.Multinames[TypeIndex],
+        _ => null
+    };
+
     public int MethodIndex { get; set; }
-
-    public ASMethod Function
+    public ASMethod Method => Kind switch
     {
-        get
-        {
-            if (Kind != TraitKind.Function) return null;
-            return ABC.Methods[FunctionIndex];
-        }
-    }
+        TraitKind.Method or TraitKind.Getter or TraitKind.Setter => ABC.Methods[MethodIndex],
+        _ => null
+    };
+
     public int FunctionIndex { get; set; }
+    public ASMethod Function => Kind is TraitKind.Function ? ABC.Methods[FunctionIndex] : null;
 
-    public ASClass Class
-    {
-        get
-        {
-            if (Kind != TraitKind.Class) return null;
-            return ABC.Classes[ClassIndex];
-        }
-    }
     public int ClassIndex { get; set; }
+    public ASClass Class => Kind is TraitKind.Class ? ABC.Classes[ClassIndex] : null;
 
     public int ValueIndex { get; set; }
     public object Value => ABC.Pool.GetConstant(ValueKind, ValueIndex);

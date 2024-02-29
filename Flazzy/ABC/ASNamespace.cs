@@ -7,12 +7,12 @@ namespace Flazzy.ABC;
 /// </summary>
 public class ASNamespace : FlashItem, IEquatable<ASNamespace>, IPoolConstant
 {
+    public ASConstantPool Pool { get; init; }
+
     /// <summary>
     /// Gets or sets the index of the string in <see cref="ASConstantPool.Strings"/> representing the namespace name.
     /// </summary>
     public int NameIndex { get; set; }
-
-    public ASConstantPool Pool { get; init; }
 
     /// <summary>
     /// Gets the name of the namespace.

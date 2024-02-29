@@ -57,26 +57,19 @@ public class ASConstantPool : FlashItem
         _multinamesIndicesCache.TrimExcess();
     }
 
-    public object GetConstant(ConstantKind type, int index)
+    public object GetConstant(ConstantKind type, int index) => type switch
     {
-        switch (type)
-        {
-            case ConstantKind.True: return true;
-            case ConstantKind.False: return false;
+        ConstantKind.True => true,
+        ConstantKind.False => false,
+        ConstantKind.Null or ConstantKind.Undefined => null,
+        ConstantKind.String => Strings[index],
+        ConstantKind.Double => Doubles[index],
+        ConstantKind.Integer => Integers[index],
+        ConstantKind.UInteger => UIntegers[index],
+        ConstantKind.Namespace => Namespaces[index],
 
-            case ConstantKind.Null:
-            case ConstantKind.Undefined: return null;
-
-            case ConstantKind.String: return Strings[index];
-            case ConstantKind.Double: return Doubles[index];
-            case ConstantKind.Integer: return Integers[index];
-            case ConstantKind.UInteger: return UIntegers[index];
-
-            case ConstantKind.Namespace: return Namespaces[index];
-
-            default: return null;
-        }
-    }
+        _ => null,
+    };
 
     public int AddConstant(object value, bool recycle = true)
     {

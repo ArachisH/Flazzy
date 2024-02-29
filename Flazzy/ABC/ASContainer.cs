@@ -13,12 +13,10 @@ public abstract class ASContainer : AS3Item
         get
         {
             int methodCount = Traits.Count(
-                t => t.Kind == TraitKind.Method ||
-                     t.Kind == TraitKind.Getter ||
-                     t.Kind == TraitKind.Setter);
+                t => t.Kind is TraitKind.Method or TraitKind.Getter or TraitKind.Setter);
 
-            int slotCount = Traits.Count(t => t.Kind == TraitKind.Slot);
-            int constantCount = Traits.Count(t => t.Kind == TraitKind.Constant);
+            int slotCount = Traits.Count(t => t.Kind is TraitKind.Slot);
+            int constantCount = Traits.Count(t => t.Kind is TraitKind.Constant);
 
             return $"{QName}, Traits: {Traits.Count}";
         }
@@ -158,9 +156,7 @@ public abstract class ASContainer : AS3Item
             var trait = new ASTrait(ABC, input);
             trait.IsStatic = IsStatic;
 
-            if (trait.Kind == TraitKind.Method ||
-                trait.Kind == TraitKind.Getter ||
-                trait.Kind == TraitKind.Setter)
+            if (trait.Kind is TraitKind.Method or TraitKind.Getter or TraitKind.Setter)
             {
                 trait.Method.Container = this;
             }
