@@ -47,8 +47,10 @@ public class AS3MultinameUpgrader
             {
                 trait.Attributes |= TraitAttributes.Metadata;
 
-                metadata = new ASMetadata(abc);
-                metadata.NameIndex = metadataNameIndex;
+                metadata = new ASMetadata(abc)
+                {
+                    NameIndex = metadataNameIndex
+                };
 
                 trait.MetadataIndices.Add(abc.AddMetadata(metadata, false));
             }
