@@ -191,7 +191,9 @@ public class AS3MultinameUpgrader
         if (!TryParseNamespace(trait.QName.Namespace.Name, out ReadOnlySpan<char> left, out ReadOnlySpan<char> right)) return false;
 
         // Return true only if any names were upgraded from this trait.
-        return TryUpgrade(@class.QName.Namespace.Name, left, ref namespaceNameUpgrade) || TryUpgrade(@class.QName.Name, right, ref qualifiedNameUpgrade);
+        bool wasQualifiedNameUpgraded = TryUpgrade(@class.QName.Name, right, ref qualifiedNameUpgrade);
+        bool wasNamespaceNameUpgraded = TryUpgrade(@class.QName.Namespace.Name, left, ref namespaceNameUpgrade);
+        return wasQualifiedNameUpgraded || wasNamespaceNameUpgraded;
     }
     protected virtual bool SearchInstructions(ASClass @class, ASMethod method, ref string namespaceNameUpgrade, ref string qualifiedNameUpgrade)
     {
