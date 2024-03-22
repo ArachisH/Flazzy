@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 
@@ -22,7 +22,12 @@ public static class FlashCrypto
         encryptedLength += 31;
         encryptedLength &= -32; // Padding Adjustment
 
-        MemoryMarshal.Write(aesIV.Slice(12), ref key); // Place key into the last four bytes of the AES IV.
+        // Place key into the last four bytes of the AES IV.
+#if NET8_0_OR_GREATER
+        MemoryMarshal.Write(aesIV.Slice(12), in key);
+#else
+        MemoryMarshal.Write(aesIV.Slice(12), ref key);
+#endif
         for (int i = 0; i < 16; i++)
         {
             aesIV[i] ^= GlobalKey[i];
