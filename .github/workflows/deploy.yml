@@ -15,7 +15,7 @@ jobs:
     
     steps:
     - name: Git Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -23,27 +23,26 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 7.0.x
-        
+
     - name: Install GitVersion
       uses: gittools/actions/gitversion/setup@v0
       with:
-        versionSpec: '6.x'
-        includePrerelease: true
+        versionSpec: '5.x'
 
     - name: Determine Version
       uses: gittools/actions/gitversion/execute@v0
       
     - name: Restoring
-      run: dotnet restore --verbosity normal
+      run: dotnet restore -v normal
 
     - name: Building
-      run: dotnet build --configuration Release --no-restore --verbosity normal
+      run: dotnet build -c Release --no-restore -v normal
 
     - name: Testing
-      run: dotnet test --configuration Release --no-restore --no-build --verbosity normal
+      run: dotnet test -c Release --no-restore --no-build -v normal
 
     - name: Packing (w/ Symbols)
-      run: dotnet pack --configuration Release --no-restore --no-build --verbosity normal --output ${{ env.PACKAGE_OUTPUT }} -p:Version=${{ env.GitVersion_SemVer }} -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+      run: dotnet pack -c Release --no-restore --no-build -v normal -o ${{ env.PACKAGE_OUTPUT }} -p:Version=${{ env.GitVersion_SemVer }} -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
 
     - name: Pushing
       run: dotnet nuget push ${{ env.PACKAGE_OUTPUT }}/*.nupkg -k ${{ secrets.REPOSITORY_KEY }} -s ${{ secrets.REPOSITORY_SOURCE }}
