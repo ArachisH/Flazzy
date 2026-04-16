@@ -1,0 +1,20 @@
+branches:
+  main:
+    increment: None
+    tracks-release-branches: true
+
+  release:
+    mode: ContinuousDelivery
+    increment: None
+    source-branches:
+      - develop
+
+  develop:
+    increment: Minor
+
+  feature:
+    regex: ^(feat|features?)[\/-](?<BranchName>.+)
+
+  hotfix:
+    mode: ContinuousDelivery
+    increment: Patch
