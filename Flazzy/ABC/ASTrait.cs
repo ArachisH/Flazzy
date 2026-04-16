@@ -63,36 +63,36 @@ public class ASTrait : IFlashItem, IAS3Item, IMethodGSTrait, ISlotConstantTrait,
         {
             case TraitKind.Slot:
             case TraitKind.Constant:
+            {
+                TypeIndex = input.ReadEncodedInt();
+                ValueIndex = input.ReadEncodedInt();
+                if (ValueIndex != 0)
                 {
-                    TypeIndex = input.ReadEncodedInt();
-                    ValueIndex = input.ReadEncodedInt();
-                    if (ValueIndex != 0)
-                    {
-                        ValueKind = (ConstantKind)input.ReadByte();
-                    }
-                    break;
+                    ValueKind = (ConstantKind)input.ReadByte();
                 }
+                break;
+            }
 
             case TraitKind.Method:
             case TraitKind.Getter:
             case TraitKind.Setter:
-                {
-                    MethodIndex = input.ReadEncodedInt();
-                    Method.Trait = this;
-                    break;
-                }
+            {
+                MethodIndex = input.ReadEncodedInt();
+                Method.Trait = this;
+                break;
+            }
 
             case TraitKind.Class:
-                {
-                    ClassIndex = input.ReadEncodedInt();
-                    break;
-                }
+            {
+                ClassIndex = input.ReadEncodedInt();
+                break;
+            }
 
             case TraitKind.Function:
-                {
-                    FunctionIndex = input.ReadEncodedInt();
-                    break;
-                }
+            {
+                FunctionIndex = input.ReadEncodedInt();
+                break;
+            }
         }
 
         if (Attributes.HasFlag(TraitAttributes.Metadata))
@@ -173,35 +173,35 @@ public class ASTrait : IFlashItem, IAS3Item, IMethodGSTrait, ISlotConstantTrait,
         {
             case TraitKind.Slot:
             case TraitKind.Constant:
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(TypeIndex);
+                size += SpanFlashWriter.GetEncodedIntSize(ValueIndex);
+                if (ValueIndex != 0)
                 {
-                    size += SpanFlashWriter.GetEncodedIntSize(TypeIndex);
-                    size += SpanFlashWriter.GetEncodedIntSize(ValueIndex);
-                    if (ValueIndex != 0)
-                    {
-                        size += sizeof(byte);
-                    }
-                    break;
+                    size += sizeof(byte);
                 }
+                break;
+            }
 
             case TraitKind.Method:
             case TraitKind.Getter:
             case TraitKind.Setter:
-                {
-                    size += SpanFlashWriter.GetEncodedIntSize(MethodIndex);
-                    break;
-                }
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(MethodIndex);
+                break;
+            }
 
             case TraitKind.Class:
-                {
-                    size += SpanFlashWriter.GetEncodedIntSize(ClassIndex);
-                    break;
-                }
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(ClassIndex);
+                break;
+            }
 
             case TraitKind.Function:
-                {
-                    size += SpanFlashWriter.GetEncodedIntSize(FunctionIndex);
-                    break;
-                }
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(FunctionIndex);
+                break;
+            }
         }
 
         if (Attributes.HasFlag(TraitAttributes.Metadata))
@@ -223,35 +223,35 @@ public class ASTrait : IFlashItem, IAS3Item, IMethodGSTrait, ISlotConstantTrait,
         {
             case TraitKind.Slot:
             case TraitKind.Constant:
+            {
+                output.WriteEncodedInt(TypeIndex);
+                output.WriteEncodedInt(ValueIndex);
+                if (ValueIndex != 0)
                 {
-                    output.WriteEncodedInt(TypeIndex);
-                    output.WriteEncodedInt(ValueIndex);
-                    if (ValueIndex != 0)
-                    {
-                        output.Write((byte)ValueKind);
-                    }
-                    break;
+                    output.Write((byte)ValueKind);
                 }
+                break;
+            }
 
             case TraitKind.Method:
             case TraitKind.Getter:
             case TraitKind.Setter:
-                {
-                    output.WriteEncodedInt(MethodIndex);
-                    break;
-                }
+            {
+                output.WriteEncodedInt(MethodIndex);
+                break;
+            }
 
             case TraitKind.Class:
-                {
-                    output.WriteEncodedInt(ClassIndex);
-                    break;
-                }
+            {
+                output.WriteEncodedInt(ClassIndex);
+                break;
+            }
 
             case TraitKind.Function:
-                {
-                    output.WriteEncodedInt(FunctionIndex);
-                    break;
-                }
+            {
+                output.WriteEncodedInt(FunctionIndex);
+                break;
+            }
         }
 
         if (Attributes.HasFlag(TraitAttributes.Metadata))

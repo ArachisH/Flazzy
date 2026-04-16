@@ -73,8 +73,8 @@ public abstract class Local : ASInstruction
 
             case OPCode.DecLocal:
             case OPCode.DecLocal_i:
-                output.WriteEncodedInt(Register);
-                break;
+            output.WriteEncodedInt(Register);
+            break;
         }
     }
 

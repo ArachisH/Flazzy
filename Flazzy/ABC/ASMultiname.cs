@@ -68,52 +68,52 @@ public sealed class ASMultiname : IFlashItem, IEquatable<ASMultiname>, IPoolCons
         {
             case MultinameKind.QName:
             case MultinameKind.QNameA:
-                {
-                    NamespaceIndex = input.ReadEncodedInt();
-                    NameIndex = input.ReadEncodedInt();
-                    break;
-                }
+            {
+                NamespaceIndex = input.ReadEncodedInt();
+                NameIndex = input.ReadEncodedInt();
+                break;
+            }
 
             case MultinameKind.RTQName:
             case MultinameKind.RTQNameA:
-                {
-                    NameIndex = input.ReadEncodedInt();
-                    break;
-                }
+            {
+                NameIndex = input.ReadEncodedInt();
+                break;
+            }
 
             case MultinameKind.RTQNameL:
             case MultinameKind.RTQNameLA:
-                {
-                    /* No data. */
-                    break;
-                }
+            {
+                /* No data. */
+                break;
+            }
 
             case MultinameKind.Multiname:
             case MultinameKind.MultinameA:
-                {
-                    NameIndex = input.ReadEncodedInt();
-                    NamespaceSetIndex = input.ReadEncodedInt();
-                    break;
-                }
+            {
+                NameIndex = input.ReadEncodedInt();
+                NamespaceSetIndex = input.ReadEncodedInt();
+                break;
+            }
 
             case MultinameKind.MultinameL:
             case MultinameKind.MultinameLA:
-                {
-                    NamespaceSetIndex = input.ReadEncodedInt();
-                    break;
-                }
+            {
+                NamespaceSetIndex = input.ReadEncodedInt();
+                break;
+            }
 
             case MultinameKind.TypeName:
+            {
+                QNameIndex = input.ReadEncodedInt();
+                TypeIndices.Capacity = input.ReadEncodedInt();
+                for (int i = 0; i < TypeIndices.Capacity; i++)
                 {
-                    QNameIndex = input.ReadEncodedInt();
-                    TypeIndices.Capacity = input.ReadEncodedInt();
-                    for (int i = 0; i < TypeIndices.Capacity; i++)
-                    {
-                        int typeIndex = input.ReadEncodedInt();
-                        TypeIndices.Add(typeIndex);
-                    }
-                    break;
+                    int typeIndex = input.ReadEncodedInt();
+                    TypeIndices.Add(typeIndex);
                 }
+                break;
+            }
         }
     }
 
@@ -133,44 +133,44 @@ public sealed class ASMultiname : IFlashItem, IEquatable<ASMultiname>, IPoolCons
         {
             case MultinameKind.QName:
             case MultinameKind.QNameA:
-                {
-                    size += SpanFlashWriter.GetEncodedIntSize(NamespaceIndex);
-                    size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
-                    break;
-                }
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(NamespaceIndex);
+                size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
+                break;
+            }
 
             case MultinameKind.RTQName:
             case MultinameKind.RTQNameA:
-                {
-                    size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
-                    break;
-                }
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
+                break;
+            }
 
             case MultinameKind.Multiname:
             case MultinameKind.MultinameA:
-                {
-                    size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
-                    size += SpanFlashWriter.GetEncodedIntSize(NamespaceSetIndex);
-                    break;
-                }
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(NameIndex);
+                size += SpanFlashWriter.GetEncodedIntSize(NamespaceSetIndex);
+                break;
+            }
 
             case MultinameKind.MultinameL:
             case MultinameKind.MultinameLA:
-                {
-                    size += SpanFlashWriter.GetEncodedIntSize(NamespaceSetIndex);
-                    break;
-                }
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(NamespaceSetIndex);
+                break;
+            }
 
             case MultinameKind.TypeName:
+            {
+                size += SpanFlashWriter.GetEncodedIntSize(QNameIndex);
+                size += SpanFlashWriter.GetEncodedIntSize(TypeIndices.Count);
+                for (int i = 0; i < TypeIndices.Count; i++)
                 {
-                    size += SpanFlashWriter.GetEncodedIntSize(QNameIndex);
-                    size += SpanFlashWriter.GetEncodedIntSize(TypeIndices.Count);
-                    for (int i = 0; i < TypeIndices.Count; i++)
-                    {
-                        size += SpanFlashWriter.GetEncodedIntSize(TypeIndices[i]);
-                    }
-                    break;
+                    size += SpanFlashWriter.GetEncodedIntSize(TypeIndices[i]);
                 }
+                break;
+            }
         }
         return size;
     }
@@ -181,52 +181,52 @@ public sealed class ASMultiname : IFlashItem, IEquatable<ASMultiname>, IPoolCons
         {
             case MultinameKind.QName:
             case MultinameKind.QNameA:
-                {
-                    output.WriteEncodedInt(NamespaceIndex);
-                    output.WriteEncodedInt(NameIndex);
-                    break;
-                }
+            {
+                output.WriteEncodedInt(NamespaceIndex);
+                output.WriteEncodedInt(NameIndex);
+                break;
+            }
 
             case MultinameKind.RTQName:
             case MultinameKind.RTQNameA:
-                {
-                    output.WriteEncodedInt(NameIndex);
-                    break;
-                }
+            {
+                output.WriteEncodedInt(NameIndex);
+                break;
+            }
 
             case MultinameKind.RTQNameL:
             case MultinameKind.RTQNameLA:
-                {
-                    /* No data. */
-                    break;
-                }
+            {
+                /* No data. */
+                break;
+            }
 
             case MultinameKind.Multiname:
             case MultinameKind.MultinameA:
-                {
-                    output.WriteEncodedInt(NameIndex);
-                    output.WriteEncodedInt(NamespaceSetIndex);
-                    break;
-                }
+            {
+                output.WriteEncodedInt(NameIndex);
+                output.WriteEncodedInt(NamespaceSetIndex);
+                break;
+            }
 
             case MultinameKind.MultinameL:
             case MultinameKind.MultinameLA:
-                {
-                    output.WriteEncodedInt(NamespaceSetIndex);
-                    break;
-                }
+            {
+                output.WriteEncodedInt(NamespaceSetIndex);
+                break;
+            }
 
             case MultinameKind.TypeName:
+            {
+                output.WriteEncodedInt(QNameIndex);
+                output.WriteEncodedInt(TypeIndices.Count);
+                for (int i = 0; i < TypeIndices.Count; i++)
                 {
-                    output.WriteEncodedInt(QNameIndex);
-                    output.WriteEncodedInt(TypeIndices.Count);
-                    for (int i = 0; i < TypeIndices.Count; i++)
-                    {
-                        int typeIndex = TypeIndices[i];
-                        output.WriteEncodedInt(typeIndex);
-                    }
-                    break;
+                    int typeIndex = TypeIndices[i];
+                    output.WriteEncodedInt(typeIndex);
                 }
+                break;
+            }
         }
     }
 

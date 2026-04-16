@@ -24,19 +24,19 @@ public class HeaderRecord : FlashItem
                 case TagKind.DefineBitsLossless2:
 
                 case TagKind.SoundStreamBlock:
-                    {
-                        /*
-                         * These tags are required to write their length amount in the long format,
-                         * despite if any of them do not meet the 63 length requirment.
-                         */
-                        return true;
-                    }
+                {
+                    /*
+                     * These tags are required to write their length amount in the long format,
+                     * despite if any of them do not meet the 63 length requirment.
+                     */
+                    return true;
+                }
 
                 default:
-                    {
-                        return (_isLongTag ||
-                            (Length > MAX_SHORT_LENGTH));
-                    }
+                {
+                    return (_isLongTag ||
+                        (Length > MAX_SHORT_LENGTH));
+                }
             }
         }
     }

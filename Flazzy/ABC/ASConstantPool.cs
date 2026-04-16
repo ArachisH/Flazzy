@@ -119,15 +119,15 @@ public class ASConstantPool : IFlashItem
             case TypeCode.Double: return AddConstant(Doubles, (double)value, recycle);
             case TypeCode.String: return AddConstant(Strings, (string)value, recycle);
             default:
+            {
+                return value switch
                 {
-                    return value switch
-                    {
-                        ASMultiname multiname => AddConstant(Multinames, multiname, recycle),
-                        ASNamespace @namespace => AddConstant(Namespaces, @namespace, recycle),
-                        ASNamespaceSet namespaceSet => AddConstant(NamespaceSets, namespaceSet, recycle),
-                        _ => throw new ArgumentException("The provided value does not belong anywhere in the constant pool.", nameof(value)),
-                    };
-                }
+                    ASMultiname multiname => AddConstant(Multinames, multiname, recycle),
+                    ASNamespace @namespace => AddConstant(Namespaces, @namespace, recycle),
+                    ASNamespaceSet namespaceSet => AddConstant(NamespaceSets, namespaceSet, recycle),
+                    _ => throw new ArgumentException("The provided value does not belong anywhere in the constant pool.", nameof(value)),
+                };
+            }
         }
     }
     protected virtual int AddConstant<T>(List<T> constants, T value, bool recycle)
