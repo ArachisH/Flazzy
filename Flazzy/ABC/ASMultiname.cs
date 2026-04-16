@@ -268,7 +268,7 @@ public sealed class ASMultiname : IFlashItem, IEquatable<ASMultiname>, IPoolCons
     }
     public override bool Equals(object obj)
         => obj is ASMultiname multiname && Equals(multiname);
-    
+
     public static bool operator ==(ASMultiname left, ASMultiname right)
     {
         return EqualityComparer<ASMultiname>.Default.Equals(left, right);

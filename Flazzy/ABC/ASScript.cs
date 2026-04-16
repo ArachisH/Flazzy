@@ -21,7 +21,7 @@ public class ASScript : ASContainer // TODO: Check QName usages
 
     public override int GetSize()
     {
-        return SpanFlashWriter.GetEncodedIntSize(InitializerIndex) +  base.GetSize();
+        return SpanFlashWriter.GetEncodedIntSize(InitializerIndex) + base.GetSize();
     }
     public override void WriteTo(ref SpanFlashWriter output)
     {

@@ -93,7 +93,7 @@ public ref struct SpanFlashWriter
         else
         {
             BinaryPrimitives.ReverseEndianness(
-                source: MemoryMarshal.Cast<double, ulong>(values), 
+                source: MemoryMarshal.Cast<double, ulong>(values),
                 destination: MemoryMarshal.Cast<byte, ulong>(_data));
         }
 

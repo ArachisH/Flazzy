@@ -15,8 +15,8 @@ public static class IFlashItemExtensions
         int size = item.GetSize();
 
         byte[] rentedBuffer = null;
-        Span<byte> buffer = size <= StackallocThreshold 
-            ? stackalloc byte[StackallocThreshold] : 
+        Span<byte> buffer = size <= StackallocThreshold
+            ? stackalloc byte[StackallocThreshold] :
             (rentedBuffer = ArrayPool<byte>.Shared.Rent(size));
 
         buffer = buffer.Slice(0, size);
@@ -31,7 +31,7 @@ public static class IFlashItemExtensions
         }
         finally
         {
-            if (rentedBuffer is not null) 
+            if (rentedBuffer is not null)
                 ArrayPool<byte>.Shared.Return(rentedBuffer);
         }
     }
@@ -49,7 +49,7 @@ public static class IFlashItemExtensions
         byte[] buffer = new byte[item.GetSize()];
         var writer = new SpanFlashWriter(buffer);
         item.WriteTo(ref writer);
-        
+
         return buffer;
     }
 }
