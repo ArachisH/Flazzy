@@ -1,32 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetFrameworks>net10.0</TargetFrameworks>
+        <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-    </PropertyGroup>
-
     <PropertyGroup>
-        <IncludeSymbols>true</IncludeSymbols>
+        <DebugType>embedded</DebugType>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+        <RepositoryUrl>https://github.com/ArachisH/Flazzy</RepositoryUrl>
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>0.4.0</Version>
         <Title>Flazzy</Title>
-        <PackageId>Hypo.$(AssemblyName)</PackageId>
+        <PackageId>Hypo.Flazzy</PackageId>
         <Authors>ArachisH</Authors>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Copyright>Copyright (c) ArachisH 2026</Copyright>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <RepositoryUrl>https://github.com/ArachisH/Flazzy</RepositoryUrl>
-        <Description>.NET library for [dis]assembling shockwave flash files(swf).</Description>
+        <PackageProjectUrl>https://github.com/ArachisH/Flazzy</PackageProjectUrl>
+        <Description>A .NET library for reading, writing, and analyzing SWF files with ABC/AVM2, AS3 decompilation, and deobfuscation support.</Description>
+        <PackageTags>swf;flash;shockwave-flash;as3;actionscript;actionscript3;abc;avm2;decompiler;deobfuscation;bytecode;parser;assembler;disassembler;reverse-engineering</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>
@@ -34,10 +31,6 @@
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>
         </None>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
     </ItemGroup>
 
 </Project>
